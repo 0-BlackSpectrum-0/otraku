@@ -37,7 +37,7 @@ class BarChart extends StatelessWidget {
           padding: const .symmetric(vertical: 5),
           child: Text(title, style: TextTheme.of(context).titleSmall),
         ),
-        if (toolbar != null) toolbar!,
+        ?toolbar,
         SizedBox(
           height: 280,
           child: ShadowedOverflowList(
