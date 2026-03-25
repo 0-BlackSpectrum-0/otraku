@@ -453,7 +453,17 @@ abstract class GqlQuery {
     query Users($page: Int, $search: String) {
       Page(page: $page) {
         pageInfo {hasNextPage}
-        users(search: $search) {id name avatar {large}}
+        users(search: $search) {
+        id 
+        name 
+        avatar {large} 
+        bannerImage
+        isFollowing 
+        isFollower
+        donatorTier
+        donatorBadge
+        moderatorRoles
+        }
       }
     }
   ''';
@@ -533,11 +543,31 @@ abstract class GqlQuery {
         $withThreads: Boolean = false, $withComments: Boolean = false) {
       following: Page(page: $page) @include(if: $withFollowing) {
         pageInfo {hasNextPage total}
-        following(userId: $userId, sort: USERNAME) {id name avatar {large}}
+        following(userId: $userId, sort: USERNAME) {
+        id 
+        name 
+        avatar {large}
+        bannerImage
+        isFollowing
+        isFollower
+        donatorTier
+        donatorBadge
+        moderatorRoles
+        }
       }
       followers: Page(page: $page) @include(if: $withFollowers) {
         pageInfo {hasNextPage total}
-        followers(userId: $userId, sort: USERNAME) {id name avatar {large}}
+        followers(userId: $userId, sort: USERNAME) {
+        id 
+        name 
+        avatar {large}
+        bannerImage
+        isFollowing
+        isFollower
+        donatorTier
+        donatorBadge
+        moderatorRoles
+        }
       }
       threads: Page(page: $page) @include(if: $withThreads) {
         pageInfo {hasNextPage total}
