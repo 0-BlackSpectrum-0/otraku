@@ -18,6 +18,7 @@ import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/grid/sliver_grid_delegates.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/paged_view.dart';
@@ -75,33 +76,36 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
     );
 
     return AdaptiveScaffold(
-      topBar: TopBarAnimatedSwitcher(
-        TopBar(
-          key: inEditingMode ? const Key('EditTopBar') : Key('${type.title}TopBar'),
-          title: type.title,
-          trailing: [
-            if (inEditingMode) ...[
-              IconButton(
-                tooltip: 'Cancel',
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () => ref.read(favoritesProvider(widget.userId).notifier).cancelEdit(),
-              ),
-              IconButton(
-                tooltip: 'Save',
-                icon: const Icon(Icons.save_outlined),
-                onPressed: () =>
-                    ref.read(favoritesProvider(widget.userId).notifier).saveEdit().then((err) {
-                      if (err == null || !context.mounted) return;
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBarAnimatedSwitcher(
+          TopBar(
+            key: inEditingMode ? const Key('EditTopBar') : Key('${type.title}TopBar'),
+            title: 'Favorites',
+            trailing: [
+              if (inEditingMode) ...[
+                IconButton(
+                  tooltip: 'Cancel',
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => ref.read(favoritesProvider(widget.userId).notifier).cancelEdit(),
+                ),
+                IconButton(
+                  tooltip: 'Save',
+                  icon: const Icon(Icons.save_outlined),
+                  onPressed: () =>
+                      ref.read(favoritesProvider(widget.userId).notifier).saveEdit().then((err) {
+                        if (err == null || !context.mounted) return;
 
-                      SnackBarExtension.show(context, 'Failed to reorder: $err');
-                    }),
-              ),
-            ] else if (count > 0)
-              Padding(
-                padding: const .only(right: Theming.offset),
-                child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
-              ),
-          ],
+                        SnackBarExtension.show(context, 'Failed to reorder: $err');
+                      }),
+                ),
+              ] else if (count > 0)
+                Padding(
+                  padding: const .only(right: Theming.offset),
+                  child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
+                ),
+            ],
+          ),
         ),
       ),
       floatingAction: !isViewer || inEditingMode
@@ -122,12 +126,20 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
               selected: _tabCtrl.index,
               onChanged: (i) => _tabCtrl.index = i,
               onSame: (_) => _scrollCtrl.scrollToTop(),
+              scrollCtrl: _scrollCtrl,
               items: const {
-                'Anime': Ionicons.film_outline,
-                'Manga': Ionicons.book_outline,
+                'Anime': Ionicons.tv_outline,
+                'Manga': Ionicons.library_outline,
                 'Characters': Ionicons.man_outline,
                 'Staff': Ionicons.briefcase_outline,
                 'Studios': Ionicons.business_outline,
+              },
+              selectedItems: const {
+                'Anime': Ionicons.tv,
+                'Manga': Ionicons.library,
+                'Characters': Ionicons.man,
+                'Staff': Ionicons.briefcase,
+                'Studios': Ionicons.business,
               },
             ),
       child: AnimatedSwitcher(

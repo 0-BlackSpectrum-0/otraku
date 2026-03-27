@@ -19,37 +19,32 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.paddingOf(context).top;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: Theming.blurFilter,
-        child: Container(
-          height: topPadding + preferredSize.height,
-          decoration: BoxDecoration(color: Theme.of(context).navigationBarTheme.backgroundColor),
-          padding: .only(top: topPadding),
-          alignment: Alignment.center,
-          child: Row(
-            children: [
-              if (GoRouter.of(context).canPop())
-                IconButton(
-                  tooltip: 'Close',
-                  icon: const Icon(Icons.arrow_back_ios_rounded),
-                  onPressed: context.back,
-                )
-              else
-                const SizedBox(width: Theming.offset),
-              if (title != null)
-                Expanded(
-                  child: Text(
-                    title!,
-                    style: TextTheme.of(context).titleMedium,
-                    overflow: .ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              ...trailing,
-            ],
-          ),
-        ),
+    return Container(
+      height: topPadding + preferredSize.height,
+      decoration: BoxDecoration(color: ColorScheme.of(context).surface),
+      padding: .only(top: topPadding),
+      alignment: Alignment.center,
+      child: Row(
+        children: [
+          if (GoRouter.of(context).canPop())
+            IconButton(
+              tooltip: 'Close',
+              icon: const Icon(Icons.arrow_back_ios_rounded),
+              onPressed: context.back,
+            )
+          else
+            const SizedBox(width: Theming.offset),
+          if (title != null)
+            Expanded(
+              child: Text(
+                title!,
+                style: TextTheme.of(context).titleMedium,
+                overflow: .ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ...trailing,
+        ],
       ),
     );
   }

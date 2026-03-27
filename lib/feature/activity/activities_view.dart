@@ -14,6 +14,7 @@ import 'package:otraku/feature/settings/settings_provider.dart';
 import 'package:otraku/feature/activity/activity_model.dart';
 import 'package:otraku/util/paged_controller.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/sheets.dart';
@@ -65,15 +66,18 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
         : null;
 
     return AdaptiveScaffold(
-      topBar: TopBar(
-        title: 'Activities',
-        trailing: [
-          IconButton(
-            tooltip: 'Filter',
-            icon: const Icon(Ionicons.funnel_outline),
-            onPressed: () => showActivityFilterSheet(context, ref, widget.tag),
-          ),
-        ],
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBar(
+          title: 'Activities',
+          trailing: [
+            IconButton(
+              tooltip: 'Filter',
+              icon: const Icon(Ionicons.funnel_outline),
+              onPressed: () => showActivityFilterSheet(context, ref, widget.tag),
+            ),
+          ],
+        ),
       ),
       floatingAction: floatingAction,
       child: ActivitiesSubView(widget.tag, _scrollCtrl),

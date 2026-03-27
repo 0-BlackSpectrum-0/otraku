@@ -14,6 +14,7 @@ import 'package:otraku/util/paged_controller.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/paged_view.dart';
 
@@ -58,28 +59,38 @@ class _SocialViewState extends ConsumerState<SocialView> with SingleTickerProvid
     final onRefresh = (invalidate) => invalidate(socialProvider(widget.id));
 
     return AdaptiveScaffold(
-      topBar: TopBarAnimatedSwitcher(
-        TopBar(
-          key: Key('${tab.title}TopBar'),
-          title: tab.title,
-          trailing: [
-            if (count > 0)
-              Padding(
-                padding: const .only(right: Theming.offset),
-                child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
-              ),
-          ],
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBarAnimatedSwitcher(
+          TopBar(
+            key: Key('${tab.title}TopBar'),
+            title: 'Social',
+            trailing: [
+              if (count > 0)
+                Padding(
+                  padding: const .only(right: Theming.offset),
+                  child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
+                ),
+            ],
+          ),
         ),
       ),
       navigationConfig: NavigationConfig(
         selected: _tabCtrl.index,
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
+        scrollCtrl: _scrollCtrl,
         items: {
-          SocialTab.following.title: Ionicons.people_circle,
-          SocialTab.followers.title: Ionicons.person_circle,
+          SocialTab.following.title: Ionicons.people_circle_outline,
+          SocialTab.followers.title: Ionicons.person_circle_outline,
           SocialTab.threads.title: Ionicons.chatbubble_outline,
           SocialTab.comments.title: Ionicons.chatbubbles_outline,
+        },
+        selectedItems: {
+          SocialTab.following.title: Ionicons.people_circle,
+          SocialTab.followers.title: Ionicons.person_circle,
+          SocialTab.threads.title: Ionicons.chatbubble,
+          SocialTab.comments.title: Ionicons.chatbubbles,
         },
       ),
       child: TabBarView(

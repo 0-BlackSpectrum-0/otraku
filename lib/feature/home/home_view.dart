@@ -29,6 +29,7 @@ import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 
 class HomeView extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
 
   final _animeScrollCtrl = ScrollController();
   final _mangaScrollCtrl = ScrollController();
+
   late final _feedScrollCtrl = PagedController(
     loadMore: () => ref.read(activitiesProvider(HomeActivitiesTag.instance).notifier).fetch(),
   );
@@ -122,6 +124,13 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     final home = ref.watch(homeProvider);
     final primaryScrollCtrl = PrimaryScrollController.of(context);
     final formFactor = Theming.of(context).formFactor;
+    final activeScrollCtrl = switch (_tabCtrl.index) {
+      0 => _feedScrollCtrl,
+      1 => _animeScrollCtrl,
+      2 => _mangaScrollCtrl,
+      3 => _discoverScrollCtrl,
+      _ => PrimaryScrollController.of(context),
+    };
 
     final topBar = TopBarAnimatedSwitcher(switch (_tabCtrl.index) {
       0 => const TopBar(
@@ -144,8 +153,11 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       _ => const EmptyTopBar() as PreferredSizeWidget,
     });
 
+    final hidingTopBar = HidingBar(scrollCtrl: activeScrollCtrl, child: topBar);
+
     final navigationConfig = NavigationConfig(
       items: _homeTabs,
+      selectedItems: _homeSelectedTabs,
       selected: _tabCtrl.index,
       onChanged: (i) => context.go(Routes.home(HomeTab.values[i])),
       onSame: (i) {
@@ -185,6 +197,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
             context.push(Routes.settings);
         }
       },
+      scrollCtrl: activeScrollCtrl,
     );
 
     final floatingAction = switch (_tabCtrl.index) {
@@ -247,7 +260,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     );
 
     return AdaptiveScaffold(
-      topBar: topBar,
+      topBar: hidingTopBar,
       floatingAction: floatingAction,
       navigationConfig: navigationConfig,
       child: child,
@@ -255,11 +268,19 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
   }
 
   static final _homeTabs = {
-    HomeTab.feed.label: Ionicons.file_tray_outline,
-    HomeTab.anime.label: Ionicons.film_outline,
-    HomeTab.manga.label: Ionicons.book_outline,
-    HomeTab.discover.label: Ionicons.compass_outline,
+    HomeTab.feed.label: Ionicons.reader_outline,
+    HomeTab.anime.label: Ionicons.tv_outline,
+    HomeTab.manga.label: Ionicons.library_outline,
+    HomeTab.discover.label: Ionicons.search_outline,
     HomeTab.profile.label: Ionicons.person_outline,
+  };
+
+  static final _homeSelectedTabs = {
+    HomeTab.feed.label: Ionicons.reader,
+    HomeTab.anime.label: Ionicons.tv,
+    HomeTab.manga.label: Ionicons.library,
+    HomeTab.discover.label: Ionicons.search,
+    HomeTab.profile.label: Ionicons.person,
   };
 
   void _toggleSearchFocus(FocusNode node) => node.hasFocus ? node.unfocus() : node.requestFocus();

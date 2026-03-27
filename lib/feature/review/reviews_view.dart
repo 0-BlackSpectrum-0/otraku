@@ -7,6 +7,7 @@ import 'package:otraku/util/paged_controller.dart';
 import 'package:otraku/feature/review/review_grid.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/paged_view.dart';
@@ -27,6 +28,7 @@ class _ReviewsViewState extends ConsumerState<ReviewsView> {
   late final _ctrl = PagedController(
     loadMore: () => ref.read(reviewsProvider(widget.id).notifier).fetch(),
   );
+  final _scrollCtrl = ScrollController();
 
   @override
   void dispose() {
@@ -40,15 +42,18 @@ class _ReviewsViewState extends ConsumerState<ReviewsView> {
     final count = ref.watch(reviewsProvider(widget.id).select((s) => s.value?.total ?? 0));
 
     return AdaptiveScaffold(
-      topBar: TopBar(
-        title: 'Reviews',
-        trailing: [
-          if (count > 0)
-            Padding(
-              padding: const .only(right: Theming.offset),
-              child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
-            ),
-        ],
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBar(
+          title: 'Reviews',
+          trailing: [
+            if (count > 0)
+              Padding(
+                padding: const .only(right: Theming.offset),
+                child: Text(count.toString(), style: TextTheme.of(context).titleSmall),
+              ),
+          ],
+        ),
       ),
       floatingAction: HidingFloatingActionButton(
         key: const Key('filter'),

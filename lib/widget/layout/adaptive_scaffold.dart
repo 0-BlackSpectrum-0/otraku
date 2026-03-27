@@ -45,13 +45,16 @@ class AdaptiveScaffold extends StatelessWidget {
           effectiveBottomBar = BottomNavigation(
             selected: navigationConfig!.selected,
             items: navigationConfig!.items,
+            selectedItems: navigationConfig!.selectedItems,
             onChanged: navigationConfig!.onChanged,
             onSame: navigationConfig!.onSame,
+            scrollCtrl: navigationConfig!.scrollCtrl,
           );
         case .tablet:
           final sideNavigation = SideNavigation(
             selected: navigationConfig!.selected,
             items: navigationConfig!.items,
+            selectedItems: navigationConfig!.selectedItems,
             onChanged: navigationConfig!.onChanged,
             onSame: navigationConfig!.onSame,
           );
@@ -93,14 +96,18 @@ class NavigationConfig {
   const NavigationConfig({
     required this.selected,
     required this.items,
+    this.selectedItems,
     required this.onChanged,
     required this.onSame,
+    this.scrollCtrl,
   });
 
   final int selected;
   final Map<String, IconData> items;
+  final Map<String, IconData>? selectedItems;
   final void Function(int) onChanged;
   final void Function(int) onSame;
+  final ScrollController? scrollCtrl;
 }
 
 class _StartFloatFabLocation extends StandardFabLocation with FabStartOffsetX, FabFloatOffsetY {

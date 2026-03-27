@@ -16,6 +16,7 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/widget/grid/sliver_grid_delegates.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
 import 'package:otraku/widget/layout/constrained_view.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/loaders.dart';
 
@@ -102,14 +103,19 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
     );
 
     return AdaptiveScaffold(
-      topBar: _tabCtrl.index == 0
-          ? const TopBar(key: Key('0'), title: 'Anime Statistics')
-          : const TopBar(key: Key('1'), title: 'Manga Statistics'),
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBar(title: 'Statistics'),
+      ), //_tabCtrl.index == 0
+      //     ? const TopBar(key: Key('0'), title: 'Anime Statistics')
+      //     : const TopBar(key: Key('1'), title: 'Manga Statistics'),
       navigationConfig: NavigationConfig(
         selected: _tabCtrl.index,
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
-        items: const {'Anime': Ionicons.film_outline, 'Manga': Ionicons.book_outline},
+        scrollCtrl: _scrollCtrl,
+        items: const {'Anime': Ionicons.tv_outline, 'Manga': Ionicons.library_outline},
+        selectedItems: const {'Anime': Ionicons.tv, 'Manga': Ionicons.library},
       ),
       child: child,
     );

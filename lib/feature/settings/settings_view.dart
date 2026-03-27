@@ -12,6 +12,7 @@ import 'package:otraku/feature/settings/settings_about_view.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
+import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
 import 'package:otraku/widget/layout/constrained_view.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
@@ -109,22 +110,32 @@ class _SettingsViewState extends ConsumerState<SettingsView> with SingleTickerPr
     };
 
     return AdaptiveScaffold(
-      topBar: TopBarAnimatedSwitcher(switch (_tabCtrl.index) {
-        0 => const TopBar(key: Key('0'), title: 'App'),
-        1 => const TopBar(key: Key('1'), title: 'Content'),
-        2 => const TopBar(key: Key('2'), title: 'Notifications'),
-        _ => const TopBar(key: Key('3'), title: 'About'),
-      }),
+      topBar: HidingBar(
+        scrollCtrl: _scrollCtrl,
+        child: TopBar(title: 'Settings'),
+      ), //TopBarAnimatedSwitcher(switch (_tabCtrl.index) {
+      //   0 => const TopBar(key: Key('0'), title: 'App'),
+      //   1 => const TopBar(key: Key('1'), title: 'Content'),
+      //   2 => const TopBar(key: Key('2'), title: 'Notifications'),
+      //   _ => const TopBar(key: Key('3'), title: 'About'),
+      // }),
       floatingAction: floatingAction,
       navigationConfig: NavigationConfig(
         selected: _tabCtrl.index,
         onSame: (_) => _scrollCtrl.scrollToTop(),
         onChanged: (i) => _tabCtrl.index = i,
+        scrollCtrl: _scrollCtrl,
         items: const {
           'App': Ionicons.color_palette_outline,
-          'Content': Ionicons.tv_outline,
+          'Content': Ionicons.hammer_outline,
           'Notifications': Ionicons.notifications_outline,
           'About': Ionicons.information_outline,
+        },
+        selectedItems: const {
+          'App': Ionicons.color_palette,
+          'Content': Ionicons.hammer,
+          'Notifications': Ionicons.notifications,
+          'About': Ionicons.information,
         },
       ),
       child: TabBarView(controller: _tabCtrl, children: tabs),
