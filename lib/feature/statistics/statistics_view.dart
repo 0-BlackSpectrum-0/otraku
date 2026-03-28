@@ -114,8 +114,8 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
         scrollCtrl: _scrollCtrl,
-        items: const {'Anime': Ionicons.tv_outline, 'Manga': Ionicons.library_outline},
-        selectedItems: const {'Anime': Ionicons.tv, 'Manga': Ionicons.library},
+        items: const {'Anime': Ionicons.film_outline, 'Manga': Ionicons.book_outline},
+        selectedItems: const {'Anime': Ionicons.film, 'Manga': Ionicons.book},
       ),
       child: child,
     );

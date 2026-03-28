@@ -50,8 +50,8 @@ class DiscoverFloatingAction extends StatelessWidget {
   }
 
   static IconData _typeIcon(DiscoverType type) => switch (type) {
-    .anime => Ionicons.tv_outline,
-    .manga => Ionicons.library_outline,
+    .anime => Ionicons.film_outline,
+    .manga => Ionicons.book_outline,
     .character => Ionicons.man_outline,
     .staff => Ionicons.mic_outline,
     .studio => Ionicons.business_outline,

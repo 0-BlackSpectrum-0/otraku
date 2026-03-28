@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
+import 'package:otraku/feature/activity/activities_filter_model.dart';
+import 'package:otraku/feature/activity/activities_filter_provider.dart';
 import 'package:otraku/feature/activity/activities_model.dart';
 import 'package:otraku/feature/activity/activities_provider.dart';
 import 'package:otraku/feature/activity/activities_view.dart';
@@ -133,10 +135,22 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     };
 
     final topBar = TopBarAnimatedSwitcher(switch (_tabCtrl.index) {
-      0 => const TopBar(
-        key: Key('feedTopBar'),
-        title: 'Feed',
-        trailing: [FeedTopBarTrailingContent()],
+      0 => TopBar(
+        key: const Key('feedTopBar'),
+        title:
+            (ref.watch(activitiesFilterProvider(HomeActivitiesTag.instance))
+                    as HomeActivitiesFilter)
+                .onFollowing
+            ? 'Following'
+            : 'Global',
+        onTitleTap: () {
+          final filter =
+              ref.read(activitiesFilterProvider(HomeActivitiesTag.instance))
+                  as HomeActivitiesFilter;
+          ref.read(activitiesFilterProvider(HomeActivitiesTag.instance).notifier).state = filter
+              .copyWith(onFollowing: !filter.onFollowing);
+        },
+        trailing: const [FeedTopBarTrailingContent()],
       ),
       1 when animeCollectionTag != null => TopBar(
         key: const Key('animeCollectionTopBar'),
@@ -269,17 +283,17 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
 
   static final _homeTabs = {
     HomeTab.feed.label: Ionicons.reader_outline,
-    HomeTab.anime.label: Ionicons.tv_outline,
-    HomeTab.manga.label: Ionicons.library_outline,
-    HomeTab.discover.label: Ionicons.search_outline,
+    HomeTab.anime.label: Ionicons.film_outline,
+    HomeTab.manga.label: Ionicons.book_outline,
+    HomeTab.discover.label: Ionicons.compass_outline,
     HomeTab.profile.label: Ionicons.person_outline,
   };
 
   static final _homeSelectedTabs = {
     HomeTab.feed.label: Ionicons.reader,
-    HomeTab.anime.label: Ionicons.tv,
-    HomeTab.manga.label: Ionicons.library,
-    HomeTab.discover.label: Ionicons.search,
+    HomeTab.anime.label: Ionicons.film,
+    HomeTab.manga.label: Ionicons.book,
+    HomeTab.discover.label: Ionicons.compass,
     HomeTab.profile.label: Ionicons.person,
   };
 

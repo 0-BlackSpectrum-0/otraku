@@ -127,13 +127,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> with SingleTickerPr
         scrollCtrl: _scrollCtrl,
         items: const {
           'App': Ionicons.color_palette_outline,
-          'Content': Ionicons.hammer_outline,
+          'Content': Ionicons.tv_outline,
           'Notifications': Ionicons.notifications_outline,
           'About': Ionicons.information_outline,
         },
         selectedItems: const {
           'App': Ionicons.color_palette,
-          'Content': Ionicons.hammer,
+          'Content': Ionicons.tv,
           'Notifications': Ionicons.notifications,
           'About': Ionicons.information,
         },
