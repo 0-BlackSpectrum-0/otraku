@@ -58,7 +58,7 @@ jobs:
           sed -i 's/ package="com.otraku.app"//' android/app/src/main/AndroidManifest.xml
           sed -i 's|https://github.com/lotusprey/otraku|https://github.com/0-BlackSpectrum-0/otraku|g' lib/feature/settings/settings_about_view.dart
           # Fix package declaration in MainActivity.kt
-          sed -i 's/package com.otraku.app/package com.otraku_fork.app/' android/app/src/main/kotlin/com/otraku/app/MainActivity.kt
+          sed -i 's/package com.otraku.app/package com.otraku_fork.app/' android/app/src/main/kotlin/com/example/otraku/MainActivity.kt
 
       - name: Verify All Replacements
         run: |
@@ -84,9 +84,9 @@ jobs:
             && echo "✅ Repo link replaced" \
             || { echo "❌ Repo link replacement failed!"; FAILED=1; }
 
-          grep -q 'package com.otraku_fork.app' android/app/src/main/kotlin/com/otraku/app/MainActivity.kt \
-          && echo "✅ MainActivity package replaced" \
-           || { echo "❌ MainActivity package replacement failed!"; FAILED=1; }
+          grep -q 'package com.otraku_fork.app' android/app/src/main/kotlin/com/example/otraku/MainActivity.kt \
+            && echo "✅ MainActivity package replaced" \
+            || { echo "❌ MainActivity package replacement failed!"; FAILED=1; }
 
           if [ $FAILED -ne 0 ]; then
             echo ""
