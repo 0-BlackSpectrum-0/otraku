@@ -127,6 +127,5 @@ jobs:
             ${{ steps.changelog.outputs.CHANGELOG }}
 
             ---
-            > Built automatically from the `personal` branch
           files: build/app/outputs/flutter-apk/otraku-fork-${{ steps.version.outputs.FULL_VERSION }}.apk
           token: ${{ secrets.GITHUB_TOKEN }}
