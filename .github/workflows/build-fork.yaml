@@ -1,0 +1,130 @@
+name: Build Personal APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s" --no-merges)
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Bump Version
+        id: version
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //;s/+.*//' | tr -d '[:space:]')
+          BUILD_NUMBER=${{ github.run_number }}
+          sed -i "s/^version: .*/version: $VERSION_NAME+$BUILD_NUMBER/" pubspec.yaml
+          grep -q "version: $VERSION_NAME+$BUILD_NUMBER" pubspec.yaml \
+            && echo "✅ Version set to $VERSION_NAME+$BUILD_NUMBER" \
+            || { echo "❌ Version bump failed!"; exit 1; }
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "FULL_VERSION=$VERSION_NAME+$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/otraku-fork-key.jks
+
+      - name: Create keystore.properties
+        run: |
+          cat > android/keystore.properties << EOF
+          releaseKeyStore=otraku-fork-key.jks
+          releaseStorePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          releaseKeyPassword=${{ secrets.KEY_PASSWORD }}
+          releaseKeyAlias=${{ secrets.KEY_ALIAS }}
+          EOF
+
+      - name: Apply Custom Changes
+        run: |
+          # Package name
+          sed -i 's/applicationId = "com.otraku.app"/applicationId = "com.otraku_fork.app"/' android/app/build.gradle.kts
+
+          # Namespace
+          sed -i 's/namespace = "com.otraku.app"/namespace = "com.otraku_fork.app"/' android/app/build.gradle.kts
+
+          # Remove dev flavor so it builds as plain release
+          sed -i '/flavorDimensions/d' android/app/build.gradle.kts
+          sed -i '/productFlavors/,/^    }/d' android/app/build.gradle.kts
+
+          # App name in strings.xml
+          sed -i 's/<string name="app_name">Otraku<\/string>/<string name="app_name">Otraku Fork<\/string>/' android/app/src/main/res/values/strings.xml
+
+          # Repo link in about page
+          sed -i 's|https://github.com/lotusprey/otraku|https://github.com/0-BlackSpectrum-0/otraku|g' lib/feature/settings/settings_about_view.dart
+
+      - name: Verify All Replacements
+        run: |
+          FAILED=0
+
+          grep -q 'applicationId = "com.otraku_fork.app"' android/app/build.gradle.kts \
+            && echo "✅ applicationId replaced" \
+            || { echo "❌ applicationId replacement failed!"; FAILED=1; }
+
+          grep -q 'namespace = "com.otraku_fork.app"' android/app/build.gradle.kts \
+            && echo "✅ namespace replaced" \
+            || { echo "❌ namespace replacement failed!"; FAILED=1; }
+
+          grep -q 'Otraku Fork' android/app/src/main/res/values/strings.xml \
+            && echo "✅ strings.xml app name replaced" \
+            || { echo "❌ strings.xml replacement failed!"; FAILED=1; }
+
+          grep -q 'https://github.com/0-BlackSpectrum-0/otraku' lib/feature/settings/settings_about_view.dart \
+            && echo "✅ Repo link replaced" \
+            || { echo "❌ Repo link replacement failed!"; FAILED=1; }
+
+          if [ $FAILED -ne 0 ]; then
+            echo ""
+            echo "🚫 One or more replacements failed. Aborting build."
+            echo "Hint: The original strings may have changed upstream. Update the sed commands."
+            exit 1
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/otraku-fork-${{ steps.version.outputs.FULL_VERSION }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION_NAME }}-build${{ steps.version.outputs.BUILD_NUMBER }}
+          name: "v${{ steps.version.outputs.VERSION_NAME }} (Build #${{ steps.version.outputs.BUILD_NUMBER }})"
+          body: |
+            ### 📦 Changes in this build
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ---
+            > Built automatically from the `personal` branch
+          files: build/app/outputs/flutter-apk/otraku-fork-${{ steps.version.outputs.FULL_VERSION }}.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
