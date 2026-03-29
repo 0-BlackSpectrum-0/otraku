@@ -50,20 +50,12 @@ jobs:
 
       - name: Apply Custom Changes
         run: |
-          # Package name
           sed -i 's/applicationId = "com.otraku.app"/applicationId = "com.otraku_fork.app"/' android/app/build.gradle.kts
-
-          # Namespace
           sed -i 's/namespace = "com.otraku.app"/namespace = "com.otraku_fork.app"/' android/app/build.gradle.kts
-
-          # Remove dev flavor so it builds as plain release
           sed -i '/flavorDimensions/d' android/app/build.gradle.kts
           sed -i '/productFlavors/,/^    }/d' android/app/build.gradle.kts
-
-          # App name in strings.xml
           sed -i 's/<string name="app_name">Otraku<\/string>/<string name="app_name">Otraku Fork<\/string>/' android/app/src/main/res/values/strings.xml
-
-          # Repo link in about page
+          sed -i '/package="com.otraku.app"/d' android/app/src/main/AndroidManifest.xml
           sed -i 's|https://github.com/lotusprey/otraku|https://github.com/0-BlackSpectrum-0/otraku|g' lib/feature/settings/settings_about_view.dart
 
       - name: Verify All Replacements
@@ -77,6 +69,10 @@ jobs:
           grep -q 'namespace = "com.otraku_fork.app"' android/app/build.gradle.kts \
             && echo "✅ namespace replaced" \
             || { echo "❌ namespace replacement failed!"; FAILED=1; }
+
+          grep -qv 'package="com.otraku.app"' android/app/src/main/AndroidManifest.xml \
+            && echo "✅ AndroidManifest.xml package line removed" \
+            || { echo "❌ AndroidManifest.xml package line still present!"; FAILED=1; }
 
           grep -q 'Otraku Fork' android/app/src/main/res/values/strings.xml \
             && echo "✅ strings.xml app name replaced" \
