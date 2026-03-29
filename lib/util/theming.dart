@@ -72,7 +72,7 @@ class Theming extends ThemeExtension<Theming> {
   static const bouncyPhysics = AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics());
 
   static ThemeData generateThemeData(ColorScheme scheme) => ThemeData(
-    fontFamily: 'Rubik',
+    fontFamily: 'Catways',
     colorScheme: scheme,
     scaffoldBackgroundColor: scheme.surface,
     disabledColor: scheme.surface,

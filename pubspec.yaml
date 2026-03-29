@@ -80,6 +80,9 @@ flutter:
     - assets/icons/about.png
 
   fonts:
+    - family: Catways
+      fonts:
+        - asset: assets/fonts/Catways.ttf
     - family: Rubik
       fonts:
         - asset: assets/fonts/Rubik-VariableFont_wght.ttf
