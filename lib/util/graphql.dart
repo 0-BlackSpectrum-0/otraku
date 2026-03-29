@@ -1060,6 +1060,7 @@ abstract class _GqlFragment {
       notes
       private
       repeat
+      customLists
       startedAt {year month day}
       completedAt {year month day}
       createdAt

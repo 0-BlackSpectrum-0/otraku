@@ -30,16 +30,24 @@ class CollectionTopBarTrailingContent extends StatelessWidget {
         final filterIcon = IconButton(
           tooltip: 'Filter',
           icon: const Icon(Ionicons.funnel_outline),
-          onPressed: () => showSheet(
-            context,
-            CollectionFilterView(
-              tag: tag,
-              filter: filter.mediaFilter,
-              onChanged: (mediaFilter) => ref
-                  .read(collectionFilterProvider(tag).notifier)
-                  .update((s) => s.copyWith(mediaFilter: mediaFilter)),
-            ),
-          ),
+          onPressed: () {
+            final customListNames = switch (ref.read(collectionProvider(tag)).value) {
+              FullCollection c =>
+                c.lists.where((l) => l.status == null).map((l) => l.name).toList(),
+              _ => const <String>[],
+            };
+            showSheet(
+              context,
+              CollectionFilterView(
+                tag: tag,
+                filter: filter.mediaFilter,
+                customListNames: customListNames,
+                onChanged: (mediaFilter) => ref
+                    .read(collectionFilterProvider(tag).notifier)
+                    .update((s) => s.copyWith(mediaFilter: mediaFilter)),
+              ),
+            );
+          },
         );
 
         return Expanded(

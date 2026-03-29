@@ -15,11 +15,17 @@ import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/sheets.dart';
 
 class CollectionFilterView extends ConsumerStatefulWidget {
-  const CollectionFilterView({required this.tag, required this.filter, required this.onChanged});
+  const CollectionFilterView({
+    required this.tag,
+    required this.filter,
+    required this.onChanged,
+    required this.customListNames,
+  });
 
   final CollectionTag tag;
   final CollectionMediaFilter filter;
   final void Function(CollectionMediaFilter) onChanged;
+  final List<String> customListNames;
 
   @override
   ConsumerState<CollectionFilterView> createState() => _FilterCollectionViewState();
@@ -107,18 +113,26 @@ class _FilterCollectionViewState extends ConsumerState<CollectionFilterView> {
           padding: const .only(top: 20),
           children: [
             EntrySortChipSelector(
-              title: 'Sorting',
+              title: 'Sort By',
               value: _filter.sort,
               onChanged: (v) => _filter.sort = v,
               highContrast: options.highContrast,
             ),
             ?previewSortPicker,
             ChipMultiSelector(
-              title: 'Statuses',
+              title: 'Release Status',
               items: ReleaseStatus.values.map((v) => (v.label, v)).toList(),
               values: _filter.statuses,
               highContrast: options.highContrast,
             ),
+            const SizedBox(height: Theming.offset),
+            const Divider(),
+            _UserStatusSelector(filter: _filter),
+            if (widget.customListNames.isNotEmpty)
+              _CustomListSelector(names: widget.customListNames, filter: _filter),
+
+            const SizedBox(height: Theming.offset / 2),
+            const Divider(),
             ChipMultiSelector(
               title: 'Formats',
               items: (widget.tag.ofAnime ? MediaFormat.animeFormats : MediaFormat.mangaFormats)
@@ -187,6 +201,157 @@ class _FilterCollectionViewState extends ConsumerState<CollectionFilterView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _UserStatusSelector extends StatefulWidget {
+  const _UserStatusSelector({required this.filter});
+  final CollectionMediaFilter filter;
+
+  @override
+  State<_UserStatusSelector> createState() => _UserStatusSelectorState();
+}
+
+class _UserStatusSelectorState extends State<_UserStatusSelector> {
+  @override
+  Widget build(BuildContext context) {
+    final isNot = widget.filter.userStatusNot;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: .center,
+          children: [
+            Text('User Status', style: TextTheme.of(context).labelMedium),
+            const SizedBox(width: Theming.offset),
+            // Toggle OR / NOT by tapping the badge
+            Tooltip(
+              preferBelow: false,
+              message: switch (widget.filter.userStatusNot) {
+                false => 'Show entries in any selected status',
+                true => 'Hide entries in selected statuses',
+              },
+              child: GestureDetector(
+                onTap: () =>
+                    setState(() => widget.filter.userStatusNot = !widget.filter.userStatusNot),
+                child: Chip(
+                  label: Text(isNot ? 'NOT' : 'OR'),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SingleChildScrollView(
+          scrollDirection: .horizontal,
+          child: Row(
+            children: [
+              for (final status in ListStatus.values)
+                Padding(
+                  padding: const .only(right: 6),
+                  child: FilterChip(
+                    label: Text(status.label(null)),
+                    selected: widget.filter.userStatusIn.contains(status),
+                    selectedColor: widget.filter.userStatusNot
+                        ? ColorScheme.of(context).errorContainer
+                        : null,
+                    checkmarkColor: widget.filter.userStatusNot
+                        ? ColorScheme.of(context).error
+                        : null,
+                    onSelected: (v) => setState(() {
+                      v
+                          ? widget.filter.userStatusIn.add(status)
+                          : widget.filter.userStatusIn.remove(status);
+                    }),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomListSelector extends StatefulWidget {
+  const _CustomListSelector({required this.names, required this.filter});
+  final List<String> names;
+  final CollectionMediaFilter filter;
+
+  @override
+  State<_CustomListSelector> createState() => _CustomListSelectorState();
+}
+
+class _CustomListSelectorState extends State<_CustomListSelector> {
+  @override
+  Widget build(BuildContext context) {
+    final logic = widget.filter.customListLogic;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: .center,
+          children: [
+            Text('Custom Lists', style: TextTheme.of(context).labelMedium),
+            const SizedBox(width: Theming.offset),
+            // Cycle OR → AND → NOT on each tap
+            Tooltip(
+              preferBelow: false,
+              message: switch (widget.filter.customListLogic) {
+                ListFilterLogic.and => 'Show entries in all selected lists',
+                ListFilterLogic.or => 'Show entries in any selected lists',
+                ListFilterLogic.not => 'Hide entries in selected lists',
+              },
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  widget.filter.customListLogic = switch (logic) {
+                    ListFilterLogic.or => ListFilterLogic.and,
+                    ListFilterLogic.and => ListFilterLogic.not,
+                    ListFilterLogic.not => ListFilterLogic.or,
+                  };
+                }),
+                child: Chip(
+                  label: Text(switch (logic) {
+                    ListFilterLogic.or => 'OR',
+                    ListFilterLogic.and => 'AND',
+                    ListFilterLogic.not => 'NOT',
+                  }),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SingleChildScrollView(
+          scrollDirection: .horizontal,
+          child: Row(
+            children: [
+              for (final name in widget.names)
+                Padding(
+                  padding: const .only(right: 6),
+                  child: FilterChip(
+                    label: Text(name),
+                    selected: widget.filter.customListIn.contains(name),
+                    selectedColor: widget.filter.customListLogic == ListFilterLogic.not
+                        ? ColorScheme.of(context).errorContainer
+                        : null,
+                    checkmarkColor: widget.filter.customListLogic == ListFilterLogic.not
+                        ? ColorScheme.of(context).error
+                        : null,
+                    onSelected: (v) => setState(() {
+                      v
+                          ? widget.filter.customListIn.add(name)
+                          : widget.filter.customListIn.remove(name);
+                    }),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

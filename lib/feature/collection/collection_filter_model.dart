@@ -1,5 +1,8 @@
 import 'package:otraku/extension/enum_extension.dart';
+import 'package:otraku/feature/collection/collection_models.dart';
 import 'package:otraku/feature/media/media_models.dart';
+
+enum ListFilterLogic { or, and, not }
 
 class CollectionFilter {
   const CollectionFilter._({required this.search, required this.mediaFilter});
@@ -51,6 +54,13 @@ class CollectionMediaFilter {
     filter.tagIn.addAll(map['tagIn'] ?? const []);
     filter.tagNotIn.addAll(map['tagNotIn'] ?? const []);
 
+    filter.userStatusIn.addAll(
+      (map['userStatusIn'] ?? const []).map<ListStatus>((e) => ListStatus.values.getOrFirst(e)),
+    );
+    filter.userStatusNot = map['userStatusNot'] ?? false;
+    filter.customListIn.addAll(List<String>.from(map['customListIn'] ?? const []));
+    filter.customListLogic = ListFilterLogic.values.getOrFirst(map['customListLogic'] ?? 0);
+
     return filter;
   }
 
@@ -67,6 +77,10 @@ class CollectionMediaFilter {
   OriginCountry? country;
   bool? isPrivate;
   bool? hasNotes;
+  final userStatusIn = <ListStatus>[];
+  bool userStatusNot = false;
+  final customListIn = <String>[];
+  ListFilterLogic customListLogic = ListFilterLogic.or;
 
   bool get isActive =>
       statuses.isNotEmpty ||
@@ -79,7 +93,9 @@ class CollectionMediaFilter {
       startYearTo != null ||
       country != null ||
       isPrivate != null ||
-      hasNotes != null;
+      hasNotes != null ||
+      userStatusIn.isNotEmpty ||
+      customListIn.isNotEmpty;
 
   CollectionMediaFilter copy() => CollectionMediaFilter()
     ..sort = sort
@@ -94,7 +110,11 @@ class CollectionMediaFilter {
     ..startYearTo = startYearTo
     ..country = country
     ..isPrivate = isPrivate
-    ..hasNotes = hasNotes;
+    ..hasNotes = hasNotes
+    ..userStatusIn.addAll(userStatusIn)
+    ..userStatusNot = userStatusNot
+    ..customListIn.addAll(customListIn)
+    ..customListLogic = customListLogic;
 
   Map<String, dynamic> toPersistenceMap() => {
     'statuses': statuses.map((e) => e.index).toList(),
@@ -110,5 +130,9 @@ class CollectionMediaFilter {
     'country': country?.index,
     'isPrivate': isPrivate,
     'hasNotes': hasNotes,
+    'userStatusIn': userStatusIn.map((e) => e.index).toList(),
+    'userStatusNot': userStatusNot,
+    'customStatusIn': customListIn,
+    'customStatusLogic': customListLogic.index,
   };
 }

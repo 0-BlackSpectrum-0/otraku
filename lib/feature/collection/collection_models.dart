@@ -383,6 +383,7 @@ class Entry {
     required this.format,
     required this.releaseStatus,
     required this.listStatus,
+    required this.customLists,
     required this.nextEpisode,
     required this.airingAt,
     required this.createdAt,
@@ -426,6 +427,10 @@ class Entry {
       format: MediaFormat.from(map['media']['format']),
       releaseStatus: ReleaseStatus.from(map['media']['status']),
       listStatus: ListStatus.from(map['status']),
+      customLists: {
+        for (final e in (map['customLists'] as Map<String, dynamic>? ?? {}).entries)
+          e.key: e.value as bool,
+      },
       nextEpisode: map['media']['nextAiringEpisode']?['episode'],
       airingAt: DateTimeExtension.tryFromSecondsSinceEpoch(
         map['media']['nextAiringEpisode']?['airingAt'],
@@ -454,6 +459,7 @@ class Entry {
   final MediaFormat? format;
   final ReleaseStatus? releaseStatus;
   final ListStatus? listStatus;
+  final Map<String, bool> customLists;
   final int? nextEpisode;
   final DateTime? airingAt;
   final int? createdAt;

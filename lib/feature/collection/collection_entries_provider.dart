@@ -140,6 +140,23 @@ List<EntryList> _filter(
         continue;
       }
 
+      if (mediaFilter.userStatusIn.isNotEmpty) {
+        final match = mediaFilter.userStatusIn.contains(entry.listStatus);
+        if (mediaFilter.userStatusNot ? match : !match) continue;
+      }
+
+      if (mediaFilter.customListIn.isNotEmpty) {
+        final selected = mediaFilter.customListIn;
+        final entryList = entry.customLists;
+
+        final pass = switch (mediaFilter.customListLogic) {
+          ListFilterLogic.or => selected.any((l) => entryList[l] == true),
+          ListFilterLogic.and => selected.every((l) => entryList[l] == true),
+          ListFilterLogic.not => selected.every((l) => entryList[l] != true),
+        };
+        if (!pass) continue;
+      }
+
       entries.add(entry);
     }
 
