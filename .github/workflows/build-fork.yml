@@ -126,6 +126,5 @@ jobs:
             ### 📦 Changes in this build
             ${{ steps.changelog.outputs.CHANGELOG }}
 
-            ---
           files: build/app/outputs/flutter-apk/otraku-fork-${{ steps.version.outputs.FULL_VERSION }}.apk
           token: ${{ secrets.GITHUB_TOKEN }}
