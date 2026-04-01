@@ -57,7 +57,12 @@ class CollectionTopBarTrailingContent extends StatelessWidget {
                 child: SearchField(
                   debounce: Debounce(),
                   focusNode: focusNode,
-                  hint: ref.watch(collectionProvider(tag).select((s) => s.value?.listName ?? '')),
+                  hint: ref.watch(
+                    collectionProvider(tag).select((s) {
+                      final name = s.value?.listName ?? '';
+                      return name == 'All' ? 'Search' : name;
+                    }),
+                  ),
                   value: filter.search,
                   onChanged: (search) => ref
                       .read(collectionFilterProvider(tag).notifier)

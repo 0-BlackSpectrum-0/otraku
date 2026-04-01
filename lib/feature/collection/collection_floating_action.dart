@@ -4,9 +4,11 @@ import 'package:ionicons/ionicons.dart';
 import 'package:otraku/feature/collection/collection_models.dart';
 import 'package:otraku/feature/collection/collection_provider.dart';
 import 'package:otraku/feature/home/home_provider.dart';
-import 'package:otraku/widget/input/pill_selector.dart';
-import 'package:otraku/widget/swipe_switcher.dart';
+// import 'package:otraku/widget/input/pill_selector.dart';
+// import 'package:otraku/widget/swipe_switcher.dart';
 import 'package:otraku/widget/sheets.dart';
+import 'package:otraku/feature/collection/collection_filter_provider.dart';
+import 'package:otraku/feature/collection/collection_filter_view.dart';
 
 class CollectionFloatingAction extends StatelessWidget {
   CollectionFloatingAction(this.tag) : super(key: Key('${tag.userId}${tag.ofAnime}'));
@@ -28,46 +30,69 @@ class CollectionFloatingAction extends StatelessWidget {
             child: const Icon(Ionicons.enter_outline),
             onPressed: () => ref.read(homeProvider.notifier).expandCollection(tag.ofAnime),
           ),
-          FullCollection c => _fullCollectionActionButton(context, ref, c.lists, c.index),
+          FullCollection c => _filterButton(context, ref, c),
         };
       },
     );
   }
 
-  Widget _fullCollectionActionButton(
-    BuildContext context,
-    WidgetRef ref,
-    List<EntryList> lists,
-    int index,
-  ) {
-    final items = buildFullCollectionSelectionItems(context, lists);
-
+  Widget _filterButton(BuildContext context, WidgetRef ref, FullCollection c) {
     return FloatingActionButton(
-      tooltip: 'Lists',
+      tooltip: 'Filter',
       onPressed: () {
+        final filter = ref.read(collectionFilterProvider(tag));
+        final customListNames = c.lists.where((l) => l.status == null).map((l) => l.name).toList();
+
         showSheet(
           context,
-          SimpleSheet(
-            initialHeight: PillSelector.expectedMinHeight(lists.length),
-            builder: (context, scrollCtrl) => PillSelector(
-              scrollCtrl: scrollCtrl,
-              selected: index + 1,
-              items: items,
-              onTap: (index) {
-                ref.read(collectionProvider(tag).notifier).changeIndex(index - 1);
-                Navigator.pop(context);
-              },
-            ),
+          CollectionFilterView(
+            tag: tag,
+            filter: filter.mediaFilter,
+            onChanged: (mediaFilter) => ref
+                .read(collectionFilterProvider(tag).notifier)
+                .update((s) => s.copyWith(mediaFilter: mediaFilter)),
+            customListNames: customListNames,
           ),
         );
       },
-      child: SwipeSwitcher(
-        index: index + 1,
-        children: List.filled(lists.length + 1, const Icon(Ionicons.menu_outline)),
-        onChanged: (index) => ref.read(collectionProvider(tag).notifier).changeIndex(index - 1),
-      ),
+      child: const Icon(Ionicons.funnel_outline),
     );
   }
+
+  //   Widget _fullCollectionActionButton(
+  //     BuildContext context,
+  //     WidgetRef ref,
+  //     List<EntryList> lists,
+  //     int index,
+  //   ) {
+  //     final items = buildFullCollectionSelectionItems(context, lists);
+
+  //     return FloatingActionButton(
+  //       tooltip: 'Lists',
+  //       onPressed: () {
+  //         showSheet(
+  //           context,
+  //           SimpleSheet(
+  //             initialHeight: PillSelector.expectedMinHeight(lists.length),
+  //             builder: (context, scrollCtrl) => PillSelector(
+  //               scrollCtrl: scrollCtrl,
+  //               selected: index + 1,
+  //               items: items,
+  //               onTap: (index) {
+  //                 ref.read(collectionProvider(tag).notifier).changeIndex(index - 1);
+  //                 Navigator.pop(context);
+  //               },
+  //             ),
+  //           ),
+  //         );
+  //       },
+  //       child: SwipeSwitcher(
+  //         index: index + 1,
+  //         children: List.filled(lists.length + 1, const Icon(Ionicons.menu_outline)),
+  //         onChanged: (index) => ref.read(collectionProvider(tag).notifier).changeIndex(index - 1),
+  //       ),
+  //     );
+  //   }
 }
 
 List<Widget> buildFullCollectionSelectionItems(BuildContext context, List<EntryList> lists) {

@@ -18,11 +18,35 @@ final collectionEntriesProvider = Provider.autoDispose.family<List<EntryList>, C
       .watch(collectionProvider(tag).notifier)
       .ensureSorted(mediaFilter.sort, mediaFilter.previewSort);
 
-  final lists = switch (ref.watch(collectionProvider(tag)).unwrapPrevious().value) {
+  // final lists = switch (ref.watch(collectionProvider(tag)).unwrapPrevious().value) {
+  //   PreviewCollection c => [c.list],
+  //   FullCollection c => c.index < 0 ? c.lists : [c.lists[c.index]],
+  //   null => const <EntryList>[],
+  // };
+
+  final rawLists = switch (ref.watch(collectionProvider(tag)).unwrapPrevious().value) {
     PreviewCollection c => [c.list],
     FullCollection c => c.index < 0 ? c.lists : [c.lists[c.index]],
     null => const <EntryList>[],
   };
+
+  final isFiltering = mediaFilter.userStatusIn.isNotEmpty || mediaFilter.customListIn.isNotEmpty;
+  final isAllPage = switch (ref.watch(collectionProvider(tag)).unwrapPrevious().value) {
+    FullCollection c => c.index < 0,
+    _ => false,
+  };
+
+  final lists = isFiltering && isAllPage
+      ? [
+          EntryList.merged(
+            '',
+            {
+              for (final l in rawLists)
+                for (final e in l.entries) e.mediaId: e,
+            }.values.toList(),
+          ),
+        ]
+      : rawLists;
 
   final tags = ref.watch(tagsProvider).value;
 

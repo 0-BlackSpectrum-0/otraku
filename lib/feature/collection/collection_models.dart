@@ -115,6 +115,9 @@ class EntryList {
     required this.splitCompletedListFormat,
   });
 
+  factory EntryList.merged(String name, List<Entry> entries) =>
+      EntryList._(name: name, entries: entries, status: null, splitCompletedListFormat: null);
+
   factory EntryList(Map<String, dynamic> map, bool splitCompleted, ImageQuality imageQuality) {
     final status = !map['isCustomList'] ? ListStatus.from(map['status']) : null;
 
