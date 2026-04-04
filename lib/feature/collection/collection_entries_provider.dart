@@ -30,23 +30,35 @@ final collectionEntriesProvider = Provider.autoDispose.family<List<EntryList>, C
     null => const <EntryList>[],
   };
 
-  final isFiltering = mediaFilter.userStatusIn.isNotEmpty || mediaFilter.customListIn.isNotEmpty;
+  final isFiltering =
+      mediaFilter.userStatusIn.isNotEmpty || mediaFilter.customListSelection.isNotEmpty;
   final isAllPage = switch (ref.watch(collectionProvider(tag)).unwrapPrevious().value) {
     FullCollection c => c.index < 0,
     _ => false,
   };
 
-  final lists = isFiltering && isAllPage
-      ? [
+  final List<EntryList> lists;
+  if (isAllPage && isFiltering) {
+    final allEntries = {
+      for (final l in rawLists)
+        for (final e in l.entries) e.mediaId: e,
+    }.values.toList();
+
+    if (mediaFilter.userStatusIn.length > 1) {
+      // one section per selected status
+      lists = [
+        for (final status in mediaFilter.userStatusIn)
           EntryList.merged(
-            '',
-            {
-              for (final l in rawLists)
-                for (final e in l.entries) e.mediaId: e,
-            }.values.toList(),
+            status.label(null),
+            allEntries.where((e) => e.listStatus == status).toList(),
           ),
-        ]
-      : rawLists;
+      ];
+    } else {
+      lists = [EntryList.merged('', allEntries)];
+    }
+  } else {
+    lists = rawLists;
+  }
 
   final tags = ref.watch(tagsProvider).value;
 
@@ -169,18 +181,19 @@ List<EntryList> _filter(
         if (mediaFilter.userStatusNot ? match : !match) continue;
       }
 
-      if (mediaFilter.customListIn.isNotEmpty) {
-        final selected = mediaFilter.customListIn;
-        final entryList = entry.customLists;
-
-        final pass = switch (mediaFilter.customListLogic) {
-          ListFilterLogic.or => selected.any((l) => entryList[l] == true),
-          ListFilterLogic.and => selected.every((l) => entryList[l] == true),
-          ListFilterLogic.not => selected.every((l) => entryList[l] != true),
-        };
-        if (!pass) continue;
+      if (mediaFilter.customListSelection.isNotEmpty) {
+        final orChips = mediaFilter.customListSelection.entries
+            .where((e) => e.value == ListFilterLogic.or)
+            .toList();
+        final andNotPass = mediaFilter.customListSelection.entries
+            .where((e) => e.value != ListFilterLogic.or)
+            .every((e) {
+              final inList = entry.customLists[e.key] == true;
+              return e.value == ListFilterLogic.and ? inList : !inList;
+            });
+        final orPass = orChips.isEmpty || orChips.any((e) => entry.customLists[e.key] == true);
+        if (!andNotPass || !orPass) continue;
       }
-
       entries.add(entry);
     }
 

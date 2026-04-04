@@ -187,15 +187,15 @@ class _Content extends StatelessWidget {
                   .saveEntryProgress(oldEntry, setAsCurrent)
             : null;
 
-        final isFiltering = ref.watch(
-          collectionFilterProvider(tag).select(
-            (s) => s.mediaFilter.userStatusIn.isNotEmpty || s.mediaFilter.customListIn.isNotEmpty,
-          ),
-        );
+        final mediaFilter = ref.watch(collectionFilterProvider(tag).select((s) => s.mediaFilter));
+        final multiStatus = mediaFilter.userStatusIn.length > 1;
+
+        final isFiltering =
+            mediaFilter.userStatusIn.isNotEmpty || mediaFilter.customListSelection.isNotEmpty;
 
         final (collectionIsExpanded, showAllLists) = switch (collection) {
           PreviewCollection _ => (false, false),
-          FullCollection c => (true, c.index < 0 && isFiltering),
+          FullCollection c => (true, c.index < 0 && (isFiltering || multiStatus)),
         };
 
         final useSimpleGrid =

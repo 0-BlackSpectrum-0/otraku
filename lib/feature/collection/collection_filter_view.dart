@@ -285,73 +285,61 @@ class _CustomListSelector extends StatefulWidget {
 }
 
 class _CustomListSelectorState extends State<_CustomListSelector> {
+  void _cycle(String name) {
+    setState(() {
+      final current = widget.filter.customListSelection[name];
+      if (current == null) {
+        widget.filter.customListSelection[name] = ListFilterLogic.and;
+      } else if (current == ListFilterLogic.and) {
+        widget.filter.customListSelection[name] = ListFilterLogic.or;
+      } else if (current == ListFilterLogic.or) {
+        widget.filter.customListSelection[name] = ListFilterLogic.not;
+      } else {
+        widget.filter.customListSelection.remove(name);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final logic = widget.filter.customListLogic;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: .center,
-          children: [
-            Text('Custom Lists', style: TextTheme.of(context).labelMedium),
-            const SizedBox(width: Theming.offset),
-            // Cycle OR → AND → NOT on each tap
-            Tooltip(
-              preferBelow: false,
-              message: switch (widget.filter.customListLogic) {
-                ListFilterLogic.and => 'Show entries in all selected lists',
-                ListFilterLogic.or => 'Show entries in any selected lists',
-                ListFilterLogic.not => 'Hide entries in selected lists',
-              },
-              child: GestureDetector(
-                onTap: () => setState(() {
-                  widget.filter.customListLogic = switch (logic) {
-                    ListFilterLogic.or => ListFilterLogic.and,
-                    ListFilterLogic.and => ListFilterLogic.not,
-                    ListFilterLogic.not => ListFilterLogic.or,
-                  };
-                }),
-                child: Chip(
-                  label: Text(switch (logic) {
-                    ListFilterLogic.or => 'OR',
-                    ListFilterLogic.and => 'AND',
-                    ListFilterLogic.not => 'NOT',
-                  }),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ),
-          ],
-        ),
+        Text('Custom Lists', style: TextTheme.of(context).labelMedium),
         SingleChildScrollView(
-          scrollDirection: .horizontal,
+          scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               for (final name in widget.names)
-                Padding(
-                  padding: const .only(right: 6),
-                  child: FilterChip(
-                    label: Text(name),
-                    selected: widget.filter.customListIn.contains(name),
-                    selectedColor: widget.filter.customListLogic == ListFilterLogic.not
-                        ? ColorScheme.of(context).errorContainer
-                        : null,
-                    checkmarkColor: widget.filter.customListLogic == ListFilterLogic.not
-                        ? ColorScheme.of(context).error
-                        : null,
-                    onSelected: (v) => setState(() {
-                      v
-                          ? widget.filter.customListIn.add(name)
-                          : widget.filter.customListIn.remove(name);
-                    }),
-                  ),
-                ),
+                Padding(padding: const EdgeInsets.only(right: 6), child: _buildChip(name)),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildChip(String name) {
+    final logic = widget.filter.customListSelection[name];
+    final isNot = logic == ListFilterLogic.not;
+    final label = switch (logic) {
+      null => name,
+      ListFilterLogic.and => '&$name',
+      ListFilterLogic.or => '|$name',
+      ListFilterLogic.not => '!$name',
+    };
+
+    return GestureDetector(
+      onTap: () => _cycle(name),
+      child: Chip(
+        label: Text(label),
+        backgroundColor: logic == null
+            ? null
+            : isNot
+            ? ColorScheme.of(context).errorContainer
+            : ColorScheme.of(context).primaryContainer,
+        side: logic == null ? null : BorderSide.none,
+      ),
     );
   }
 }

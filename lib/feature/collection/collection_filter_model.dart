@@ -58,8 +58,10 @@ class CollectionMediaFilter {
       (map['userStatusIn'] ?? const []).map<ListStatus>((e) => ListStatus.values.getOrFirst(e)),
     );
     filter.userStatusNot = map['userStatusNot'] ?? false;
-    filter.customListIn.addAll(List<String>.from(map['customListIn'] ?? const []));
-    filter.customListLogic = ListFilterLogic.values.getOrFirst(map['customListLogic'] ?? 0);
+    final savedSelection = map['customListSelection'] as Map? ?? {};
+    for (final e in savedSelection.entries) {
+      filter.customListSelection[e.key] = ListFilterLogic.values.getOrFirst(e.value);
+    }
 
     return filter;
   }
@@ -79,8 +81,7 @@ class CollectionMediaFilter {
   bool? hasNotes;
   final userStatusIn = <ListStatus>[];
   bool userStatusNot = false;
-  final customListIn = <String>[];
-  ListFilterLogic customListLogic = ListFilterLogic.or;
+  final customListSelection = <String, ListFilterLogic>{};
 
   bool get isActive =>
       statuses.isNotEmpty ||
@@ -95,7 +96,7 @@ class CollectionMediaFilter {
       isPrivate != null ||
       hasNotes != null ||
       userStatusIn.isNotEmpty ||
-      customListIn.isNotEmpty;
+      customListSelection.isNotEmpty;
 
   CollectionMediaFilter copy() => CollectionMediaFilter()
     ..sort = sort
@@ -113,8 +114,7 @@ class CollectionMediaFilter {
     ..hasNotes = hasNotes
     ..userStatusIn.addAll(userStatusIn)
     ..userStatusNot = userStatusNot
-    ..customListIn.addAll(customListIn)
-    ..customListLogic = customListLogic;
+    ..customListSelection.addAll(customListSelection);
 
   Map<String, dynamic> toPersistenceMap() => {
     'statuses': statuses.map((e) => e.index).toList(),
@@ -132,7 +132,6 @@ class CollectionMediaFilter {
     'hasNotes': hasNotes,
     'userStatusIn': userStatusIn.map((e) => e.index).toList(),
     'userStatusNot': userStatusNot,
-    'customStatusIn': customListIn,
-    'customStatusLogic': customListLogic.index,
+    'customStatusSelection': customListSelection.map((k, v) => MapEntry(k, v.index)),
   };
 }
