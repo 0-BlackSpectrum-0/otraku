@@ -13,6 +13,14 @@ extension StringExtension on String {
     _ => null,
   };
 
+  static String? codeToCountry(String? code) => switch (code) {
+    'JP' => 'Japan',
+    'CN' => 'China',
+    'KR' => 'South Korea',
+    'TW' => 'Taiwan',
+    _ => null,
+  };
+
   static String? tryNoScreamingSnakeCase(dynamic str) =>
       str is String ? str.noScreamingSnakeCase : null;
 

@@ -5,6 +5,7 @@ import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
+import 'package:otraku/widget/anilist_link_handler.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/dialogs.dart';
@@ -18,8 +19,10 @@ class HtmlContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final processedText = _replaceAniListLinks(text);
+
     return HtmlWidget(
-      text,
+      processedText,
       renderMode: renderMode,
       textStyle: TextTheme.of(context).bodyMedium,
       onTapUrl: (url) {
@@ -109,10 +112,34 @@ class HtmlContent extends StatelessWidget {
           );
         }
 
+        if (element.localName == 'anilistcard') {
+          final category = element.attributes['category'] ?? '';
+          final idOrName = element.attributes['id'] ?? '';
+
+          if (category.isNotEmpty && idOrName.isNotEmpty) {
+            return AnilistLinkHandler(category: category, idOrName: idOrName);
+          }
+        }
+
         return null;
       },
     );
   }
+}
+
+String _replaceAniListLinks(String html) {
+  debugPrint('=== HTML BEFORE REPLACE ===\n$html');
+
+  final result = html.replaceAllMapped(
+    RegExp(
+      '<a[^>]*href=["\']https?://anilist\\.co/(anime|manga|character|staff|user)/(\\d+|[A-Za-z0-9_-]+)[^"\']*["\'][^>]*>.*?</a>',
+      caseSensitive: false,
+      dotAll: true,
+    ),
+    (m) => '<anilistcard category="${m.group(1)}" id="${m.group(2)}"></anilistcard>',
+  );
+  debugPrint('=== PROCESSED ===\n$result');
+  return result;
 }
 
 final _routeMatchers = {
