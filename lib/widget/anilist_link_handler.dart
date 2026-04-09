@@ -172,8 +172,30 @@ final anilistPreviewProvider = FutureProvider.autoDispose.family<_AnilistPreview
         );
 
       case 'user':
+        final id = int.tryParse(idOrName);
         final data = await repo.request(
-          r'''
+          id != null
+              ? r'''
+          query AniListPreview($userId: Int){
+            User(id: $userId) {
+              name
+              avatar { large }
+              createdAt
+              donatorBadge
+              donatorTier
+              moderatorRoles
+              statistics {
+                anime {
+                  count
+                }
+                manga {
+                  count
+                }
+              }
+            }
+          }
+        '''
+              : r'''
           query AniListPreview($name: String){
             User(name: $name) {
               name
@@ -193,7 +215,7 @@ final anilistPreviewProvider = FutureProvider.autoDispose.family<_AnilistPreview
             }
           }
         ''',
-          {'name': idOrName},
+          id != null ? {'userId': id} : {'name': idOrName},
         );
 
         final u = data['User'] as Map<String, dynamic>;
@@ -358,7 +380,7 @@ class AnilistLinkHandler extends ConsumerWidget {
                             ),
                           ],
                           //modRoles
-                          if (preview.modRoles != null) ...[
+                          if (preview.modRoles?.isNotEmpty ?? false) ...[
                             const SizedBox(width: Theming.offset / 5),
                             Tooltip(
                               message: preview.modRoles!.join(' · '),

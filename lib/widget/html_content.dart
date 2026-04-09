@@ -132,11 +132,19 @@ String _replaceAniListLinks(String html) {
 
   final result = html.replaceAllMapped(
     RegExp(
-      '<a[^>]*href=["\']https?://anilist\\.co/(anime|manga|character|staff|user)/(\\d+|[A-Za-z0-9_-]+)[^"\']*["\'][^>]*>.*?</a>',
+      '<a[^>]*href=["\']https?://anilist\\.co/(anime|manga|character|staff|user)/(\\d+|[A-Za-z0-9_-]+)[^"\']*["\'][^>]*>(.*?)</a>',
       caseSensitive: false,
       dotAll: true,
     ),
-    (m) => '<anilistcard category="${m.group(1)}" id="${m.group(2)}"></anilistcard>',
+    (m) {
+      final category = m.group(1)!;
+      final idOrName = m.group(2)!;
+      final linkText = m.group(3)!.trim();
+
+      if (!linkText.startsWith('http')) return m.group(0)!;
+
+      return '<anilistcard category="$category" id="$idOrName"></anilistcard>';
+    },
   );
   debugPrint('=== PROCESSED ===\n$result');
   return result;
