@@ -450,10 +450,10 @@ abstract class GqlQuery {
     ''';
 
   static const userPage = r'''
-    query Users($page: Int, $search: String) {
+    query Users($page: Int, $search: String, $sort: [UserSort], $isModerator: Boolean) {
       Page(page: $page) {
         pageInfo {hasNextPage}
-        users(search: $search) {
+        users(search: $search, sort: $sort, isModerator: $isModerator) {
         id 
         name 
         avatar {large} 
@@ -463,6 +463,16 @@ abstract class GqlQuery {
         donatorTier
         donatorBadge
         moderatorRoles
+        statistics{
+          anime{
+            count
+            minutesWatched
+          }
+          manga{
+            count
+            chaptersRead
+          }
+        }
         }
       }
     }

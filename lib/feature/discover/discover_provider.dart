@@ -170,6 +170,8 @@ class DiscoverNotifier extends AsyncNotifier<DiscoverItems> {
     final data = await ref.read(repositoryProvider).request(GqlQuery.userPage, {
       'page': oldValue.pages.next,
       if (filter.search.isNotEmpty) 'search': filter.search,
+      'sort': [filter.usersFilter.sort.value],
+      if (filter.usersFilter.isModerator != null) 'isModerator': filter.usersFilter.isModerator,
     });
 
     final items = <UserItem>[];

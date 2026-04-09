@@ -11,6 +11,10 @@ class UserItem {
     required this.donatorBadge,
     required this.donatorTier,
     required this.modRoles,
+    required this.animeStats,
+    required this.animeStatsMinutes,
+    required this.mangaStats,
+    required this.mangaStatsChapters,
   });
 
   factory UserItem(Map<String, dynamic> map) {
@@ -31,6 +35,10 @@ class UserItem {
       donatorBadge: map['donatorBadge'] ?? '',
       donatorTier: map['donatorTier'] ?? 0,
       modRoles: modRoles,
+      animeStats: map['statistics']['anime']['count'] as int,
+      animeStatsMinutes: map['statistics']['anime']['minutesWatched'] as int? ?? 0,
+      mangaStats: map['statistics']['manga']['count'] as int,
+      mangaStatsChapters: map['statistics']['manga']['chaptersRead'] as int? ?? 0,
     );
   }
   final int id;
@@ -42,4 +50,8 @@ class UserItem {
   final String? bannerUrl;
   bool isFollowed;
   final bool isFollower;
+  final int animeStats;
+  final int animeStatsMinutes;
+  final int mangaStats;
+  final int mangaStatsChapters;
 }
