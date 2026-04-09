@@ -10,6 +10,7 @@ class DiscoverFilter {
     required this.search,
     required this.mediaFilter,
     required this.hasBirthday,
+    required this.usersFilter,
     required this.reviewsFilter,
     required this.recommendationsFilter,
   });
@@ -17,6 +18,7 @@ class DiscoverFilter {
   DiscoverFilter(this.type, this.mediaFilter)
     : search = '',
       hasBirthday = false,
+      usersFilter = const DiscoverUsersFilter(),
       reviewsFilter = const ReviewsFilter(),
       recommendationsFilter = const DiscoverRecommendationsFilter();
 
@@ -24,6 +26,7 @@ class DiscoverFilter {
   final String search;
   final DiscoverMediaFilter mediaFilter;
   final bool hasBirthday;
+  final DiscoverUsersFilter usersFilter;
   final ReviewsFilter reviewsFilter;
   final DiscoverRecommendationsFilter recommendationsFilter;
 
@@ -32,6 +35,7 @@ class DiscoverFilter {
     String? search,
     DiscoverMediaFilter? mediaFilter,
     bool? hasBirthday,
+    DiscoverUsersFilter? usersFilter,
     ReviewsFilter? reviewsFilter,
     DiscoverRecommendationsFilter? recommendationsFilter,
   }) => DiscoverFilter._(
@@ -39,6 +43,7 @@ class DiscoverFilter {
     search: search ?? this.search,
     mediaFilter: mediaFilter ?? this.mediaFilter,
     hasBirthday: hasBirthday ?? this.hasBirthday,
+    usersFilter: usersFilter ?? this.usersFilter,
     reviewsFilter: reviewsFilter ?? this.reviewsFilter,
     recommendationsFilter: recommendationsFilter ?? this.recommendationsFilter,
   );
@@ -199,6 +204,35 @@ class DiscoverMediaFilter {
     'isAdult': isAdult,
     'isLicensed': isLicensed,
   };
+}
+
+class DiscoverUsersFilter {
+  const DiscoverUsersFilter({this.sort = UsersSort.searchMatch, this.isModerator});
+
+  final UsersSort sort;
+  final bool? isModerator;
+
+  bool get isActive => sort != UsersSort.searchMatch || isModerator != null;
+
+  DiscoverUsersFilter copyWith({UsersSort? sort, (bool?,)? isModerator}) => DiscoverUsersFilter(
+    sort: sort ?? this.sort,
+    isModerator: isModerator == null ? this.isModerator : isModerator.$1,
+  );
+}
+
+enum UsersSort {
+  id('ID'),
+  idDesc('ID_DESC'),
+  username('USERNAME'),
+  usernameDesc('USERNAME_DESC'),
+  watchedTime('WATCHED_TIME'),
+  watchedTimeDesc('WATCHED_TIME_DESC'),
+  chaptersRead('CHAPTERS_READ'),
+  chaptersReadDesc('CHAPTERS_READ_DESC'),
+  searchMatch('SEARCH_MATCH');
+
+  const UsersSort(this.value);
+  final String value;
 }
 
 class DiscoverRecommendationsFilter {

@@ -5,14 +5,12 @@ import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/user/user_item_model.dart';
-//import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
 import 'package:otraku/util/graphql.dart';
 import 'package:otraku/extension/future_extension.dart';
-import 'package:otraku/widget/text_rail.dart';
 
 class UserItemGrid extends StatelessWidget {
   const UserItemGrid(this.items, {required this.highContrast});
@@ -45,12 +43,6 @@ class __TileState extends State<_Tile> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    final textRailRoles = <String, bool>{};
-    if (item.modRoles.isNotEmpty) {
-      for (final i in item.modRoles) {
-        textRailRoles[i] = false;
-      }
-    }
 
     return ClipRRect(
       borderRadius: Theming.borderRadiusSmall,
@@ -60,7 +52,7 @@ class __TileState extends State<_Tile> {
           borderRadius: Theming.borderRadiusSmall,
           onTap: () => context.push(Routes.user(item.id, item.imageUrl)),
           child: SizedBox(
-            height: 120,
+            height: 100,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -90,63 +82,118 @@ class __TileState extends State<_Tile> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.all(Theming.offset),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.all(Theming.radiusSmall),
-                        child: CachedImage(item.imageUrl, width: 80, height: 80),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Theming.radiusSmall,
+                        bottomLeft: Theming.radiusSmall,
                       ),
+                      child: CachedImage(item.imageUrl, width: 100, height: 100),
                     ),
                     Expanded(
                       child: Align(
                         alignment: .topLeft,
                         child: Padding(
-                          padding: EdgeInsets.only(left: Theming.offset, top: Theming.offset),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: Theming.offset / 2,
+                            vertical: Theming.offset / 2,
+                          ),
                           child: Column(
                             crossAxisAlignment: .start,
                             children: [
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  left: Theming.offset / 2,
-                                  right: Theming.offset / 2,
-                                  top: Theming.offset / 2,
-                                ),
-                                child: Text(
-                                  item.name,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                  style: TextStyle(
-                                    color: ColorScheme.of(context).onSurface,
-                                    fontSize: Theming.fontBig,
-                                  ),
-                                ),
-                                // ),
-                              ),
-                              if (item.donatorTier > 0)
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                    left: Theming.offset / 2,
-                                    right: Theming.offset / 2,
-                                    bottom: Theming.offset / 2,
-                                  ),
-                                  child: Text(
-                                    item.donatorBadge,
+                              Row(
+                                mainAxisSize: .min,
+                                children: [
+                                  Text(
+                                    item.name,
                                     overflow: TextOverflow.ellipsis,
-                                    maxLines: 2,
-                                    style: TextTheme.of(
-                                      context,
-                                    ).labelMedium?.copyWith(color: ColorScheme.of(context).primary),
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      color: ColorScheme.of(context).onSurface,
+                                      fontSize: Theming.fontBig,
+                                    ),
                                   ),
-                                ),
-
-                              Padding(
-                                padding: Theming.paddingAll / 2,
-                                child: TextRail(
-                                  textRailRoles,
-                                  maxLines: 2,
-                                  style: TextTheme.of(context).labelMedium,
-                                ),
+                                  if (item.modRoles.isNotEmpty) ...[
+                                    const SizedBox(width: Theming.offset / 5),
+                                    Tooltip(
+                                      message: item.modRoles.join(' · '),
+                                      preferBelow: false,
+                                      child: Icon(Icons.verified_rounded, size: 15),
+                                    ),
+                                  ],
+                                  if (item.donatorTier > 0) ...[
+                                    const SizedBox(width: Theming.offset / 5),
+                                    Tooltip(
+                                      message: item.donatorBadge,
+                                      preferBelow: false,
+                                      child: Flexible(
+                                        child: Text(
+                                          item.donatorBadge,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          style: TextTheme.of(context).labelSmall?.copyWith(
+                                            color: ColorScheme.of(context).primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
+
+                              //stats
+                              if (item.animeStats > 0 ||
+                                  item.mangaStats > 0 ||
+                                  item.animeStatsMinutes > 0 ||
+                                  item.mangaStatsChapters > 0) ...[
+                                Spacer(),
+                                Column(
+                                  children: [
+                                    if (item.animeStats > 0 || item.animeStatsMinutes > 0) ...[
+                                      Row(
+                                        children: [
+                                          Icon(Ionicons.film, size: 15),
+                                          const SizedBox(width: 3),
+                                          if (item.animeStats > 0)
+                                            Text(
+                                              '${item.animeStats}',
+                                              style: TextTheme.of(context).labelSmall,
+                                              maxLines: 1,
+                                            ),
+                                          if (item.animeStats > 0 && item.animeStatsMinutes > 0)
+                                            Text(' · '),
+                                          if (item.animeStatsMinutes > 0)
+                                            Text(
+                                              formatMinutes(item.animeStatsMinutes),
+                                              style: TextTheme.of(context).labelSmall,
+                                              maxLines: 1,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                    if (item.mangaStats > 0 && item.mangaStatsChapters > 0) ...[
+                                      Row(
+                                        children: [
+                                          Icon(Ionicons.book, size: 15),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            '${item.mangaStats}',
+                                            style: TextTheme.of(context).labelSmall,
+                                            maxLines: 1,
+                                          ),
+                                          if (item.mangaStats > 0 && item.mangaStatsChapters > 0)
+                                            Text(' · '),
+                                          if (item.mangaStatsChapters > 0)
+                                            Text(
+                                              formatCount(item.mangaStatsChapters),
+                                              style: TextTheme.of(context).labelSmall,
+                                              maxLines: 1,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -161,6 +208,29 @@ class __TileState extends State<_Tile> {
         ),
       ),
     );
+  }
+
+  static String formatMinutes(int minutes) {
+    if (minutes < 60) return '$minutes minutes';
+    final hours = minutes / 60;
+    if (hours < 24) {
+      return '${hours.toStringAsFixed(hours.truncateToDouble() == hours ? 0 : 1)} hours';
+    }
+    final days = hours / 24;
+    return '${days.toStringAsFixed(days.truncateToDouble() == days ? 0 : 1)} days';
+  }
+
+  static String formatCount(int count) {
+    if (count < 1000) {
+      if (count <= 1) return '$count chapter';
+      return '$count chapters';
+    }
+    if (count < 1000000) {
+      final k = count / 1000;
+      return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1)}K chapters';
+    }
+    final m = count / 1000000;
+    return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1)}M chapters';
   }
 
   Future<Object?> _toggleFollow() {

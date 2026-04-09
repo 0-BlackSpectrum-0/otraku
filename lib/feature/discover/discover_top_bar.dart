@@ -6,6 +6,7 @@ import 'package:otraku/feature/discover/discover_filter_model.dart';
 import 'package:otraku/feature/discover/discover_filter_provider.dart';
 import 'package:otraku/feature/discover/discover_media_filter_view.dart';
 import 'package:otraku/feature/discover/discover_recommendations_filter_sheet.dart';
+import 'package:otraku/feature/discover/discover_users_filter_sheet.dart';
 import 'package:otraku/feature/review/reviews_filter_sheet.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/util/routes.dart';
@@ -71,6 +72,15 @@ class DiscoverTopBarTrailingContent extends StatelessWidget {
                         )
                       : _filterIcon(context, ref, filter),
                 .character || .staff => _BirthdayFilter(ref),
+                .user =>
+                  filter.usersFilter.isActive
+                      ? Badge(
+                          smallSize: 10,
+                          alignment: .topLeft,
+                          backgroundColor: ColorScheme.of(context).primary,
+                          child: _usersFilterIcon(context, ref, filter, highContrast),
+                        )
+                      : _usersFilterIcon(context, ref, filter, highContrast),
                 .review => IconButton(
                   tooltip: 'Filter',
                   icon: const Icon(Ionicons.funnel_outline),
@@ -127,6 +137,31 @@ class DiscoverTopBarTrailingContent extends StatelessWidget {
               .read(discoverFilterProvider.notifier)
               .update((s) => s.copyWith(mediaFilter: mediaFilter)),
         ),
+      ),
+    );
+  }
+
+  Widget _usersFilterIcon(
+    BuildContext context,
+    WidgetRef ref,
+    DiscoverFilter filter,
+    bool highContrast,
+  ) {
+    return IconButton(
+      tooltip: 'Filter',
+      icon: const Icon(Ionicons.funnel_outline),
+      onPressed: () => showUsersFilterSheet(
+        context: context,
+        filter: filter.usersFilter,
+        highContrast: highContrast,
+        onDone: (usersFilter) {
+          final discoverFilter = ref.read(discoverFilterProvider);
+          if (usersFilter != discoverFilter.usersFilter) {
+            ref
+                .read(discoverFilterProvider.notifier)
+                .update((s) => s.copyWith(usersFilter: usersFilter));
+          }
+        },
       ),
     );
   }
