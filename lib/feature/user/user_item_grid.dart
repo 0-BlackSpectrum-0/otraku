@@ -52,7 +52,7 @@ class __TileState extends State<_Tile> {
           borderRadius: Theming.borderRadiusSmall,
           onTap: () => context.push(Routes.user(item.id, item.imageUrl)),
           child: SizedBox(
-            height: 100,
+            height: 105,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -87,7 +87,7 @@ class __TileState extends State<_Tile> {
                         topLeft: Theming.radiusSmall,
                         bottomLeft: Theming.radiusSmall,
                       ),
-                      child: CachedImage(item.imageUrl, width: 100, height: 100),
+                      child: CachedImage(item.imageUrl, width: 105, height: 105),
                     ),
                     Expanded(
                       child: Align(
@@ -100,8 +100,8 @@ class __TileState extends State<_Tile> {
                           child: Column(
                             crossAxisAlignment: .start,
                             children: [
-                              Row(
-                                mainAxisSize: .min,
+                              Wrap(
+                                crossAxisAlignment: .center,
                                 children: [
                                   Text(
                                     item.name,
@@ -109,7 +109,7 @@ class __TileState extends State<_Tile> {
                                     maxLines: 1,
                                     style: TextStyle(
                                       color: ColorScheme.of(context).onSurface,
-                                      fontSize: Theming.fontBig,
+                                      fontSize: Theming.fontMedium,
                                     ),
                                   ),
                                   if (item.modRoles.isNotEmpty) ...[
@@ -125,14 +125,12 @@ class __TileState extends State<_Tile> {
                                     Tooltip(
                                       message: item.donatorBadge,
                                       preferBelow: false,
-                                      child: Flexible(
-                                        child: Text(
-                                          item.donatorBadge,
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                          style: TextTheme.of(context).labelSmall?.copyWith(
-                                            color: ColorScheme.of(context).primary,
-                                          ),
+                                      child: Text(
+                                        item.donatorBadge,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        style: TextTheme.of(context).labelSmall?.copyWith(
+                                          color: ColorScheme.of(context).primary,
                                         ),
                                       ),
                                     ),
