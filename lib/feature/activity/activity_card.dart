@@ -16,6 +16,7 @@ import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
 import 'package:otraku/widget/dialogs.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:otraku/widget/timestamp.dart';
 
@@ -377,6 +378,15 @@ class _ActivityFooterState extends State<ActivityFooter> {
                   : const Icon(Ionicons.notifications_off_outline),
               onTap: _toggleSubscription,
             ),
+            if (activity.text.isNotEmpty)
+              ListTile(
+                title: const Text('View Raw'),
+                leading: const Icon(Icons.code_rounded),
+                onTap: () {
+                  Navigator.pop(context);
+                  showRawMarkdown(context, activity.text);
+                },
+              ),
           ]);
         },
       ),

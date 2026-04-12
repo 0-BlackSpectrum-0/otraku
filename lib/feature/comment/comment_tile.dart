@@ -8,6 +8,7 @@ import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:otraku/widget/timestamp.dart';
 
@@ -83,6 +84,18 @@ class CommentTile extends StatelessWidget {
                     child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
                   ),
                 const Spacer(),
+                SizedBox(
+                  height: 40,
+                  child: Tooltip(
+                    message: 'View Raw',
+                    preferBelow: false,
+                    child: InkResponse(
+                      radius: Theming.radiusSmall.x,
+                      onTap: () => showRawMarkdown(context, comment.text),
+                      child: const Icon(Icons.code_rounded, size: Theming.iconSmall),
+                    ),
+                  ),
+                ),
                 if (interaction != null) ...[
                   if (comment.userId != viewerId)
                     Tooltip(

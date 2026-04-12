@@ -14,6 +14,7 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
 import 'package:otraku/widget/dialogs.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:otraku/widget/timestamp.dart';
 
@@ -88,7 +89,7 @@ class ReplyCard extends StatelessWidget {
                                   ),
                                 ),
                               )
-                            : _ReplyMentionButton(ref, activityId, reply.authorName),
+                            : _ReplyMentionButton(ref, activityId, reply.authorName, reply.text),
                       ),
                     ),
                     _ReplyLikeButton(reply: reply, toggleLike: toggleLike),
@@ -146,36 +147,58 @@ class ReplyCard extends StatelessWidget {
             },
           ),
         ),
+        ListTile(
+          title: const Text('View Raw'),
+          leading: const Icon(Icons.code_rounded),
+          onTap: () {
+            Navigator.pop(context);
+            showRawMarkdown(context, reply.text);
+          },
+        ),
       ]),
     );
   }
 }
 
 class _ReplyMentionButton extends StatelessWidget {
-  const _ReplyMentionButton(this.ref, this.activityId, this.username);
+  const _ReplyMentionButton(this.ref, this.activityId, this.username, this.rawText);
 
   final WidgetRef ref;
   final int activityId;
   final String username;
+  final String rawText;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
-      child: Tooltip(
-        message: 'Reply',
-        child: InkResponse(
-          radius: Theming.radiusSmall.x,
-          onTap: () => showSheet(
-            context,
-            CompositionView(
-              defaultText: '@$username ',
-              tag: ActivityReplyCompositionTag(id: null, activityId: activityId),
-              onSaved: (map) => ref.read(activityProvider(activityId).notifier).appendReply(map),
+      child: Row(
+        children: [
+          Tooltip(
+            message: 'View Raw',
+            child: InkResponse(
+              radius: Theming.radiusSmall.x,
+              onTap: () => showRawMarkdown(context, rawText),
+              child: const Icon(Icons.code_rounded, size: Theming.iconSmall),
             ),
           ),
-          child: const Icon(Icons.reply_rounded, size: Theming.iconSmall),
-        ),
+          Tooltip(
+            message: 'Reply',
+            child: InkResponse(
+              radius: Theming.radiusSmall.x,
+              onTap: () => showSheet(
+                context,
+                CompositionView(
+                  defaultText: '@$username ',
+                  tag: ActivityReplyCompositionTag(id: null, activityId: activityId),
+                  onSaved: (map) =>
+                      ref.read(activityProvider(activityId).notifier).appendReply(map),
+                ),
+              ),
+              child: const Icon(Icons.reply_rounded, size: Theming.iconSmall),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -23,6 +23,7 @@ import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
 import 'package:otraku/widget/layout/navigation_tool.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/loaders.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/shadowed_overflow_list.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:otraku/widget/timestamp.dart';
@@ -319,6 +320,14 @@ class _Content extends StatelessWidget {
             child: Row(
               spacing: Theming.offset,
               children: [
+                Tooltip(
+                  message: 'View Raw',
+                  child: InkResponse(
+                    radius: Theming.radiusSmall.x,
+                    onTap: () => showRawMarkdown(context, thread.info.body),
+                    child: const Icon(Icons.code_rounded, size: Theming.iconSmall),
+                  ),
+                ),
                 if (info.isPinned)
                   Tooltip(
                     message: 'Pinned',
