@@ -10,11 +10,14 @@ import 'package:otraku/widget/sheets.dart';
 
 enum _DateMode { single, range, before, after }
 
-void showFeedDateFilterSheet(BuildContext context, WidgetRef ref) {
-  final current = ref.read(activitiesFilterProvider(HomeActivitiesTag.instance));
-  if (current is! HomeActivitiesFilter) return;
+void showFeedDateFilterSheet(BuildContext context, WidgetRef ref, ActivitiesTag tag) {
+  final current = ref.read(activitiesFilterProvider(tag));
 
-  ActivityDateFilter result = current.dateFilter;
+  ActivityDateFilter result = switch (current) {
+    HomeActivitiesFilter f => f.dateFilter,
+    UserActivitiesFilter f => f.dateFilter,
+    _ => ActivityDateNone(),
+  };
 
   showSheet(
     context,
@@ -27,10 +30,15 @@ void showFeedDateFilterSheet(BuildContext context, WidgetRef ref) {
       ),
     ),
   ).then((_) {
-    final notifier = ref.read(activitiesFilterProvider(HomeActivitiesTag.instance).notifier);
-    final filter = ref.read(activitiesFilterProvider(HomeActivitiesTag.instance));
-    if (filter is HomeActivitiesFilter) {
-      notifier.state = filter.copyWith(dateFilter: result);
+    final notifier = ref.read(activitiesFilterProvider(tag).notifier);
+    final filter = ref.read(activitiesFilterProvider(tag));
+    switch (filter) {
+      case HomeActivitiesFilter f:
+        notifier.state = f.copyWith(dateFilter: result);
+      case UserActivitiesFilter f:
+        notifier.state = f.copyWithTypeIn(dateFilter: result);
+      default:
+        break;
     }
   });
 }

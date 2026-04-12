@@ -67,7 +67,7 @@ class FeedTopBarTrailingContent extends StatelessWidget {
                 style: isFiltered ? TextStyle(color: ColorScheme.of(context).onPrimary) : null,
               ),
               backgroundColor: isFiltered ? ColorScheme.of(context).primary : null,
-              onPressed: () => showFeedDateFilterSheet(context, ref),
+              onPressed: () => showFeedDateFilterSheet(context, ref, HomeActivitiesTag.instance),
             ),
             IconButton(
               tooltip: 'Forum',

@@ -15,8 +15,9 @@ class HomeActivitiesFilter extends ActivitiesFilter {
     this.onFollowing,
     this.withViewerActivities,
     this.typeIn,
-    this.dateFilter,
-  );
+    this.dateFilter, [
+    this.hasRepliesOrTypeText = false,
+  ]);
 
   factory HomeActivitiesFilter.empty() => const HomeActivitiesFilter(null, false, false, [
     .animeStatus,
@@ -43,28 +44,37 @@ class HomeActivitiesFilter extends ActivitiesFilter {
   final bool withViewerActivities;
   final List<ActivityType> typeIn;
   final ActivityDateFilter dateFilter;
+  final bool hasRepliesOrTypeText;
 
   @override
-  HomeActivitiesFilter copy() =>
-      HomeActivitiesFilter(viewerId, onFollowing, withViewerActivities, [...typeIn], dateFilter);
+  HomeActivitiesFilter copy() => HomeActivitiesFilter(
+    viewerId,
+    onFollowing,
+    withViewerActivities,
+    [...typeIn],
+    dateFilter,
+    hasRepliesOrTypeText,
+  );
 
   HomeActivitiesFilter copyWith({
     bool? onFollowing,
     bool? withViewerActivities,
     List<ActivityType>? typeIn,
     ActivityDateFilter? dateFilter,
+    bool? hasRepliesOrTypeText,
   }) => HomeActivitiesFilter(
     viewerId,
     onFollowing ?? this.onFollowing,
     withViewerActivities ?? this.withViewerActivities,
     typeIn ?? this.typeIn,
     dateFilter ?? this.dateFilter,
+    hasRepliesOrTypeText ?? this.hasRepliesOrTypeText,
   );
 
   @override
   Map<String, dynamic> toGraphQlVariables() => {
     'isFollowing': onFollowing,
-    if (!onFollowing) 'hasRepliesOrText': true,
+    if (hasRepliesOrTypeText) 'hasRepliesOrText': true,
     if (!withViewerActivities && viewerId != null) 'userIdNot': viewerId,
     'typeIn': typeIn.map((t) => t.value).toList(),
     ...dateFilter.toGraphQlVariables(),
@@ -78,21 +88,29 @@ class HomeActivitiesFilter extends ActivitiesFilter {
 }
 
 class UserActivitiesFilter extends ActivitiesFilter {
-  const UserActivitiesFilter(this.userId, this.typeIn);
+  const UserActivitiesFilter(
+    this.userId,
+    this.typeIn, [
+    this.dateFilter = const ActivityDateNone(),
+  ]);
 
   final int userId;
   final List<ActivityType> typeIn;
+  final ActivityDateFilter dateFilter;
 
   @override
-  UserActivitiesFilter copy() => UserActivitiesFilter(userId, [...typeIn]);
+  UserActivitiesFilter copy() => UserActivitiesFilter(userId, [...typeIn], dateFilter);
 
-  UserActivitiesFilter copyWithTypeIn(List<ActivityType> typeIn) =>
-      UserActivitiesFilter(userId, typeIn);
+  UserActivitiesFilter copyWithTypeIn({
+    List<ActivityType>? typeIn,
+    ActivityDateFilter? dateFilter,
+  }) => UserActivitiesFilter(userId, typeIn ?? this.typeIn, dateFilter ?? this.dateFilter);
 
   @override
   Map<String, dynamic> toGraphQlVariables() => {
     'userId': userId,
     'typeIn': typeIn.map((t) => t.value).toList(),
+    ...dateFilter.toGraphQlVariables(),
   };
 }
 

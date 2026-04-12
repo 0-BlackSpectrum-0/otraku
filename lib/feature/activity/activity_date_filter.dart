@@ -44,10 +44,15 @@ class ActivityDateRange extends ActivityDateFilter {
   String get label => '${ActivityDateFilter._fmt(from)} -${ActivityDateFilter._fmt(to)}';
 
   @override
-  Map<String, dynamic> toGraphQlVariables() => {
-    'createdBefore': DateTime(from.year, from.month, from.day).secondsSinceEpoch,
-    'createdAfter': DateTime(to.year, to.month, to.day, 23, 59, 59).secondsSinceEpoch,
-  };
+  Map<String, dynamic> toGraphQlVariables() {
+    final start = from.isBefore(to) ? from : to;
+    final end = from.isBefore(to) ? to : from;
+
+    return {
+      'createdAfter': DateTime(start.year, start.month, start.day).secondsSinceEpoch,
+      'createdBefore': DateTime(end.year, end.month, end.day, 23, 59, 59).secondsSinceEpoch,
+    };
+  }
 }
 
 class ActivityDateBefore extends ActivityDateFilter {

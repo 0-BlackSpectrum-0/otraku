@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:otraku/extension/future_extension.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
@@ -47,16 +48,30 @@ class ActivitiesNotifier extends AsyncNotifier<Paged<Activity>> {
   }
 
   Future<Paged<Activity>> _fetch(Paged<Activity> oldState) async {
-    final data = await ref.read(repositoryProvider).request(GqlQuery.activityPage, {
-      'page': oldState.next,
-      ..._filter.toGraphQlVariables(),
-    });
+    final variables = {'page': oldState.next, ..._filter.toGraphQlVariables()};
+    final data = await ref.read(repositoryProvider).request(GqlQuery.activityPage, variables);
+
+    debugPrint('Queries: $variables');
+
+    for (final a in data['Page']['activities']) {
+      debugPrint('Returned activity id: ${a['id']} createdAt: ${a['createdAt']}');
+    }
+
+    final createdAfter = variables['createdAfter'] as int?;
+    final createdBefore = variables['createdBefore'] as int?;
 
     final imageQuality = ref.read(persistenceProvider).options.imageQuality;
 
     final items = <Activity>[];
     for (final a in data['Page']['activities']) {
       if (_lastId != null && a['id'] >= _lastId) continue;
+
+      if (createdAfter != null || createdBefore != null) {
+        final createdAt = a['createdAt'] as int?;
+        if (createdAt == null) continue;
+        if (createdAfter != null && createdAt < createdAfter) continue;
+        if (createdBefore != null && createdAt > createdBefore) continue;
+      }
 
       final item = Activity.maybe(a, _viewerId, imageQuality);
       if (item != null) items.add(item);

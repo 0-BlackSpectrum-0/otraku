@@ -71,7 +71,8 @@ class _FilterListState extends State<_FilterList> {
             },
           ),
         ...switch (_filter) {
-          UserActivitiesFilter _ || MediaActivitiesFilter _ => const [],
+          MediaActivitiesFilter _ => const [],
+          UserActivitiesFilter _ => const [],
           HomeActivitiesFilter filter => [
             const Divider(),
             CheckboxListTile(
@@ -83,6 +84,16 @@ class _FilterListState extends State<_FilterList> {
                 widget.onChanged(_filter.copy());
               },
             ),
+            CheckboxListTile(
+              title: const Text('Has Replies Or Text'),
+              value: filter.hasRepliesOrTypeText,
+              onChanged: (v) {
+                setState(() => _filter = filter.copyWith(hasRepliesOrTypeText: v!));
+
+                widget.onChanged(_filter.copy());
+              },
+            ),
+
             Padding(
               padding: const .only(
                 top: Theming.offset,
