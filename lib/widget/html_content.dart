@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/dialogs.dart';
 import 'package:otraku/widget/sheets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HtmlContent extends StatelessWidget {
   const HtmlContent(this.text, {this.renderMode = RenderMode.column});
@@ -22,7 +24,8 @@ class HtmlContent extends StatelessWidget {
     final processedText = _replaceAniListLinks(text);
 
     return HtmlWidget(
-      processedText,
+      fixMalformedImageUrls(processedText),
+      factoryBuilder: () => _HtmlFactory(),
       renderMode: renderMode,
       textStyle: TextTheme.of(context).bodyMedium,
       onTapUrl: (url) {
@@ -159,3 +162,105 @@ final _routeMatchers = {
   RegExp(r'anilist.co\/review\/(\d+)'): (String id) => Routes.review(int.parse(id)),
   RegExp(r'anilist.co\/activity\/(\d+)'): (String id) => Routes.activity(int.parse(id)),
 };
+
+String fixMalformedImageUrls(String html) {
+  return html.replaceAllMapped(
+    RegExp(
+      r'<img([^>]*?)src="([^"]*?)"([^>]*?)/>([^<]*?)(\.(?:png|jpg|jpeg|gif|webp))\)?',
+      caseSensitive: false,
+    ),
+    (m) {
+      final before = m.group(1)!;
+      final url = m.group(2)!;
+      final after = m.group(3)!;
+      final ext = m.group(5)!;
+      return '<img${before}src="${url}${ext}"${after}/>';
+    },
+  );
+}
+
+class _HtmlFactory extends WidgetFactory {
+  @override
+  Widget? buildImageWidget(BuildTree tree, ImageSource src) {
+    final url = src.url;
+    if (!url.startsWith('http')) {
+      return super.buildImageWidget(tree, src);
+    }
+
+    final isGif = url.toLowerCase().endsWith('.gif');
+    final proxiedUrl = 'https://wsrv.nl/?url=${Uri.encodeComponent(url)}';
+
+    final imageWidget = CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.contain,
+      errorWidget: (context, error, _) {
+        if (isGif) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.network(proxiedUrl, fit: BoxFit.contain),
+              Tooltip(
+                message: 'Can\'t load the GIF',
+                preferBelow: false,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: 40,
+                  color: ColorScheme.of(context).onError,
+                ),
+              ),
+            ],
+          );
+        } else {
+          return CachedNetworkImage(
+            imageUrl: proxiedUrl,
+            fit: BoxFit.contain,
+            errorWidget: (context, error, _) => Tooltip(
+              message: 'Can\'t load the image',
+              preferBelow: false,
+              child: Icon(
+                Icons.broken_image_outlined,
+                size: 40,
+                color: ColorScheme.of(context).onError,
+              ),
+            ),
+          );
+        }
+      },
+    );
+
+    final anchor = tree.element.parent;
+    final href = anchor?.localName == 'a' ? anchor?.attributes['href'] : null;
+
+    if (href != null) {
+      return Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          imageWidget,
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: Builder(
+              builder: (context) => Tooltip(
+                message: href,
+                preferBelow: false,
+                child: InkResponse(
+                  onTap: () => launchUrl(Uri.parse(href)),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: ColorScheme.of(context).surface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(Icons.link, color: ColorScheme.of(context).onSurface, size: 16),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return imageWidget;
+  }
+}
