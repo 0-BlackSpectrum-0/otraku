@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
+import 'package:otraku/feature/activity/activities_filter_model.dart';
+import 'package:otraku/feature/activity/activities_filter_provider.dart';
 import 'package:otraku/feature/activity/activities_model.dart';
+import 'package:otraku/feature/activity/activity_date_filter.dart';
 import 'package:otraku/feature/activity/activity_filter_sheet.dart';
+import 'package:otraku/feature/feed/feed_date_filter_sheet.dart';
 import 'package:otraku/feature/settings/settings_provider.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/util/routes.dart';
@@ -41,8 +45,30 @@ class FeedTopBarTrailingContent extends StatelessWidget {
           );
         }
 
+        final dateFilter = ref.watch(
+          activitiesFilterProvider(HomeActivitiesTag.instance).select((f) {
+            if (f is HomeActivitiesFilter) return f.dateFilter;
+            return const ActivityDateNone() as ActivityDateFilter;
+          }),
+        );
+        final isFiltered = dateFilter is! ActivityDateNone;
+
         return Row(
           children: [
+            ActionChip(
+              visualDensity: .compact,
+              avatar: Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: isFiltered ? ColorScheme.of(context).onPrimary : null,
+              ),
+              label: Text(
+                dateFilter.label,
+                style: isFiltered ? TextStyle(color: ColorScheme.of(context).onPrimary) : null,
+              ),
+              backgroundColor: isFiltered ? ColorScheme.of(context).primary : null,
+              onPressed: () => showFeedDateFilterSheet(context, ref, HomeActivitiesTag.instance),
+            ),
             IconButton(
               tooltip: 'Forum',
               icon: const Icon(Ionicons.chatbubbles_outline),

@@ -627,11 +627,11 @@ abstract class GqlQuery {
   static const activityPage =
       r'''
     query Activities($userId: Int, $userIdNot: Int, $mediaId: Int, $page: Int = 1, $isFollowing: Boolean,
-        $hasRepliesOrText: Boolean, $typeIn: [ActivityType], $createdBefore: Int) {
+        $hasRepliesOrText: Boolean, $typeIn: [ActivityType], $createdBefore: Int, $createdAfter: Int) {
       Page(page: $page) {
         pageInfo {hasNextPage}
         activities(userId: $userId, userId_not: $userIdNot, mediaId: $mediaId, isFollowing: $isFollowing,
-            hasRepliesOrTypeText: $hasRepliesOrText, type_in: $typeIn, createdAt_lesser: $createdBefore, sort: [PINNED, ID_DESC]) {
+            hasRepliesOrTypeText: $hasRepliesOrText, type_in: $typeIn, createdAt_lesser: $createdBefore, createdAt_greater: $createdAfter, sort: [PINNED, ID_DESC]) {
           ... on TextActivity {...textActivity}
           ... on ListActivity {...listActivity}
           ... on MessageActivity {...messageActivity}

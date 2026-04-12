@@ -1,4 +1,5 @@
 import 'package:otraku/extension/enum_extension.dart';
+import 'package:otraku/feature/activity/activity_date_filter.dart';
 
 sealed class ActivitiesFilter {
   const ActivitiesFilter();
@@ -14,10 +15,15 @@ class HomeActivitiesFilter extends ActivitiesFilter {
     this.onFollowing,
     this.withViewerActivities,
     this.typeIn,
-  );
+    this.dateFilter, [
+    this.hasRepliesOrTypeText = false,
+  ]);
 
-  factory HomeActivitiesFilter.empty() =>
-      const HomeActivitiesFilter(null, false, false, [.animeStatus, .mangaStatus, .status]);
+  factory HomeActivitiesFilter.empty() => const HomeActivitiesFilter(null, false, false, [
+    .animeStatus,
+    .mangaStatus,
+    .status,
+  ], ActivityDateNone());
 
   factory HomeActivitiesFilter.fromPersistenceMap(Map<dynamic, dynamic> map, int? viewerId) {
     final List<int> typeIn =
@@ -29,6 +35,7 @@ class HomeActivitiesFilter extends ActivitiesFilter {
       map['onFollowing'] ?? false,
       map['withViewerActivities'] ?? false,
       typeIn.map((index) => ActivityType.values.getOrFirst(index)).toList(),
+      const ActivityDateNone(),
     );
   }
 
@@ -36,28 +43,41 @@ class HomeActivitiesFilter extends ActivitiesFilter {
   final bool onFollowing;
   final bool withViewerActivities;
   final List<ActivityType> typeIn;
+  final ActivityDateFilter dateFilter;
+  final bool hasRepliesOrTypeText;
 
   @override
-  HomeActivitiesFilter copy() =>
-      HomeActivitiesFilter(viewerId, onFollowing, withViewerActivities, [...typeIn]);
+  HomeActivitiesFilter copy() => HomeActivitiesFilter(
+    viewerId,
+    onFollowing,
+    withViewerActivities,
+    [...typeIn],
+    dateFilter,
+    hasRepliesOrTypeText,
+  );
 
   HomeActivitiesFilter copyWith({
     bool? onFollowing,
     bool? withViewerActivities,
     List<ActivityType>? typeIn,
+    ActivityDateFilter? dateFilter,
+    bool? hasRepliesOrTypeText,
   }) => HomeActivitiesFilter(
     viewerId,
     onFollowing ?? this.onFollowing,
     withViewerActivities ?? this.withViewerActivities,
     typeIn ?? this.typeIn,
+    dateFilter ?? this.dateFilter,
+    hasRepliesOrTypeText ?? this.hasRepliesOrTypeText,
   );
 
   @override
   Map<String, dynamic> toGraphQlVariables() => {
     'isFollowing': onFollowing,
-    if (!onFollowing) 'hasRepliesOrText': true,
+    if (hasRepliesOrTypeText) 'hasRepliesOrText': true,
     if (!withViewerActivities && viewerId != null) 'userIdNot': viewerId,
     'typeIn': typeIn.map((t) => t.value).toList(),
+    ...dateFilter.toGraphQlVariables(),
   };
 
   Map<String, dynamic> toPersistenceMap() => {
@@ -68,21 +88,29 @@ class HomeActivitiesFilter extends ActivitiesFilter {
 }
 
 class UserActivitiesFilter extends ActivitiesFilter {
-  const UserActivitiesFilter(this.userId, this.typeIn);
+  const UserActivitiesFilter(
+    this.userId,
+    this.typeIn, [
+    this.dateFilter = const ActivityDateNone(),
+  ]);
 
   final int userId;
   final List<ActivityType> typeIn;
+  final ActivityDateFilter dateFilter;
 
   @override
-  UserActivitiesFilter copy() => UserActivitiesFilter(userId, [...typeIn]);
+  UserActivitiesFilter copy() => UserActivitiesFilter(userId, [...typeIn], dateFilter);
 
-  UserActivitiesFilter copyWithTypeIn(List<ActivityType> typeIn) =>
-      UserActivitiesFilter(userId, typeIn);
+  UserActivitiesFilter copyWithTypeIn({
+    List<ActivityType>? typeIn,
+    ActivityDateFilter? dateFilter,
+  }) => UserActivitiesFilter(userId, typeIn ?? this.typeIn, dateFilter ?? this.dateFilter);
 
   @override
   Map<String, dynamic> toGraphQlVariables() => {
     'userId': userId,
     'typeIn': typeIn.map((t) => t.value).toList(),
+    ...dateFilter.toGraphQlVariables(),
   };
 }
 
