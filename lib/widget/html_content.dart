@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,7 @@ class HtmlContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return HtmlWidget(
       text,
+      factoryBuilder: () => _HtmlFactory(),
       renderMode: renderMode,
       textStyle: TextTheme.of(context).bodyMedium,
       onTapUrl: (url) {
@@ -124,3 +126,55 @@ final _routeMatchers = {
   RegExp(r'anilist.co\/review\/(\d+)'): (String id) => Routes.review(int.parse(id)),
   RegExp(r'anilist.co\/activity\/(\d+)'): (String id) => Routes.activity(int.parse(id)),
 };
+
+class _HtmlFactory extends WidgetFactory {
+  @override
+  Widget? buildImageWidget(BuildTree tree, ImageSource src) {
+    final url = src.url;
+    if (!url.startsWith('http')) {
+      return super.buildImageWidget(tree, src);
+    }
+
+    final isGif = url.toLowerCase().endsWith('.gif');
+
+    final proxiedUrl = 'https://wsrv.nl/?url=${Uri.encodeComponent(url)}';
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.contain,
+      errorWidget: (context, error, _) {
+        if (isGif) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.network(proxiedUrl, fit: BoxFit.contain),
+              Tooltip(
+                message: 'Can\'t load the GIF',
+                preferBelow: false,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: 40,
+                  color: ColorScheme.of(context).onError,
+                ),
+              ),
+            ],
+          );
+        } else {
+          return CachedNetworkImage(
+            imageUrl: proxiedUrl,
+            fit: BoxFit.contain,
+            errorWidget: (context, error, _) => Tooltip(
+              message: 'Can\'t load the image',
+              preferBelow: false,
+              child: Icon(
+                Icons.broken_image_outlined,
+                size: 40,
+                color: ColorScheme.of(context).onError,
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+}
