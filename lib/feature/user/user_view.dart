@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/build_context_extension.dart';
@@ -14,8 +13,8 @@ import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/user/user_header.dart';
 import 'package:otraku/widget/html_content.dart';
-import 'package:otraku/widget/layout/constrained_view.dart';
 import 'package:otraku/widget/loaders.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 
 class UserView extends StatelessWidget {
   const UserView(this.tag, this.avatarUrl);
@@ -159,8 +158,11 @@ class _UserView extends StatelessWidget {
               _ButtonRow(data.id, isViewer, highContrast),
               if (data.description.isNotEmpty) ...[
                 const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
-                SliverConstrainedView(
-                  sliver: HtmlContent(data.description, renderMode: RenderMode.sliverList),
+                SliverToBoxAdapter(
+                  child: GestureDetector(
+                    onLongPress: () => showRawMarkdown(context, data.description),
+                    child: HtmlContent(data.description),
+                  ),
                 ),
               ],
               const SliverFooter(),
