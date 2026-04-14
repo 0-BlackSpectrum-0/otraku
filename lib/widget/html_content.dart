@@ -164,7 +164,7 @@ class _HtmlFactory extends WidgetFactory {
       placeholder: (context, url) => LayoutBuilder(
         builder: (context, constraints) => Container(
           width: constraints.maxWidth,
-          height: 200,
+          height: 60,
           decoration: BoxDecoration(
             color: ColorScheme.of(context).surface,
             borderRadius: .circular(12),
