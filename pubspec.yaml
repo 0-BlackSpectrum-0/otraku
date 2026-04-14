@@ -60,6 +60,12 @@ dependencies:
   # An addition to the material icons.
   ionicons: ^0.2.2
 
+  #video
+  video_player: ^2.11.1
+
+  #to share images
+  share_plus: ^12.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

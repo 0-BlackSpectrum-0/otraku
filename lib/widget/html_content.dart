@@ -8,7 +8,8 @@ import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/dialogs.dart';
-import 'package:otraku/widget/sheets.dart';
+
+import 'package:video_player/video_player.dart';
 
 class HtmlContent extends StatelessWidget {
   const HtmlContent(this.text, {this.renderMode = RenderMode.column});
@@ -95,20 +96,11 @@ class HtmlContent extends StatelessWidget {
         }
 
         if (element.localName == 'video') {
-          final source = element.children.firstWhere((e) => e.localName == 'source');
-          final url = source.attributes['src'] ?? '';
-          return SizedBox(
-            width: double.infinity,
-            child: Center(
-              child: IconButton(
-                tooltip: 'WebM Video',
-                icon: const Icon(Ionicons.videocam, size: 50),
-                onPressed: () => showSheet(context, SimpleSheet.link(context, url)),
-              ),
-            ),
-          );
+          final src = element.querySelector('source')?.attributes['src'];
+          if (src != null && src.startsWith('http')) {
+            return _InlineVideoPlayer(src);
+          }
         }
-
         return null;
       },
     );
@@ -124,3 +116,95 @@ final _routeMatchers = {
   RegExp(r'anilist.co\/review\/(\d+)'): (String id) => Routes.review(int.parse(id)),
   RegExp(r'anilist.co\/activity\/(\d+)'): (String id) => Routes.activity(int.parse(id)),
 };
+
+class _InlineVideoPlayer extends StatefulWidget {
+  const _InlineVideoPlayer(this.url);
+
+  final String url;
+
+  @override
+  State<_InlineVideoPlayer> createState() => _InlineVideoPlayerState();
+}
+
+class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
+  late final VideoPlayerController _controller;
+  bool _initialized = false;
+  bool _muted = true;
+
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize()
+          .then((_) {
+            if (!mounted) return;
+            setState(() => _initialized = true);
+            _controller.play();
+            _controller.setVolume(0);
+            _controller.setLooping(true);
+          })
+          .catchError((error) {
+            if (!mounted) return;
+            setState(() => _error = error.toString());
+          });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return Tooltip(message: _error!, child: const Icon(Icons.broken_image_outlined));
+    }
+
+    if (!_initialized) {
+      return const AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => showDialog(context: context, builder: (context) => VideoDialog(widget.url)),
+      child: Stack(
+        alignment: .bottomRight,
+        children: [
+          AspectRatio(aspectRatio: _controller.value.aspectRatio, child: VideoPlayer(_controller)),
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: Builder(
+              builder: (context) => Tooltip(
+                message: _muted ? 'Unmute' : 'Mute',
+                child: InkResponse(
+                  onTap: () => setState(() {
+                    _muted = !_muted;
+                    _controller.setVolume(_muted ? 0 : 1);
+                  }),
+                  child: Container(
+                    padding: const .all(4),
+                    decoration: BoxDecoration(
+                      color: ColorScheme.of(context).surface,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                      color: ColorScheme.of(context).primary,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
