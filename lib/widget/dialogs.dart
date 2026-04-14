@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
+import 'package:video_player/video_player.dart';
 
 class TextInputDialog extends StatefulWidget {
   const TextInputDialog({required this.title, required this.initialValue, this.validator});
@@ -482,5 +483,269 @@ class _DialogColumn extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class VideoDialog extends StatefulWidget {
+  const VideoDialog(this.url);
+
+  final String url;
+
+  @override
+  State<VideoDialog> createState() => _VideoDialogState();
+}
+
+class _VideoDialogState extends State<VideoDialog> {
+  late final VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _initialized = true);
+        _controller.play();
+        _controller.setVolume(1);
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: .zero,
+      backgroundColor: ColorScheme.of(context).surface.withAlpha(125),
+      surfaceTintColor: Colors.transparent,
+      child: GestureDetector(
+        behavior: .opaque,
+        onTap: () => Navigator.pop(context),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Stack(
+            children: [
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                    setState(() {});
+                  },
+                  child: !_initialized
+                      ? const CircularProgressIndicator()
+                      : AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio,
+                          child: VideoPlayer(_controller),
+                        ),
+                ),
+              ),
+              //play pause
+              if (_initialized)
+                Center(
+                  child: IgnorePointer(
+                    child: ValueListenableBuilder(
+                      valueListenable: _controller,
+                      builder: (context, value, _) => AnimatedOpacity(
+                        opacity: value.isPlaying ? 0.0 : 1.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Icon(
+                          Icons.play_arrow_rounded,
+                          size: 64,
+                          color: ColorScheme.of(context).onSurface.withAlpha(200),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              // Slider
+              Align(
+                alignment: .bottomCenter,
+                child: Padding(
+                  padding: .all(Theming.offset * 2),
+                  child: Column(
+                    mainAxisSize: .min,
+                    children: [
+                      if (_initialized)
+                        ValueListenableBuilder(
+                          valueListenable: _controller,
+                          builder: (context, value, _) {
+                            final pos = value.position.inMilliseconds.toDouble();
+                            final dur = value.duration.inMilliseconds.toDouble();
+                            return Slider(
+                              value: pos.clamp(0, dur > 0 ? dur : 1),
+                              min: 0,
+                              max: dur > 0 ? dur : 1,
+                              onChanged: (v) =>
+                                  _controller.seekTo(Duration(milliseconds: v.round())),
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        spacing: Theming.offset,
+                        children: [
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: ColorScheme.of(context).onSurface.withAlpha(125),
+                              borderRadius: Theming.borderRadiusSmall,
+                            ),
+                            child: IconButton(
+                              color: ColorScheme.of(context).onPrimary,
+                              tooltip: 'Close',
+                              icon: const Icon(Ionicons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                          const Spacer(),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: ColorScheme.of(context).onSurface.withAlpha(125),
+                              borderRadius: Theming.borderRadiusSmall,
+                            ),
+                            child: IconButton(
+                              color: ColorScheme.of(context).onPrimary,
+                              tooltip: 'Download',
+                              icon: const Icon(Icons.download_outlined),
+                              onPressed: () => _saveVideo(context),
+                            ),
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: ColorScheme.of(context).onSurface.withAlpha(125),
+                              borderRadius: Theming.borderRadiusSmall,
+                            ),
+                            child: PopupMenuButton<String>(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: Theming.borderRadiusSmall,
+                              ),
+                              tooltip: 'More',
+                              iconColor: ColorScheme.of(context).onPrimary,
+                              color: ColorScheme.of(context).surface,
+                              elevation: 3,
+                              icon: const Icon(Ionicons.ellipsis_vertical),
+                              offset: const Offset(0, -200),
+                              onSelected: (result) async {
+                                switch (result) {
+                                  case 'copy':
+                                    SnackBarExtension.copy(context, widget.url);
+                                    Navigator.pop(context);
+                                  case 'browser':
+                                    launchUrl(
+                                      Uri.parse(widget.url),
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  case 'share':
+                                    final file = await DefaultCacheManager().getSingleFile(
+                                      widget.url,
+                                    );
+                                    final fileName = _getVideoFileName(widget.url);
+                                    final temp = File(
+                                      '${(await getTemporaryDirectory()).path}/$fileName',
+                                    );
+                                    await file.copy(temp.path);
+                                    await SharePlus.instance.share(
+                                      ShareParams(files: [XFile(temp.path)]),
+                                    );
+                                    await temp.delete();
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'copy',
+                                  child: ListTile(
+                                    leading: Icon(Ionicons.clipboard_outline),
+                                    title: Text('Copy URL'),
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'browser',
+                                  child: ListTile(
+                                    leading: Icon(Ionicons.link_outline),
+                                    title: Text('Open in Browser'),
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'share',
+                                  child: ListTile(
+                                    leading: Icon(Ionicons.share_outline),
+                                    title: Text('Share Video'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveVideo(BuildContext context) async {
+    try {
+      final file = await DefaultCacheManager().getSingleFile(widget.url);
+      final fileName = _getVideoFileName(widget.url);
+      final Directory dir;
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download');
+        if (!await dir.exists()) await dir.create(recursive: true);
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final dotIndex = fileName.lastIndexOf('.');
+      final name = dotIndex != -1 ? fileName.substring(0, dotIndex) : fileName;
+      final ext = dotIndex != -1 ? fileName.substring(dotIndex) : '';
+
+      int i = 0;
+      while (true) {
+        final destPath = i == 0 ? '${dir.path}/$fileName' : '${dir.path}/$name($i)$ext';
+        try {
+          await file.copy(destPath);
+          break;
+        } on FileSystemException catch (e) {
+          if (e.osError?.errorCode == 17) {
+            i++;
+          } else {
+            rethrow;
+          }
+        }
+      }
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        SnackBarExtension.show(
+          context,
+          Platform.isAndroid ? 'Saved to Downloads' : 'Saved to Documents',
+        );
+      }
+    } catch (e) {
+      final osError = e is FileSystemException ? e.osError : null;
+      final message = osError != null
+          ? '${osError.message}, errno = ${osError.errorCode}'
+          : e.toString();
+      if (context.mounted) {
+        Navigator.pop(context);
+        SnackBarExtension.show(context, 'Failed to save : $message');
+      }
+    }
+  }
+
+  String _getVideoFileName(String url) {
+    final name = Uri.parse(url).pathSegments.last;
+    if (name.endsWith('gifv')) return name.replaceAll('.gifv', '.mp4');
+    if (name.contains('.')) return name;
+    return '$name.mp4';
   }
 }
