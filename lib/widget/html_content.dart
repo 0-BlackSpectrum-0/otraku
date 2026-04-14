@@ -10,6 +10,7 @@ import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/dialogs.dart';
 import 'package:otraku/widget/sheets.dart';
+import 'package:otraku/widget/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HtmlContent extends StatelessWidget {
@@ -158,6 +159,32 @@ class _HtmlFactory extends WidgetFactory {
     final imageWidget = CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.contain,
+      fadeInDuration: .zero,
+      fadeOutDuration: .zero,
+      placeholder: (context, url) => LayoutBuilder(
+        builder: (context, constraints) => Container(
+          width: constraints.maxWidth,
+          height: 200,
+          decoration: BoxDecoration(
+            color: ColorScheme.of(context).surface,
+            borderRadius: .circular(12),
+          ),
+          child: Center(
+            child: Shimmer(
+              ShimmerItem(
+                Container(
+                  width: 60,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    borderRadius: Theming.borderRadiusSmall,
+                    color: ColorScheme.of(context).surfaceContainerHighest,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       errorWidget: (context, error, _) {
         if (isGif) {
           return Stack(
