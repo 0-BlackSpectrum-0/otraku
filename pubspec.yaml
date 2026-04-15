@@ -39,6 +39,9 @@ dependencies:
   # Image caching.
   cached_network_image: ^3.4.1
 
+  #Svg
+  flutter_svg: ^2.2.4
+
   # Opening links in the browser.
   url_launcher: ^6.3.2
 

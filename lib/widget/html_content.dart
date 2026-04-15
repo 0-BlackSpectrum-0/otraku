@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
@@ -12,6 +13,7 @@ import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/dialogs.dart';
 
 import 'package:video_player/video_player.dart';
+import 'package:otraku/widget/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HtmlContent extends StatelessWidget {
@@ -271,50 +273,105 @@ class _HtmlFactory extends WidgetFactory {
     }
 
     final isGif = url.toLowerCase().endsWith('.gif');
+    final isSvg = url.toLowerCase().endsWith('.svg');
     final proxiedUrl = 'https://wsrv.nl/?url=${Uri.encodeComponent(url)}';
 
-    final imageWidget = CachedNetworkImage(
-      imageUrl: url,
-      fit: BoxFit.contain,
-      errorWidget: (context, error, _) {
-        if (isGif) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              Image.network(proxiedUrl, fit: BoxFit.contain),
-              Tooltip(
-                message: 'Can\'t load the GIF',
-                preferBelow: false,
-                child: Icon(
-                  Icons.broken_image_outlined,
-                  size: 40,
-                  color: ColorScheme.of(context).onError,
+    final imageWidget = (isSvg)
+        ? SvgPicture.network(
+            url,
+            fit: .contain,
+            placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+            errorBuilder: (context, error, _) => SvgPicture.network(
+              proxiedUrl,
+              fit: .contain,
+              placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+            ),
+          )
+        : CachedNetworkImage(
+            imageUrl: url,
+            fit: BoxFit.contain,
+            fadeInDuration: .zero,
+            fadeOutDuration: .zero,
+            placeholder: (context, url) => LayoutBuilder(
+              builder: (context, constraints) => Container(
+                width: constraints.maxWidth,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: ColorScheme.of(context).surface,
+                  borderRadius: .circular(12),
+                ),
+                child: Center(
+                  child: Shimmer(
+                    ShimmerItem(
+                      Container(
+                        width: 60,
+                        height: 15,
+                        decoration: BoxDecoration(
+                          borderRadius: Theming.borderRadiusSmall,
+                          color: ColorScheme.of(context).surfaceContainerHighest,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ],
-          );
-        } else {
-          return CachedNetworkImage(
-            imageUrl: proxiedUrl,
-            fit: BoxFit.contain,
-            errorWidget: (context, error, _) => Tooltip(
-              message: 'Can\'t load the image',
-              preferBelow: false,
-              child: Icon(
-                Icons.broken_image_outlined,
-                size: 40,
-                color: ColorScheme.of(context).onError,
-              ),
             ),
+            errorWidget: (context, error, _) {
+              if (isGif) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.network(proxiedUrl, fit: BoxFit.contain),
+                    Tooltip(
+                      message: 'Can\'t load the GIF',
+                      preferBelow: false,
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 40,
+                        color: ColorScheme.of(context).onError,
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                return CachedNetworkImage(
+                  imageUrl: proxiedUrl,
+                  fit: BoxFit.contain,
+                  errorWidget: (context, error, _) => SvgPicture.network(
+                    url,
+                    fit: .contain,
+                    placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+                    errorBuilder: (context, error, _) => SvgPicture.network(
+                      proxiedUrl,
+                      fit: .contain,
+                      placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+                      errorBuilder: (context, error, _) => Tooltip(
+                        message: 'Can\'t load the image',
+                        preferBelow: false,
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          size: 40,
+                          color: ColorScheme.of(context).onError,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+            },
           );
-        }
-      },
-    );
 
     final anchor = tree.element.parent;
     final href = anchor?.localName == 'a' ? anchor?.attributes['href'] : null;
 
     if (href != null) {
+      final widthAttr = tree.element.attributes['width'];
+      final width = widthAttr != null ? double.tryParse(widthAttr) : null;
+      final isSmall = width != null && width < 100;
+
+      if (isSmall) {
+        return GestureDetector(onDoubleTap: () => launchUrl(Uri.parse(href)), child: imageWidget);
+      }
       return Stack(
         alignment: Alignment.bottomRight,
         children: [
