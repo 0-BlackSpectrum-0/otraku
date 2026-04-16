@@ -131,7 +131,17 @@ final _routeMatchers = {
 };
 
 String fixMalformedImageUrls(String html) {
-  return html.replaceAllMapped(
+  var result = html.replaceAllMapped(
+    RegExp(r'<img([^>]*?)src=(?:<br\s*/?>\s*)*\s*\n\s*"([^"]+)"([^>]*?)>', caseSensitive: false),
+    (m) {
+      final before = m.group(1)!;
+      final url = m.group(2)!;
+      final after = m.group(3)!;
+      return '<img${before}src="$url"${after}/>';
+    },
+  );
+
+  result = result.replaceAllMapped(
     RegExp(
       r'<img([^>]*?)src="([^"]*?)"([^>]*?)/>([^<]*?)(\.(?:png|jpg|jpeg|gif|webp))\)?',
       caseSensitive: false,
@@ -144,6 +154,7 @@ String fixMalformedImageUrls(String html) {
       return '<img${before}src="${url}${ext}"${after}/>';
     },
   );
+  return result;
 }
 
 class _HtmlFactory extends WidgetFactory {
