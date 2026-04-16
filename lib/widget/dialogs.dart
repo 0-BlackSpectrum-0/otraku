@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
@@ -291,6 +292,7 @@ class VideoDialog extends StatefulWidget {
 class _VideoDialogState extends State<VideoDialog> {
   late final VideoPlayerController _controller;
   bool _initialized = false;
+  bool _showControls = true;
 
   @override
   void initState() {
@@ -302,12 +304,14 @@ class _VideoDialogState extends State<VideoDialog> {
         _controller.play();
         _controller.setVolume(1);
       });
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   @override
@@ -325,7 +329,8 @@ class _VideoDialogState extends State<VideoDialog> {
             children: [
               Center(
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () => setState(() => _showControls = !_showControls),
+                  onDoubleTap: () {
                     _controller.value.isPlaying ? _controller.pause() : _controller.play();
                     setState(() {});
                   },
@@ -338,7 +343,7 @@ class _VideoDialogState extends State<VideoDialog> {
                 ),
               ),
               //play pause
-              if (_initialized)
+              if (_initialized && _showControls)
                 Center(
                   child: IgnorePointer(
                     child: ValueListenableBuilder(
@@ -346,138 +351,237 @@ class _VideoDialogState extends State<VideoDialog> {
                       builder: (context, value, _) => AnimatedOpacity(
                         opacity: value.isPlaying ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          size: 64,
-                          color: ColorScheme.of(context).onSurface.withAlpha(200),
+                        child: Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          decoration: const BoxDecoration(color: Colors.black54),
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            size: 64,
+                            color: ColorScheme.of(context).onSurface.withAlpha(200),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              // Slider
-              Align(
-                alignment: .bottomCenter,
-                child: Padding(
-                  padding: .all(Theming.offset * 2),
-                  child: Column(
-                    mainAxisSize: .min,
-                    children: [
-                      if (_initialized)
-                        ValueListenableBuilder(
-                          valueListenable: _controller,
-                          builder: (context, value, _) {
-                            final pos = value.position.inMilliseconds.toDouble();
-                            final dur = value.duration.inMilliseconds.toDouble();
-                            return Slider(
-                              value: pos.clamp(0, dur > 0 ? dur : 1),
-                              min: 0,
-                              max: dur > 0 ? dur : 1,
-                              onChanged: (v) =>
-                                  _controller.seekTo(Duration(milliseconds: v.round())),
-                            );
-                          },
-                        ),
-                      const SizedBox(height: 8),
-                      Row(
-                        spacing: Theming.offset,
+              // Slider and buttons
+              if (_showControls)
+                AnimatedOpacity(
+                  opacity: _showControls ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Align(
+                    alignment: .bottomCenter,
+                    child: Padding(
+                      padding: .all(Theming.offset * 2),
+                      child: Column(
+                        mainAxisSize: .min,
                         children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: ColorScheme.of(context).onSurface.withAlpha(125),
-                              borderRadius: Theming.borderRadiusSmall,
-                            ),
-                            child: IconButton(
-                              color: ColorScheme.of(context).onPrimary,
-                              tooltip: 'Close',
-                              icon: const Icon(Ionicons.close),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                          const Spacer(),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: ColorScheme.of(context).onSurface.withAlpha(125),
-                              borderRadius: Theming.borderRadiusSmall,
-                            ),
-                            child: IconButton(
-                              color: ColorScheme.of(context).onPrimary,
-                              tooltip: 'Download',
-                              icon: const Icon(Icons.download_outlined),
-                              onPressed: () => _saveVideo(context),
-                            ),
-                          ),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: ColorScheme.of(context).onSurface.withAlpha(125),
-                              borderRadius: Theming.borderRadiusSmall,
-                            ),
-                            child: PopupMenuButton<String>(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: Theming.borderRadiusSmall,
-                              ),
-                              tooltip: 'More',
-                              iconColor: ColorScheme.of(context).onPrimary,
-                              color: ColorScheme.of(context).surface,
-                              elevation: 3,
-                              icon: const Icon(Ionicons.ellipsis_vertical),
-                              offset: const Offset(0, -200),
-                              onSelected: (result) async {
-                                switch (result) {
-                                  case 'copy':
-                                    SnackBarExtension.copy(context, widget.url);
-                                    Navigator.pop(context);
-                                  case 'browser':
-                                    launchUrl(
-                                      Uri.parse(widget.url),
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  case 'share':
-                                    final file = await DefaultCacheManager().getSingleFile(
-                                      widget.url,
-                                    );
-                                    final fileName = _getVideoFileName(widget.url);
-                                    final temp = File(
-                                      '${(await getTemporaryDirectory()).path}/$fileName',
-                                    );
-                                    await file.copy(temp.path);
-                                    await SharePlus.instance.share(
-                                      ShareParams(files: [XFile(temp.path)]),
-                                    );
-                                    await temp.delete();
-                                }
+                          if (_initialized)
+                            ValueListenableBuilder(
+                              valueListenable: _controller,
+                              builder: (context, value, _) {
+                                final pos = value.position.inMilliseconds.toDouble();
+                                final dur = value.duration.inMilliseconds.toDouble();
+
+                                return Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            color: ColorScheme.of(context).onSurface,
+                                            borderRadius: Theming.borderRadiusSmall,
+                                          ),
+                                          child: IconButton(
+                                            tooltip: _controller.value.isPlaying ? 'Pause' : 'Play',
+                                            onPressed: () {
+                                              _controller.value.isPlaying
+                                                  ? _controller.pause()
+                                                  : _controller.play();
+                                              setState(() {});
+                                            },
+                                            icon: _controller.value.isPlaying
+                                                ? const Icon(Icons.pause_rounded)
+                                                : const Icon(Icons.play_arrow_rounded),
+                                            color: ColorScheme.of(context).onPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: Theming.offset),
+                                        SpeedControl(controller: _controller),
+                                        Spacer(),
+                                        DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            color: ColorScheme.of(context).onSurface,
+                                            borderRadius: Theming.borderRadiusSmall,
+                                          ),
+                                          child: IconButton(
+                                            tooltip: _controller.value.volume > 0
+                                                ? 'Mute'
+                                                : 'Unmute',
+                                            onPressed: () {
+                                              _controller.value.volume > 0
+                                                  ? _controller.setVolume(0)
+                                                  : _controller.setVolume(1);
+                                              setState(() {});
+                                            },
+                                            icon: _controller.value.volume > 0
+                                                ? const Icon(Icons.volume_up_rounded)
+                                                : Icon(
+                                                    Icons.volume_off_rounded,
+                                                    color: ColorScheme.of(context).onError,
+                                                  ),
+                                            color: ColorScheme.of(context).onPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: Theming.offset),
+                                    Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 45,
+                                          child: Text(
+                                            value.position.inHours > 0
+                                                ? '${value.position.inHours}:${value.position.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.position.inSeconds.remainder(60).toString().padLeft(2, '0')} '
+                                                : '${value.position.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.position.inSeconds.remainder(60).toString().padLeft(2, '0')} ',
+                                            style: TextStyle(
+                                              color: ColorScheme.of(context).onSurface,
+                                              fontSize: 12,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Slider(
+                                            value: pos.clamp(0, dur > 0 ? dur : 1),
+                                            min: 0,
+                                            max: dur > 0 ? dur : 1,
+                                            onChanged: (v) => _controller.seekTo(
+                                              Duration(milliseconds: v.round()),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 45,
+                                          child: Text(
+                                            value.position.inHours > 0
+                                                ? '${value.duration.inHours}:${value.duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.duration.inSeconds.remainder(60).toString().padLeft(2, '0')} '
+                                                : '${value.duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.duration.inSeconds.remainder(60).toString().padLeft(2, '0')} ',
+                                            style: TextStyle(
+                                              color: ColorScheme.of(context).onSurface,
+                                              fontSize: 12,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
                               },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'copy',
-                                  child: ListTile(
-                                    leading: Icon(Ionicons.clipboard_outline),
-                                    title: Text('Copy URL'),
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'browser',
-                                  child: ListTile(
-                                    leading: Icon(Ionicons.link_outline),
-                                    title: Text('Open in Browser'),
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'share',
-                                  child: ListTile(
-                                    leading: Icon(Ionicons.share_outline),
-                                    title: Text('Share Video'),
-                                  ),
-                                ),
-                              ],
                             ),
+                          const SizedBox(height: 8),
+                          Row(
+                            spacing: Theming.offset,
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: ColorScheme.of(context).onSurface.withAlpha(125),
+                                  borderRadius: Theming.borderRadiusSmall,
+                                ),
+                                child: IconButton(
+                                  color: ColorScheme.of(context).onPrimary,
+                                  tooltip: 'Close',
+                                  icon: const Icon(Ionicons.close),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                              ),
+                              const Spacer(),
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: ColorScheme.of(context).onSurface.withAlpha(125),
+                                  borderRadius: Theming.borderRadiusSmall,
+                                ),
+                                child: IconButton(
+                                  color: ColorScheme.of(context).onPrimary,
+                                  tooltip: 'Download',
+                                  icon: const Icon(Icons.download_outlined),
+                                  onPressed: () => _saveVideo(context),
+                                ),
+                              ),
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: ColorScheme.of(context).onSurface.withAlpha(125),
+                                  borderRadius: Theming.borderRadiusSmall,
+                                ),
+                                child: PopupMenuButton<String>(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: Theming.borderRadiusSmall,
+                                  ),
+                                  tooltip: 'More',
+                                  iconColor: ColorScheme.of(context).onPrimary,
+                                  color: ColorScheme.of(context).surface,
+                                  elevation: 3,
+                                  icon: const Icon(Ionicons.ellipsis_vertical),
+                                  offset: const Offset(0, -200),
+                                  onSelected: (result) async {
+                                    switch (result) {
+                                      case 'copy':
+                                        SnackBarExtension.copy(context, widget.url);
+                                        Navigator.pop(context);
+                                      case 'browser':
+                                        launchUrl(
+                                          Uri.parse(widget.url),
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      case 'share':
+                                        final file = await DefaultCacheManager().getSingleFile(
+                                          widget.url,
+                                        );
+                                        final fileName = _getVideoFileName(widget.url);
+                                        final temp = File(
+                                          '${(await getTemporaryDirectory()).path}/$fileName',
+                                        );
+                                        await file.copy(temp.path);
+                                        await SharePlus.instance.share(
+                                          ShareParams(files: [XFile(temp.path)]),
+                                        );
+                                        await temp.delete();
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'copy',
+                                      child: ListTile(
+                                        leading: Icon(Ionicons.clipboard_outline),
+                                        title: Text('Copy URL'),
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'browser',
+                                      child: ListTile(
+                                        leading: Icon(Ionicons.link_outline),
+                                        title: Text('Open in Browser'),
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'share',
+                                      child: ListTile(
+                                        leading: Icon(Ionicons.share_outline),
+                                        title: Text('Share Video'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -540,5 +644,82 @@ class _VideoDialogState extends State<VideoDialog> {
     if (name.endsWith('gifv')) return name.replaceAll('.gifv', '.mp4');
     if (name.contains('.')) return name;
     return '$name.mp4';
+  }
+}
+
+class SpeedControl extends StatefulWidget {
+  final VideoPlayerController controller;
+
+  const SpeedControl({super.key, required this.controller});
+
+  @override
+  State<SpeedControl> createState() => _SpeedControlState();
+}
+
+class _SpeedControlState extends State<SpeedControl> {
+  bool isExpanded = false;
+  double currentSpeed = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: isExpanded ? 220 : 60,
+      height: 45,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.onSurface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: isExpanded ? _buildExpanded() : _buildCollapsed(),
+    );
+  }
+
+  Widget _buildCollapsed() {
+    return InkWell(
+      onTap: () => setState(() => isExpanded = true),
+      child: Center(
+        child: Text(
+          "${currentSpeed}x",
+          style: TextStyle(
+            color: ColorScheme.of(context).onPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpanded() {
+    return Row(
+      children: [
+        IconButton(
+          constraints: const BoxConstraints(maxWidth: 35),
+          padding: EdgeInsets.zero,
+          icon: Icon(Icons.close, color: ColorScheme.of(context).onPrimary),
+          onPressed: () => setState(() => isExpanded = false),
+        ),
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+            ),
+            child: Slider(
+              value: currentSpeed,
+              min: 0.25,
+              max: 4.0,
+              divisions: 15,
+              label: '${currentSpeed}x',
+              onChanged: (val) {
+                setState(() => currentSpeed = val);
+                widget.controller.setPlaybackSpeed(val);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
