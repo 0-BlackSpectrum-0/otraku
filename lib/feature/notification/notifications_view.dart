@@ -69,7 +69,16 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
     final formFactor = Theming.of(context).formFactor;
 
     return AdaptiveScaffold(
-      topBar: const TopBar(title: 'Notifications'),
+      topBar: TopBar(
+        title: 'Notifications',
+        trailing: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active_outlined),
+            tooltip: 'Send test notification',
+            onPressed: () => BackgroundHandler.sendTestNotification(),
+          ),
+        ],
+      ),
       floatingAction: formFactor == .phone
           ? HidingFloatingActionButton(
               key: const Key('filter'),
