@@ -3,15 +3,34 @@ import 'dart:io';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/notification/notifications_model.dart';
 import 'package:otraku/util/graphql.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:workmanager/workmanager.dart';
 
 final _notificationPlugin = FlutterLocalNotificationsPlugin();
+
+const _actionDone = 'DONE';
+const _actionSnooze = 'SNOOZE';
+const _actionReply = 'REPLY';
+
+Future<String?> _downloadImage(String url, String filename) async {
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode != 200) return null;
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/$filename.png');
+    await file.writeAsBytes(response.bodyBytes);
+    return file.path;
+  } catch (_) {
+    return null;
+  }
+}
 
 class BackgroundHandler {
   BackgroundHandler._();
@@ -23,8 +42,32 @@ class BackgroundHandler {
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveNotificationResponse: (response) {
+        if (response.actionId == _actionSnooze) {
+          Future.delayed(const Duration(hours: 1), () {
+            _notificationPlugin.show(
+              id: response.id!,
+              title: 'Snoozed Reminder',
+              body: 'You Snoozed this earlier.',
+              notificationDetails: const NotificationDetails(
+                android: AndroidNotificationDetails(
+                  'snooze_channel',
+                  'Snoozed Notifications',
+                  icon: 'notification_icon_monochrome',
+                ),
+              ),
+              payload: response.payload,
+            );
+          });
+          return;
+        }
+
         if (response.payload == null) return;
         notificationCtrl.add(response.payload!);
+
+        if (response.actionId == _actionDone) {
+          if (response.payload != null) notificationCtrl.add(response.payload!);
+          return;
+        }
       },
     );
 
@@ -73,6 +116,29 @@ class BackgroundHandler {
 
   /// Clears device notifications.
   static void clearNotifications() => _notificationPlugin.cancelAll();
+
+  /// FOR TESTING ONLY — fires a dummy notification immediately.
+  static Future<void> sendTestNotification() async {
+    final dummy = MediaReleaseNotification(
+      {
+        'id': 999,
+        'createdAt': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        'episode': 8,
+        'media': {
+          'id': 97663,
+          'title': {'userPreferred': 'Knights Magic'},
+          'coverImage': {
+            'large':
+                'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97663-4TMJDIpm3toz.png',
+          },
+        },
+      },
+      NotificationType.airing,
+      ImageQuality.high, // change to whatever value your app uses as default
+    );
+
+    await _showRich(dummy, 'New Episode', Routes.notifications);
+  }
 }
 
 @pragma('vm:entry-point')
@@ -120,111 +186,209 @@ void _fetch() => Workmanager().executeTask((_, _) async {
 
     if (notification == null) continue;
 
-    (switch (notification.type) {
-      .following => _show(
-        notification,
-        'New Follow',
-        Routes.user((notification as FollowNotification).userId),
-      ),
-      .activityMention => _show(
-        notification,
-        'New Mention',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .activityMessage => _show(
-        notification,
-        'New Message',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .activityReply => _show(
-        notification,
-        'New Reply',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .activityReplySubscribed => _show(
-        notification,
-        'New Reply To Subscribed Activity',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .activityLike => _show(
-        notification,
-        'New Activity Like',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .acrivityReplyLike => _show(
-        notification,
-        'New Reply Like',
-        Routes.activity((notification as ActivityNotification).activityId),
-      ),
-      .threadLike => _show(
-        notification,
-        'New Forum Like',
-        Routes.thread((notification as ThreadNotification).threadId),
-      ),
-      .threadCommentReply => _show(
-        notification,
-        'New Forum Reply',
-        Routes.comment((notification as ThreadCommentNotification).commentId),
-      ),
-      .threadCommentMention => _show(
-        notification,
-        'New Forum Mention',
-        Routes.comment((notification as ThreadCommentNotification).commentId),
-      ),
-      .threadReplySubscribed => _show(
-        notification,
-        'New Forum Comment',
-        Routes.comment((notification as ThreadCommentNotification).commentId),
-      ),
-      .threadCommentLike => _show(
-        notification,
-        'New Forum Comment Like',
-        Routes.comment((notification as ThreadCommentNotification).commentId),
-      ),
-      .airing => _show(
-        notification,
-        'New Episode',
-        Routes.media((notification as MediaReleaseNotification).mediaId),
-      ),
-      .relatedMediaAddition => _show(
-        notification,
-        'Added Media',
-        Routes.media((notification as MediaReleaseNotification).mediaId),
-      ),
-      .mediaDataChange => _show(
-        notification,
-        'Modified Media',
-        Routes.media((notification as MediaChangeNotification).mediaId),
-      ),
-      .mediaMerge => _show(
-        notification,
-        'Merged Media',
-        Routes.media((notification as MediaChangeNotification).mediaId),
-      ),
-      .mediaDeletion => _show(notification, 'Deleted Media', Routes.notifications),
-      .mediaSubmissionUpdate => _show(
-        notification,
-        'Media Submission Update',
-        Routes.notifications,
-      ),
-      .characterSubmissionUpdate => _show(
-        notification,
-        'Character Submission Update',
-        Routes.notifications,
-      ),
-      .staffSubmissionUpdate => _show(
-        notification,
-        'Staff Submission Update',
-        Routes.notifications,
-      ),
-    });
+    switch (notification.type) {
+      case .following:
+        await _showRich(
+          notification,
+          'New Follow',
+          Routes.user((notification as FollowNotification).userId),
+        );
+      case .activityMention:
+        await _showRich(
+          notification,
+          'New Mention',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .activityMessage:
+        await _showRich(
+          notification,
+          'New Message',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .activityReply:
+        await _showRich(
+          notification,
+          'New Reply',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .activityReplySubscribed:
+        await _showRich(
+          notification,
+          'New Reply To Subscribed Activity',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .activityLike:
+        await _showRich(
+          notification,
+          'New Activity Like',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .acrivityReplyLike:
+        await _showRich(
+          notification,
+          'New Reply Like',
+          Routes.activity((notification as ActivityNotification).activityId),
+        );
+      case .threadLike:
+        await _showRich(
+          notification,
+          'New Forum Like',
+          Routes.thread((notification as ThreadNotification).threadId),
+        );
+      case .threadCommentReply:
+        await _showRich(
+          notification,
+          'New Forum Reply',
+          Routes.comment((notification as ThreadCommentNotification).commentId),
+        );
+      case .threadCommentMention:
+        await _showRich(
+          notification,
+          'New Forum Mention',
+          Routes.comment((notification as ThreadCommentNotification).commentId),
+        );
+      case .threadReplySubscribed:
+        await _showRich(
+          notification,
+          'New Forum Comment',
+          Routes.comment((notification as ThreadCommentNotification).commentId),
+        );
+      case .threadCommentLike:
+        await _showRich(
+          notification,
+          'New Forum Comment Like',
+          Routes.comment((notification as ThreadCommentNotification).commentId),
+        );
+      case .airing:
+        await _showRich(
+          notification,
+          'New Episode',
+          Routes.media((notification as MediaReleaseNotification).mediaId),
+        );
+      case .relatedMediaAddition:
+        await _showRich(
+          notification,
+          'Added Media',
+          Routes.media((notification as MediaReleaseNotification).mediaId),
+        );
+      case .mediaDataChange:
+        await _showRich(
+          notification,
+          'Modified Media',
+          Routes.media((notification as MediaChangeNotification).mediaId),
+        );
+      case .mediaMerge:
+        await _showRich(
+          notification,
+          'Merged Media',
+          Routes.media((notification as MediaChangeNotification).mediaId),
+        );
+      case .mediaDeletion:
+        await _showRich(notification, 'Deleted Media', Routes.notifications);
+      case .mediaSubmissionUpdate:
+        await _showRich(notification, 'Media Submission Update', Routes.notifications);
+      case .characterSubmissionUpdate:
+        await _showRich(notification, 'Character Submission Update', Routes.notifications);
+      case .staffSubmissionUpdate:
+        await _showRich(notification, 'Staff Submission Update', Routes.notifications);
+    }
   }
 
   return true;
 });
 
-() _show(SiteNotification notification, String title, String payload) {
-  _notificationPlugin.show(
+// () _show(SiteNotification notification, String title, String payload) {
+//   _notificationPlugin.show(
+//     id: notification.id,
+//     title: title,
+//     body: notification.texts.join(),
+//     payload: payload,
+//     notificationDetails: NotificationDetails(
+//       android: AndroidNotificationDetails(
+//         notification.type.name,
+//         notification.type.label,
+//         channelDescription: notification.type.label,
+//         icon: 'notification_icon_monochrome',
+//         largeIcon: const DrawableResourceAndroidBitmap('notificaion_icon'),
+//       ),
+//     ),
+//   );
+//   return ();
+// }
+
+Future<void> _showRich(SiteNotification notification, String title, String payload) async {
+  //large icon
+  FilePathAndroidBitmap? largeIcon;
+  if (notification.imageUrl != null) {
+    final path = await _downloadImage(notification.imageUrl!, 'notif_${notification.id}');
+    if (path != null) largeIcon = FilePathAndroidBitmap(path);
+  }
+  StyleInformation? style;
+  List<AndroidNotificationAction> actions = [];
+
+  switch (notification) {
+    case MediaReleaseNotification _:
+      if (largeIcon != null) {
+        style = BigPictureStyleInformation(
+          largeIcon,
+          contentTitle: title,
+          summaryText: notification.texts.join(),
+        );
+      }
+      if (notification.type == NotificationType.airing) {
+        actions = [
+          const AndroidNotificationAction(_actionDone, '✓ Done', showsUserInterface: true),
+          const AndroidNotificationAction(_actionDone, '⏰ Snooze (1h)', showsUserInterface: false),
+        ];
+      }
+    case ActivityNotification _:
+      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+      if (notification.type == NotificationType.activityReply ||
+          notification.type == NotificationType.activityMessage ||
+          notification.type == NotificationType.activityMention ||
+          notification.type == NotificationType.activityReplySubscribed) {
+        actions = [
+          const AndroidNotificationAction(
+            _actionReply,
+            '↩ Reply',
+            showsUserInterface: true,
+            inputs: [AndroidNotificationActionInput(label: 'Write a reply ...')],
+          ),
+        ];
+      }
+
+    case ThreadCommentNotification _:
+      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+      if (notification.type == NotificationType.threadCommentReply ||
+          notification.type == NotificationType.threadCommentMention ||
+          notification.type == NotificationType.threadReplySubscribed) {
+        actions = [
+          const AndroidNotificationAction(
+            _actionReply,
+            '↩ Reply',
+            showsUserInterface: true,
+            inputs: [AndroidNotificationActionInput(label: 'Write a reply ...')],
+          ),
+        ];
+      }
+
+    case MediaChangeNotification _:
+      style = BigTextStyleInformation(
+        notification.reason.isNotEmpty ? notification.reason : notification.texts.join(),
+        contentTitle: title,
+      );
+
+    case MediaDeletionNotification _:
+      style = BigTextStyleInformation(
+        notification.reason.isNotEmpty ? notification.reason : notification.texts.join(),
+        contentTitle: title,
+      );
+
+    default:
+      break;
+  }
+
+  await _notificationPlugin.show(
     id: notification.id,
     title: title,
     body: notification.texts.join(),
@@ -234,8 +398,11 @@ void _fetch() => Workmanager().executeTask((_, _) async {
         notification.type.name,
         notification.type.label,
         channelDescription: notification.type.label,
+        icon: 'notification_icon_monochrome',
+        largeIcon: largeIcon,
+        styleInformation: style,
+        actions: actions,
       ),
     ),
   );
-  return ();
 }
