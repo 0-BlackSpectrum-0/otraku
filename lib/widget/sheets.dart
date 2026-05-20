@@ -31,6 +31,14 @@ class SimpleSheet extends StatelessWidget {
       SimpleSheet.list([
         ...children,
         ListTile(
+          title: const Text('Copy Link'),
+          leading: const Icon(Ionicons.clipboard_outline),
+          onTap: () {
+            SnackBarExtension.copy(context, link);
+            Navigator.pop(context);
+          },
+        ),
+        ListTile(
           title: const Text('Share'),
           leading: const Icon(Ionicons.share_outline),
           onTap: () async {
