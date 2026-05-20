@@ -780,6 +780,10 @@ abstract class GqlQuery {
             id
             type
             activityId
+            context
+            activity{
+            ... on TextActivity { text }
+            }
             user {id name avatar {large}}
             createdAt
           }
@@ -787,6 +791,8 @@ abstract class GqlQuery {
             id
             type
             activityId
+            context
+            message { message }
             user {id name avatar {large}}
             createdAt
           }
@@ -801,6 +807,11 @@ abstract class GqlQuery {
             id
             type
             activityId
+            context
+            activity {
+            ... on TextActivity { text }
+            ... on MessageActivity{ message }
+            }
             user {id name avatar {large}}
             createdAt
           }
@@ -838,15 +849,16 @@ abstract class GqlQuery {
             type
             context
             thread {title}
-            comment {id siteUrl}
+            comment {id siteUrl comment}
             user {id name avatar {large}}
             createdAt
           }
           ... on ThreadCommentMentionNotification {
             id
             type
+            context
             thread {title}
-            comment {id siteUrl}
+            comment {id siteUrl comment}
             user {id name avatar {large}}
             createdAt
           }

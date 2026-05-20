@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
+import 'package:otraku/feature/viewer/repository_model.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/notification/notifications_model.dart';
@@ -18,6 +23,41 @@ final _notificationPlugin = FlutterLocalNotificationsPlugin();
 const _actionDone = 'DONE';
 const _actionSnooze = 'SNOOZE';
 const _actionReply = 'REPLY';
+
+@pragma('vm:entry-point')
+Future<void> _onBackgroundAction(NotificationResponse response) async {
+  if (response.actionId != _actionDone) return;
+  final payload = response.payload;
+  if (payload == null) return;
+
+  try {
+    final data = json.decode(payload) as Map<String, dynamic>;
+    final mediaId = data['mediaId'] as int?;
+    final episode = data['episode'] as int?;
+    if (mediaId == null || episode == null) return;
+
+    // Read the active account's token directly from storage
+    if (!kIsWeb) Hive.init((await getApplicationDocumentsDirectory()).path);
+    final box = await Hive.openBox('persistence');
+    final persistence = box.toMap();
+
+    final accountIndex = persistence['accountIndex'] as int?;
+    final accounts = persistence['accounts'] as List?;
+    if (accountIndex == null || accounts == null || accountIndex >= accounts.length) return;
+
+    final accountId = accounts[accountIndex]['id'] as int?;
+    if (accountId == null) return;
+
+    final token = (await const FlutterSecureStorage().readAll())['auth$accountId'];
+    if (token == null) return;
+
+    await Repository(
+      token,
+    ).request(GqlMutation.updateProgress, {'mediaId': mediaId, 'progress': episode});
+
+    await FlutterLocalNotificationsPlugin().cancel(id: response.id!);
+  } catch (_) {}
+}
 
 Future<String?> _downloadImage(String url, String filename) async {
   try {
@@ -38,7 +78,7 @@ class BackgroundHandler {
   static Future<void> init(StreamController<String> notificationCtrl) async {
     _notificationPlugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('notification_icon'),
+        android: AndroidInitializationSettings('notification_icon_monochrome'),
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveNotificationResponse: (response) {
@@ -61,14 +101,17 @@ class BackgroundHandler {
           return;
         }
 
-        if (response.payload == null) return;
-        notificationCtrl.add(response.payload!);
-
         if (response.actionId == _actionDone) {
-          if (response.payload != null) notificationCtrl.add(response.payload!);
+          _onBackgroundAction(response);
           return;
         }
+
+        if (response.payload == null) return;
+
+        notificationCtrl.add(_extractRoute(response.payload!));
       },
+
+      onDidReceiveBackgroundNotificationResponse: _onBackgroundAction,
     );
 
     // Check if the app was launched by a notification.
@@ -138,6 +181,15 @@ class BackgroundHandler {
     );
 
     await _showRich(dummy, 'New Episode', Routes.notifications);
+  }
+}
+
+String _extractRoute(String payload) {
+  try {
+    final map = json.decode(payload) as Map<String, dynamic>;
+    return map['route'] as String? ?? payload;
+  } catch (_) {
+    return payload;
   }
 }
 
@@ -260,11 +312,15 @@ void _fetch() => Workmanager().executeTask((_, _) async {
           Routes.comment((notification as ThreadCommentNotification).commentId),
         );
       case .airing:
-        await _showRich(
-          notification,
-          'New Episode',
-          Routes.media((notification as MediaReleaseNotification).mediaId),
-        );
+        final n = notification as MediaReleaseNotification;
+        final payload = n.episode != null
+            ? json.encode({
+                'route': Routes.media(n.mediaId),
+                'mediaId': n.mediaId,
+                'episode': n.episode,
+              })
+            : Routes.media(n.mediaId);
+        await _showRich(n, 'New Episode', payload);
       case .relatedMediaAddition:
         await _showRich(
           notification,
@@ -297,25 +353,6 @@ void _fetch() => Workmanager().executeTask((_, _) async {
   return true;
 });
 
-// () _show(SiteNotification notification, String title, String payload) {
-//   _notificationPlugin.show(
-//     id: notification.id,
-//     title: title,
-//     body: notification.texts.join(),
-//     payload: payload,
-//     notificationDetails: NotificationDetails(
-//       android: AndroidNotificationDetails(
-//         notification.type.name,
-//         notification.type.label,
-//         channelDescription: notification.type.label,
-//         icon: 'notification_icon_monochrome',
-//         largeIcon: const DrawableResourceAndroidBitmap('notificaion_icon'),
-//       ),
-//     ),
-//   );
-//   return ();
-// }
-
 Future<void> _showRich(SiteNotification notification, String title, String payload) async {
   //large icon
   FilePathAndroidBitmap? largeIcon;
@@ -328,17 +365,16 @@ Future<void> _showRich(SiteNotification notification, String title, String paylo
 
   switch (notification) {
     case MediaReleaseNotification _:
-      if (largeIcon != null) {
-        style = BigPictureStyleInformation(
-          largeIcon,
-          contentTitle: title,
-          summaryText: notification.texts.join(),
-        );
-      }
+      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+
       if (notification.type == NotificationType.airing) {
         actions = [
-          const AndroidNotificationAction(_actionDone, '✓ Done', showsUserInterface: true),
-          const AndroidNotificationAction(_actionDone, '⏰ Snooze (1h)', showsUserInterface: false),
+          const AndroidNotificationAction(_actionDone, '✓ Done', showsUserInterface: false),
+          const AndroidNotificationAction(
+            _actionSnooze,
+            '⏰ Snooze (1h)',
+            showsUserInterface: false,
+          ),
         ];
       }
     case ActivityNotification _:
