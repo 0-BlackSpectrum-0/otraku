@@ -232,6 +232,7 @@ class MediaReleaseNotification extends SiteNotification {
     required super.imageUrl,
     required super.texts,
     required this.mediaId,
+    this.episode,
   });
 
   factory MediaReleaseNotification(
@@ -259,10 +260,12 @@ class MediaReleaseNotification extends SiteNotification {
       imageUrl: map['media']?['coverImage']?[imageQuality.value],
       texts: texts,
       mediaId: map['media']?['id'] ?? 0,
+      episode: map['episode'] as int?,
     );
   }
 
   final int mediaId;
+  final int? episode;
 }
 
 class MediaChangeNotification extends SiteNotification {
