@@ -13,6 +13,7 @@ import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/user/user_header.dart';
 import 'package:otraku/widget/html_content.dart';
+import 'package:otraku/widget/layout/constrained_view.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/raw_dialog_box.dart';
 
@@ -158,10 +159,12 @@ class _UserView extends StatelessWidget {
               _ButtonRow(data.id, isViewer, highContrast),
               if (data.description.isNotEmpty) ...[
                 const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
-                SliverToBoxAdapter(
-                  child: GestureDetector(
-                    onLongPress: () => showRawMarkdown(context, data.description),
-                    child: HtmlContent(data.description),
+                SliverConstrainedView(
+                  sliver: SliverToBoxAdapter(
+                    child: GestureDetector(
+                      onLongPress: () => showRawMarkdown(context, data.description),
+                      child: HtmlContent(data.description),
+                    ),
                   ),
                 ),
               ],
