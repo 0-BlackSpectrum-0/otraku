@@ -16,7 +16,7 @@ dependencies:
   flutter_riverpod: ^3.3.1
 
   # Routing.
-  go_router: ^17.1.0
+  go_router: ^17.2.2
 
   # Data fetching.
   http: ^1.6.0
@@ -24,7 +24,7 @@ dependencies:
   # Lightweight storage.
   hive: ^2.2.3
 
-  # Access to device storage. Used for [hive] setup.
+  # Access to filesystem.
   path_provider: ^2.1.5
 
   # Secure storage for the access tokens.
@@ -55,7 +55,7 @@ dependencies:
   flutter_local_notifications: ^21.0.0
 
   # Parsing html into flutter widgets.
-  flutter_widget_from_html_core: ^0.17.0
+  flutter_widget_from_html_core: ^0.17.2
 
   # Transformation calculations.
   vector_math: ^2.2.0
@@ -66,8 +66,12 @@ dependencies:
   #video
   video_player: ^2.11.1
 
-  #to share images
+  # Sharing content.
   share_plus: ^12.0.2
+
+
+  # Saving media to gallery.
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:
