@@ -570,6 +570,16 @@ abstract class GqlQuery {
         donatorTier
         donatorBadge
         moderatorRoles
+        statistics{
+          anime{
+            count
+            minutesWatched
+          }
+          manga{
+            count
+            chaptersRead
+          }
+        }
         }
       }
       followers: Page(page: $page) @include(if: $withFollowers) {
@@ -584,6 +594,16 @@ abstract class GqlQuery {
         donatorTier
         donatorBadge
         moderatorRoles
+        statistics{
+          anime{
+            count
+            minutesWatched
+          }
+          manga{
+            count
+            chaptersRead
+          }
+        }
         }
       }
       threads: Page(page: $page) @include(if: $withThreads) {
