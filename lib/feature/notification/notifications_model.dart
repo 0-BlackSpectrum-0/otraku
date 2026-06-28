@@ -233,6 +233,7 @@ class MediaReleaseNotification extends SiteNotification {
     required super.texts,
     required this.mediaId,
     this.episode,
+    this.streamingUrl,
   });
 
   factory MediaReleaseNotification(
@@ -254,6 +255,17 @@ class MediaReleaseNotification extends SiteNotification {
       _ => const [],
     };
 
+    String? streamingUrl;
+    final links = map['media']?['externalLinks'] as List?;
+    if (links != null) {
+      for (final link in links) {
+        if (link['type'] == 'STREAMING' &&
+            (link['site'] as String).toLowerCase().contains('crunchyroll')) {
+          streamingUrl = link['url'] as String?;
+        }
+      }
+    }
+
     return MediaReleaseNotification._(
       map: map,
       type: type,
@@ -261,11 +273,13 @@ class MediaReleaseNotification extends SiteNotification {
       texts: texts,
       mediaId: map['media']?['id'] ?? 0,
       episode: map['episode'] as int?,
+      streamingUrl: streamingUrl,
     );
   }
 
   final int mediaId;
   final int? episode;
+  final String? streamingUrl;
 }
 
 class MediaChangeNotification extends SiteNotification {

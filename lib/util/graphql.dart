@@ -835,7 +835,8 @@ abstract class GqlQuery {
             id
             type
             episode
-            media {id title {userPreferred} coverImage {extraLarge large medium}}
+            media {id title {userPreferred} coverImage {extraLarge large medium} externalLinks {url site type}
+            }
             createdAt
           }
           ... on MediaSubmissionUpdateNotification {

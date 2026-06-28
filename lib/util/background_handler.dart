@@ -16,12 +16,13 @@ import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/notification/notifications_model.dart';
 import 'package:otraku/util/graphql.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
 final _notificationPlugin = FlutterLocalNotificationsPlugin();
 
 const _actionDone = 'DONE';
-const _actionSnooze = 'SNOOZE';
+const _actionPlay = 'PLAY';
 const _actionReply = 'REPLY';
 
 @pragma('vm:entry-point')
@@ -81,28 +82,18 @@ class BackgroundHandler {
         android: AndroidInitializationSettings('notification_icon_monochrome'),
         iOS: DarwinInitializationSettings(),
       ),
-      onDidReceiveNotificationResponse: (response) {
-        if (response.actionId == _actionSnooze) {
-          Future.delayed(const Duration(hours: 1), () {
-            _notificationPlugin.show(
-              id: response.id!,
-              title: 'Snoozed Reminder',
-              body: 'You Snoozed this earlier.',
-              notificationDetails: const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  'snooze_channel',
-                  'Snoozed Notifications',
-                  icon: 'notification_icon_monochrome',
-                ),
-              ),
-              payload: response.payload,
-            );
-          });
+      onDidReceiveNotificationResponse: (response) async {
+        if (response.actionId == _actionDone) {
+          await _onBackgroundAction(response);
           return;
         }
 
-        if (response.actionId == _actionDone) {
-          _onBackgroundAction(response);
+        if (response.actionId == _actionPlay) {
+          try {
+            final data = json.decode(response.payload ?? '{}') as Map<String, dynamic>;
+            final url = data['streamingUrl'] as String?;
+            if (url != null) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          } catch (_) {}
           return;
         }
 
@@ -162,25 +153,39 @@ class BackgroundHandler {
 
   /// FOR TESTING ONLY — fires a dummy notification immediately.
   static Future<void> sendTestNotification() async {
-    final dummy = MediaReleaseNotification(
-      {
-        'id': 999,
-        'createdAt': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        'episode': 8,
-        'media': {
-          'id': 97663,
-          'title': {'userPreferred': 'Knights Magic'},
-          'coverImage': {
-            'large':
-                'https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx97663-4TMJDIpm3toz.png',
-          },
-        },
-      },
-      NotificationType.airing,
-      ImageQuality.high, // change to whatever value your app uses as default
-    );
+    final container = ProviderContainer(retry: (_, __) => null);
+    await container.read(persistenceProvider.notifier).init();
+    final persistence = container.read(persistenceProvider);
 
-    await _showRich(dummy, 'New Episode', Routes.notifications);
+    if (persistence.accountGroup.accountIndex == null) return;
+
+    Map<String, dynamic> data;
+    try {
+      data = await container.read(repositoryProvider).request(GqlQuery.notifications, {
+        'filter': ['AIRING'],
+      });
+    } catch (_) {
+      return;
+    }
+
+    final notifications = data['Page']?['notifications'] as List?;
+    if (notifications == null || notifications.isEmpty) return;
+
+    final notification = SiteNotification.maybe(
+      notifications.first as Map<String, dynamic>,
+      persistence.options.imageQuality,
+    );
+    if (notification is! MediaReleaseNotification) return;
+
+    final payload = json.encode({
+      'route': Routes.media(notification.mediaId),
+      'mediaId': notification.mediaId,
+      'episode': notification.episode,
+      if (notification.streamingUrl != null) 'streamingUrl': notification.streamingUrl,
+    });
+
+    await _showRich(notification, 'New Episode', payload);
+    container.dispose();
   }
 }
 
@@ -318,6 +323,7 @@ void _fetch() => Workmanager().executeTask((_, _) async {
                 'route': Routes.media(n.mediaId),
                 'mediaId': n.mediaId,
                 'episode': n.episode,
+                if (n.streamingUrl != null) 'streamingUrl': n.streamingUrl,
               })
             : Routes.media(n.mediaId);
         await _showRich(n, 'New Episode', payload);
@@ -368,13 +374,11 @@ Future<void> _showRich(SiteNotification notification, String title, String paylo
       style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
 
       if (notification.type == NotificationType.airing) {
+        final n = notification;
         actions = [
-          const AndroidNotificationAction(_actionDone, '✓ Done', showsUserInterface: false),
-          const AndroidNotificationAction(
-            _actionSnooze,
-            '⏰ Snooze (1h)',
-            showsUserInterface: false,
-          ),
+          const AndroidNotificationAction(_actionDone, 'Done', showsUserInterface: false),
+          if (n.streamingUrl != null)
+            const AndroidNotificationAction(_actionPlay, 'Play', showsUserInterface: true),
         ];
       }
     case ActivityNotification _:
