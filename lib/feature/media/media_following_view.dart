@@ -2,9 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
@@ -46,6 +47,7 @@ class _MediaFollowingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bodyMediumLineHeight = context.lineHeight(TextTheme.of(context).bodyMedium!);
     final tileHeight = bodyMediumLineHeight + max(bodyMediumLineHeight, 35) + 5;
 
@@ -77,34 +79,30 @@ class _MediaFollowingGrid extends StatelessWidget {
                         Row(
                           mainAxisAlignment: .spaceBetween,
                           children: [
-                            //Name
                             Text(items[i].userName, overflow: .ellipsis, maxLines: 1),
-                            //Score
                             ScoreLabel(items[i].score, items[i].scoreFormat),
                           ],
                         ),
-                        //Progress
                         SizedBox(
                           height: 35,
                           child: Row(
                             mainAxisAlignment: .spaceBetween,
                             children: [
                               TextRail({
-                                items[i].entryStatus.label(null): true,
+                                items[i].entryStatus.localize(l10n, null): true,
                                 items[i].progress == items[i].progressMax
                                         ? items[i].progress.toString()
                                         : '${items[i].progress}/${items[i].progressMax ?? "?"}':
                                     false,
                               }),
                               const Spacer(),
-                              //Repeat
                               if (items[i].repeat > 0)
                                 ConstrainedBox(
                                   constraints: BoxConstraints(minWidth: Theming.minTapTarget),
                                   child: Align(
                                     alignment: .centerRight,
                                     child: Tooltip(
-                                      message: 'Repeats',
+                                      message: l10n.entryRepeats,
                                       child: Row(
                                         mainAxisSize: .min,
                                         spacing: 3,
@@ -119,7 +117,6 @@ class _MediaFollowingGrid extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                              //Notes
                               if (items[i].notes != '')
                                 ConstrainedBox(
                                   constraints: BoxConstraints(minWidth: Theming.minTapTarget),

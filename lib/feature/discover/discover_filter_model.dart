@@ -236,7 +236,7 @@ enum UsersSort {
 }
 
 class DiscoverRecommendationsFilter {
-  const DiscoverRecommendationsFilter({this.sort = .recent, this.inLists});
+  const DiscoverRecommendationsFilter({this.sort = .newest, this.inLists});
 
   final RecommendationsSort sort;
   final bool? inLists;
@@ -249,7 +249,7 @@ class DiscoverRecommendationsFilter {
 }
 
 enum RecommendationsSort {
-  recent('ID_DESC'),
+  newest('ID_DESC'),
   highestRated('RATING_DESC'),
   lowestRated('RATING');
 

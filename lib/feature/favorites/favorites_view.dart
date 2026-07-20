@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
@@ -12,6 +12,7 @@ import 'package:otraku/feature/edit/edit_view.dart';
 import 'package:otraku/feature/favorites/favorites_model.dart';
 import 'package:otraku/feature/favorites/favorites_provider.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/paged_controller.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
@@ -56,12 +57,11 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final type = FavoritesType.values[_tabCtrl.index];
 
     final isViewer = ref.watch(viewerIdProvider) == widget.userId;
-
     final options = ref.watch(persistenceProvider.select((s) => s.options));
-
     final count = ref.watch(
       favoritesProvider(widget.userId).select((s) => s.value?.getCount(type) ?? 0),
     );
@@ -85,18 +85,18 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
             trailing: [
               if (inEditingMode) ...[
                 IconButton(
-                  tooltip: 'Cancel',
+                  tooltip: l10n.actionCancel,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => ref.read(favoritesProvider(widget.userId).notifier).cancelEdit(),
                 ),
                 IconButton(
-                  tooltip: 'Save',
+                  tooltip: l10n.actionSave,
                   icon: const Icon(Icons.save_outlined),
                   onPressed: () =>
                       ref.read(favoritesProvider(widget.userId).notifier).saveEdit().then((err) {
                         if (err == null || !context.mounted) return;
 
-                        SnackBarExtension.show(context, 'Failed to reorder: $err');
+                        SnackBarExtension.show(context, l10n.errorFailedReordering(err.toString()));
                       }),
                 ),
               ] else if (count > 0)
@@ -114,7 +114,7 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
               key: const Key('edit'),
               scrollCtrl: _scrollCtrl,
               child: FloatingActionButton(
-                tooltip: 'Edit',
+                tooltip: l10n.actionEdit,
                 child: const Icon(Icons.edit_outlined),
                 onPressed: () =>
                     ref.read(favoritesProvider(widget.userId).notifier).startEdit(type),
@@ -127,12 +127,12 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> with SingleTicker
               onChanged: (i) => _tabCtrl.index = i,
               onSame: (_) => _scrollCtrl.scrollToTop(),
               scrollCtrl: _scrollCtrl,
-              items: const {
-                'Anime': Ionicons.film_outline,
-                'Manga': Ionicons.book_outline,
-                'Characters': Ionicons.man_outline,
-                'Staff': Ionicons.briefcase_outline,
-                'Studios': Ionicons.business_outline,
+              items: {
+                l10n.mediaTypeAnime: Ionicons.film_outline,
+                l10n.mediaTypeManga: Ionicons.book_outline,
+                l10n.characters: Ionicons.man_outline,
+                l10n.staff: Ionicons.briefcase_outline,
+                l10n.studios(100): Ionicons.business_outline,
               },
               selectedItems: const {
                 'Anime': Ionicons.film,
@@ -423,6 +423,7 @@ class _EditList extends StatefulWidget {
 class _EditListState extends State<_EditList> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final lineCount = widget.compact ? 1 : 4;
     final lineHeight = context.lineHeight(TextTheme.of(context).bodyMedium!);
     final itemExtent = max(lineHeight * lineCount, Theming.iconBig + 20) + 20;
@@ -431,10 +432,6 @@ class _EditListState extends State<_EditList> {
       itemExtent: itemExtent,
       itemCount: widget.items.length,
       onReorder: (oldIndex, newIndex) => setState(() {
-        if (oldIndex < newIndex) {
-          newIndex -= 1;
-        }
-
         final item = widget.items.removeAt(oldIndex);
         widget.items.insert(newIndex, item);
       }),
@@ -442,12 +439,7 @@ class _EditListState extends State<_EditList> {
         return DecoratedBox(
           decoration: BoxDecoration(
             boxShadow: [
-              BoxShadow(
-                color: ColorScheme.of(context).surface,
-                blurRadius: 12,
-                spreadRadius: 1,
-                // offset: Offset(0, 4 * animation.value),
-              ),
+              BoxShadow(color: ColorScheme.of(context).surface, blurRadius: 12, spreadRadius: 1),
             ],
           ),
           child: child,
@@ -468,7 +460,7 @@ class _EditListState extends State<_EditList> {
                 icon: item.isFavorite
                     ? const Icon(Icons.favorite)
                     : const Icon(Icons.favorite_border_rounded),
-                tooltip: item.isFavorite ? 'Unfavorite' : 'Favorite',
+                tooltip: item.isFavorite ? l10n.favoritesRemove : l10n.favoritesAdd,
                 onPressed: () async {
                   final isFavorite = item.isFavorite;
                   setState(() => item.isFavorite = !isFavorite);

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/activity/activities_filter_provider.dart';
 import 'package:otraku/feature/activity/activities_model.dart';
 import 'package:otraku/feature/activity/activity_date_filter.dart';
 import 'package:otraku/feature/feed/feed_date_filter_sheet.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/activity/activity_filter_sheet.dart';
 import 'package:otraku/feature/activity/activities_provider.dart';
@@ -47,6 +48,7 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
   @override
   Widget build(BuildContext context) {
     final viewerId = ref.watch(viewerIdProvider);
+    final l10n = AppLocalizations.of(context)!;
     final userId = widget.tag.userId;
 
     final floatingAction = viewerId != null
@@ -54,7 +56,7 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
             key: const Key('post'),
             scrollCtrl: _scrollCtrl,
             child: FloatingActionButton(
-              tooltip: userId == viewerId ? 'New Post' : 'New Message',
+              tooltip: userId == viewerId ? l10n.postsAdd : l10n.postsAddMessage,
               child: const Icon(Icons.edit_outlined),
               onPressed: () => showSheet(
                 context,
@@ -73,7 +75,7 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
       topBar: HidingBar(
         scrollCtrl: _scrollCtrl,
         child: TopBar(
-          title: 'Activities',
+          title: l10n.activities,
           trailing: [
             Consumer(
               builder: (context, ref, _) {
@@ -105,7 +107,7 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
                       onPressed: () => showFeedDateFilterSheet(context, ref, widget.tag),
                     ),
                     IconButton(
-                      tooltip: 'Filter',
+                      tooltip: l10n.filter,
                       icon: const Icon(Ionicons.funnel_outline),
                       onPressed: () => showActivityFilterSheet(context, ref, widget.tag),
                     ),

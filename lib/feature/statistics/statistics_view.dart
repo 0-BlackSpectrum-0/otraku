@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
@@ -11,6 +11,7 @@ import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/statistics/charts.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/widget/grid/sliver_grid_delegates.dart';
@@ -52,6 +53,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final child = Consumer(
       builder: (context, ref, _) {
         ref.listen<AsyncValue<User>>(
@@ -66,7 +68,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
             .watch(userProvider(tag))
             .when(
               loading: () => const Center(child: Loader()),
-              error: (_, _) => const Center(child: Text('Failed to load statistics')),
+              error: (err, _) => Center(child: Text(l10n.errorFailedLoading(err.toString()))),
               data: (data) {
                 return TabBarView(
                   controller: _tabCtrl,
@@ -114,8 +116,11 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
         scrollCtrl: _scrollCtrl,
-        items: const {'Anime': Ionicons.film_outline, 'Manga': Ionicons.book_outline},
-        selectedItems: const {'Anime': Ionicons.film, 'Manga': Ionicons.book},
+        items: {
+          l10n.mediaTypeAnime: Ionicons.film_outline,
+          l10n.mediaTypeManga: Ionicons.book_outline,
+        },
+        selectedItems: {l10n.mediaTypeAnime: Ionicons.film, l10n.mediaTypeManga: Ionicons.book},
       ),
       child: child,
     );
@@ -145,6 +150,7 @@ class _StatisticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     const spacing = SliverToBoxAdapter(child: SizedBox(height: Theming.offset));
 
     return CustomScrollView(
@@ -153,14 +159,15 @@ class _StatisticsView extends StatelessWidget {
         SliverToBoxAdapter(
           child: SizedBox(height: MediaQuery.paddingOf(context).top + Theming.offset),
         ),
-        _Details(statistics, ofAnime, highContrast),
+        _Details(statistics, ofAnime, l10n, highContrast),
         if (statistics.scores.isNotEmpty) ...[
           spacing,
           _BarChart(
-            title: 'Score',
+            title: l10n.entryScore,
             statistics: statistics.scores,
             ofAnime: ofAnime,
             full: false,
+            l10n: l10n,
             initialTab: primaryBarChartTab(),
             onTabChanged: onPrimaryTabChanged,
           ),
@@ -168,10 +175,11 @@ class _StatisticsView extends StatelessWidget {
         if (statistics.lengths.isNotEmpty) ...[
           spacing,
           _BarChart(
-            title: ofAnime ? 'Episodes' : 'Chapters',
+            title: ofAnime ? l10n.mediaEpisodes : l10n.mediaChapters,
             statistics: statistics.lengths,
             ofAnime: ofAnime,
             full: true,
+            l10n: l10n,
             initialTab: secondaryBarChartTab(),
             onTabChanged: onSecondaryTabChanged,
           ),
@@ -184,9 +192,27 @@ class _StatisticsView extends StatelessWidget {
               height: 200,
             ),
             delegate: SliverChildListDelegate([
-              _PieChart('Format Distribution', statistics.formats, highContrast),
-              _PieChart('Status Distribution', statistics.statuses, highContrast),
-              _PieChart('Country Distribution', statistics.countries, highContrast),
+              PieChart(
+                title: l10n.statisticsDistributionFormat,
+                categories: statistics.formats
+                    .map((e) => (e.name.localize(l10n), e.count))
+                    .toList(),
+                highContrast: highContrast,
+              ),
+              PieChart(
+                title: l10n.statisticsDistributionStatus,
+                categories: statistics.statuses
+                    .map((e) => (e.name.localize(l10n, ofAnime), e.count))
+                    .toList(),
+                highContrast: highContrast,
+              ),
+              PieChart(
+                title: l10n.statisticsDistributionCountry,
+                categories: statistics.countries
+                    .map((e) => (e.name.localize(l10n), e.count))
+                    .toList(),
+                highContrast: highContrast,
+              ),
             ]),
           ),
         ],
@@ -197,38 +223,30 @@ class _StatisticsView extends StatelessWidget {
 }
 
 class _Details extends StatelessWidget {
-  _Details(Statistics statistics, bool ofAnime, this.highContrast) {
-    subtitles.add(statistics.count);
-    subtitles.add(statistics.partsConsumed);
+  _Details(Statistics statistics, bool ofAnime, AppLocalizations l10n, this.highContrast)
+    : categories = [
+        if (ofAnime) ...[
+          (l10n.statisticsTotalAnime, Ionicons.film_outline, statistics.count),
+          (l10n.statisticsEpisodesWatched, Ionicons.play_outline, statistics.partsConsumed),
+          (
+            l10n.statisticsDaysWatched,
+            Ionicons.calendar_clear_outline,
+            ((statistics.amountConsumed / 1440) * 10).round() / 10,
+          ),
+        ] else ...[
+          (l10n.statisticsTotalManga, Ionicons.book_outline, statistics.count),
+          (l10n.statisticsChaptersRead, Ionicons.reader_outline, statistics.partsConsumed),
+          (l10n.statisticsVolumesRead, Ionicons.bookmark_outline, statistics.amountConsumed),
+        ],
+        (l10n.mediaScoreMean, Ionicons.star_half_outline, statistics.meanScore),
+        (
+          l10n.statisticsStandardDeviation,
+          Ionicons.calculator_outline,
+          statistics.standardDeviation,
+        ),
+      ];
 
-    if (ofAnime) {
-      subtitles.add(((statistics.amountConsumed / 1440) * 10).round() / 10);
-      icons.add(Ionicons.film_outline);
-      icons.add(Ionicons.play_outline);
-      icons.add(Ionicons.calendar_clear_outline);
-      titles.add('Total Anime');
-      titles.add('Episodes Watched');
-      titles.add('Days Watched');
-    } else {
-      subtitles.add(statistics.amountConsumed);
-      icons.add(Ionicons.book_outline);
-      icons.add(Ionicons.reader_outline);
-      icons.add(Ionicons.bookmark_outline);
-      titles.add('Total Manga');
-      titles.add('Chapters Read');
-      titles.add('Volumes Read');
-    }
-    icons.add(Ionicons.star_half_outline);
-    icons.add(Ionicons.calculator_outline);
-    titles.add('Mean Score');
-    titles.add('Standard Deviation');
-    subtitles.add(statistics.meanScore);
-    subtitles.add(statistics.standardDeviation);
-  }
-
-  final icons = <IconData>[];
-  final titles = <String>[];
-  final subtitles = <num>[];
+  final List<(String, IconData, num)> categories;
   final bool highContrast;
 
   @override
@@ -246,9 +264,9 @@ class _Details extends StatelessWidget {
         crossAxisSpacing: 10,
       ),
       delegate: SliverChildBuilderDelegate(
-        childCount: titles.length,
+        childCount: categories.length,
         (context, i) => Tooltip(
-          message: titles[i],
+          message: categories[i].$1,
           triggerMode: .tap,
           child: CardExtension.highContrast(highContrast)(
             child: Padding(
@@ -256,7 +274,7 @@ class _Details extends StatelessWidget {
               child: Row(
                 spacing: Theming.offset,
                 children: [
-                  Icon(icons[i], size: Theming.iconBig),
+                  Icon(categories[i].$2, size: Theming.iconBig),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: .center,
@@ -264,13 +282,13 @@ class _Details extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            titles[i],
+                            categories[i].$1,
                             style: TextTheme.of(context).labelMedium,
                             overflow: .ellipsis,
                             maxLines: 1,
                           ),
                         ),
-                        Text(subtitles[i].toString()),
+                        Text(categories[i].$3.toString()),
                       ],
                     ),
                   ),
@@ -291,14 +309,16 @@ class _BarChart extends StatefulWidget {
     required this.initialTab,
     required this.ofAnime,
     required this.full,
+    required this.l10n,
     required this.onTabChanged,
   });
 
-  final List<AmountStatistics> statistics;
+  final List<({String name, int count, int amount, double meanScore})> statistics;
   final String title;
   final int initialTab;
   final bool ofAnime;
   final bool full;
+  final AppLocalizations l10n;
   final void Function(int) onTabChanged;
 
   @override
@@ -310,42 +330,39 @@ class _BarChartState extends State<_BarChart> {
 
   @override
   Widget build(BuildContext context) {
-    late List<num> values;
-    if (_tab == 0) {
-      values = widget.statistics.map((s) => s.count).toList();
-    } else if (_tab == 1) {
-      values = widget.statistics.map((s) => s.amount).toList();
-    } else {
-      values = widget.statistics.map((s) => s.meanScore).toList();
-    }
+    final categories = switch (_tab) {
+      0 => widget.statistics.map((e) => (e.name, e.count)).toList(),
+      1 => widget.statistics.map((e) => (e.name, e.amount)).toList(),
+      _ => widget.statistics.map((e) => (e.name, e.meanScore)).toList(),
+    };
 
     return SliverToBoxAdapter(
       child: BarChart(
         title: widget.title,
         toolbar: SegmentedButton(
           segments: [
-            const ButtonSegment(
+            ButtonSegment(
               value: 0,
-              label: Text('Titles'),
-              icon: Icon(Icons.numbers_outlined),
+              label: Text(widget.l10n.statisticsTitles),
+              icon: const Icon(Icons.numbers_outlined),
             ),
             if (widget.ofAnime)
-              const ButtonSegment(
+              ButtonSegment(
                 value: 1,
-                label: Text('Hours'),
-                icon: Icon(Icons.hourglass_bottom_outlined),
+                label: Text(widget.l10n.statisticsHours),
+                icon: const Icon(Icons.hourglass_bottom_outlined),
               )
             else
-              const ButtonSegment(
+              ButtonSegment(
                 value: 1,
-                label: Text('Chapters'),
-                icon: Icon(Icons.hourglass_bottom_outlined),
+                label: Text(widget.l10n.mediaChapters),
+                icon: const Icon(Icons.hourglass_bottom_outlined),
               ),
             if (widget.full && widget.statistics.any((s) => s.meanScore > 0))
-              const ButtonSegment(
+              ButtonSegment(
                 value: 2,
-                label: Text('Score'),
-                icon: Icon(Icons.star_half_outlined),
+                label: Text(widget.l10n.entryScore),
+                icon: const Icon(Icons.star_half_outlined),
               ),
           ],
           selected: {_tab},
@@ -354,24 +371,8 @@ class _BarChartState extends State<_BarChart> {
             widget.onTabChanged(v.first);
           },
         ),
-        names: widget.statistics.map((s) => s.type).toList(),
-        values: values,
+        categories: categories,
       ),
     );
-  }
-}
-
-class _PieChart extends StatelessWidget {
-  const _PieChart(this.title, this.stats, this.highContrast);
-
-  final String title;
-  final List<TypeStatistics> stats;
-  final bool highContrast;
-
-  @override
-  Widget build(BuildContext context) {
-    final names = stats.map((s) => s.value).toList();
-    final values = stats.map((s) => s.count).toList();
-    return PieChart(title: title, names: names, values: values, highContrast: highContrast);
   }
 }

@@ -4,8 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
@@ -39,6 +40,8 @@ class _TextInputDialogState extends State<TextInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AlertDialog(
       title: Text(widget.title),
       content: Form(
@@ -48,7 +51,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
           controller: _textCtrl,
           decoration: InputDecoration(
             isDense: true,
-            hint: const Text('Enter'),
+            hint: Text(l10n.enter),
             hintStyle: TextStyle(color: ColorScheme.of(context).onSurfaceVariant),
             border: const OutlineInputBorder(borderRadius: Theming.borderRadiusSmall),
           ),
@@ -56,7 +59,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
           validator: (value) {
             final text = value?.trim() ?? '';
             if (text.isEmpty) {
-              return 'The field cannot be empty.';
+              return l10n.errorFieldRequired;
             }
 
             if (widget.validator != null) {
@@ -68,14 +71,14 @@ class _TextInputDialogState extends State<TextInputDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.actionGoBack)),
         TextButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               Navigator.pop(context, _textCtrl.text.trim());
             }
           },
-          child: const Text('Confirm'),
+          child: Text(l10n.actionConfirm),
         ),
       ],
     );
@@ -110,14 +113,14 @@ class ConfirmationDialog extends StatelessWidget {
 
   final String title;
   final String? content;
-  final String primaryAction;
+  final String? primaryAction;
   final String? secondaryAction;
 
   static Future<void> show(
     BuildContext context, {
     required String title,
     String? content,
-    String primaryAction = 'Ok',
+    String? primaryAction,
     String? secondaryAction,
     void Function()? onConfirm,
   }) => showDialog(
@@ -138,7 +141,10 @@ class ConfirmationDialog extends StatelessWidget {
       actions: [
         if (secondaryAction != null)
           TextButton(child: Text(secondaryAction!), onPressed: () => Navigator.pop(context, false)),
-        TextButton(child: Text(primaryAction), onPressed: () => Navigator.pop(context, true)),
+        TextButton(
+          child: Text(primaryAction ?? AppLocalizations.of(context)!.actionOk),
+          onPressed: () => Navigator.pop(context, true),
+        ),
       ],
     );
   }
@@ -193,6 +199,8 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Dialog(
       insetPadding: .zero,
       // give darkening effect
@@ -263,7 +271,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                         ),
                         child: IconButton(
                           color: ColorScheme.of(context).onPrimary,
-                          tooltip: 'Download',
+                          tooltip: l10n.actionDownload,
                           icon: const Icon(Ionicons.download_outline),
                           onPressed: () => _saveImage(context),
                         ),
@@ -274,7 +282,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                           borderRadius: Theming.borderRadiusSmall,
                         ),
                         child: IconButton(
-                          tooltip: 'More',
+                          tooltip: l10n.actionMore,
                           color: ColorScheme.of(context).onPrimary,
                           enableFeedback: true,
                           icon: const Icon(Ionicons.ellipsis_vertical),
@@ -282,7 +290,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                             context,
                             SimpleSheet.list([
                               ListTile(
-                                title: Text('Share'),
+                                title: Text(l10n.actionShare),
                                 leading: const Icon(Ionicons.share_outline),
                                 onTap: () async {
                                   final file = await DefaultCacheManager().getSingleFile(

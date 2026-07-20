@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/activity/activities_filter_provider.dart';
@@ -24,6 +24,7 @@ import 'package:otraku/feature/tag/tag_provider.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/user/user_view.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/paged_controller.dart';
 import 'package:otraku/feature/discover/discover_view.dart';
 import 'package:otraku/feature/collection/collection_view.dart';
@@ -105,6 +106,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     ref.watch(settingsProvider.select((_) => null));
     ref.watch(tagsProvider.select((_) => null));
 
@@ -142,7 +144,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
                     as HomeActivitiesFilter)
                 .onFollowing
             ? 'Following'
-            : 'Global',
+            : l10n.filterActivitiesGlobal,
         onTitleTap: () {
           final filter =
               ref.read(activitiesFilterProvider(HomeActivitiesTag.instance))
@@ -170,8 +172,20 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     final hidingTopBar = HidingBar(scrollCtrl: activeScrollCtrl, child: topBar);
 
     final navigationConfig = NavigationConfig(
-      items: _homeTabs,
-      selectedItems: _homeSelectedTabs,
+      items: {
+        l10n.feed: Ionicons.reader_outline,
+        l10n.mediaTypeAnime: Ionicons.film_outline,
+        l10n.mediaTypeManga: Ionicons.book_outline,
+        l10n.discover: Ionicons.compass_outline,
+        l10n.profile: Ionicons.person_outline,
+      },
+      selectedItems: {
+        l10n.feed: Ionicons.reader,
+        l10n.mediaTypeAnime: Ionicons.film,
+        l10n.mediaTypeManga: Ionicons.book,
+        l10n.discover: Ionicons.compass,
+        l10n.profile: Ionicons.person,
+      },
       selected: _tabCtrl.index,
       onChanged: (i) => context.go(Routes.home(HomeTab.values[i])),
       onSame: (i) {
@@ -280,22 +294,6 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       child: child,
     );
   }
-
-  static final _homeTabs = {
-    HomeTab.feed.label: Ionicons.reader_outline,
-    HomeTab.anime.label: Ionicons.film_outline,
-    HomeTab.manga.label: Ionicons.book_outline,
-    HomeTab.discover.label: Ionicons.compass_outline,
-    HomeTab.profile.label: Ionicons.person_outline,
-  };
-
-  static final _homeSelectedTabs = {
-    HomeTab.feed.label: Ionicons.reader,
-    HomeTab.anime.label: Ionicons.film,
-    HomeTab.manga.label: Ionicons.book,
-    HomeTab.discover.label: Ionicons.compass,
-    HomeTab.profile.label: Ionicons.person,
-  };
 
   void _toggleSearchFocus(FocusNode node) => node.hasFocus ? node.unfocus() : node.requestFocus();
 }

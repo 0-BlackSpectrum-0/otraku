@@ -4,6 +4,7 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/composition/composition_view.dart';
 import 'package:otraku/feature/comment/comment_model.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
@@ -38,6 +39,8 @@ class CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final userRow = Row(
       spacing: Theming.offset,
       children: [
@@ -57,7 +60,7 @@ class CommentTile extends StatelessWidget {
               Timestamp(
                 comment.createdAt,
                 analogClock,
-                leading: Text('replied', style: TextTheme.of(context).labelSmall),
+                leading: Text(l10n.postsReplied, style: TextTheme.of(context).labelSmall),
               ),
             ],
           ),
@@ -79,7 +82,7 @@ class CommentTile extends StatelessWidget {
               children: [
                 if (comment.isLocked)
                   Tooltip(
-                    message: 'Locked',
+                    message: l10n.postsLocked,
                     triggerMode: .tap,
                     child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
                   ),
@@ -99,7 +102,7 @@ class CommentTile extends StatelessWidget {
                 if (interaction != null) ...[
                   if (comment.userId != viewerId)
                     Tooltip(
-                      message: 'Reply',
+                      message: l10n.postsRepliesAdd,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
                         onTap: () => showSheet(
@@ -126,7 +129,7 @@ class CommentTile extends StatelessWidget {
                     )
                   else
                     Tooltip(
-                      message: 'Replies',
+                      message: l10n.postsReplies,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
                         onTap: () => context.push(Routes.comment(comment.id)),
@@ -147,7 +150,7 @@ class CommentTile extends StatelessWidget {
                   SizedBox(
                     height: 20,
                     child: Tooltip(
-                      message: 'Replies',
+                      message: l10n.postsReplies,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
                         onTap: () => context.push(Routes.comment(comment.id)),
@@ -156,7 +159,7 @@ class CommentTile extends StatelessWidget {
                     ),
                   ),
                   Tooltip(
-                    message: 'Likes',
+                    message: l10n.likes,
                     triggerMode: .tap,
                     child: Row(
                       mainAxisSize: .min,
@@ -194,11 +197,7 @@ class CommentTile extends StatelessWidget {
                   )
                 : TextButton(
                     onPressed: () => context.push(Routes.comment(comment.id)),
-                    child: Text(
-                      comment.childComments.length > 1
-                          ? '${comment.childComments.length} replies'
-                          : '1 reply',
-                    ),
+                    child: Text(l10n.postsRepliesCount(comment.childComments.length)),
                   ),
         ],
       ),
@@ -235,10 +234,11 @@ class _LikeButton extends StatefulWidget {
 class __LikeButtonState extends State<_LikeButton> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final comment = widget.comment;
 
     return Tooltip(
-      message: !comment.isLiked ? 'Like' : 'Unlike',
+      message: !comment.isLiked ? l10n.likesAdd : l10n.likesRemove,
       child: InkResponse(
         radius: Theming.radiusSmall.x,
         onTap: () async {
