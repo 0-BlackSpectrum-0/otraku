@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,6 +14,8 @@ import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/feature/viewer/repository_model.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
+import 'package:otraku/localizations/gen.dart';
+import 'package:otraku/localizations/gen_en.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/notification/notifications_model.dart';
 import 'package:otraku/util/graphql.dart';
@@ -73,10 +77,12 @@ Future<String?> _downloadImage(String url, String filename) async {
   }
 }
 
-class BackgroundHandler {
-  BackgroundHandler._();
+class BackgroundWorker {
+  BackgroundWorker._();
 
   static Future<void> init(StreamController<String> notificationCtrl) async {
+    WidgetsFlutterBinding.ensureInitialized();
+
     _notificationPlugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('notification_icon_monochrome'),
@@ -118,6 +124,7 @@ class BackgroundHandler {
         '0',
         'notifications',
         constraints: Constraints(networkType: NetworkType.connected),
+        inputData: {'languageCode': PlatformDispatcher.instance.locale.languageCode},
       );
     }
   }
@@ -159,6 +166,8 @@ class BackgroundHandler {
 
     if (persistence.accountGroup.accountIndex == null) return;
 
+    final l10n = _getLocalizations(null);
+
     Map<String, dynamic> data;
     try {
       data = await container.read(repositoryProvider).request(GqlQuery.notifications, {
@@ -184,7 +193,7 @@ class BackgroundHandler {
       if (notification.streamingUrl != null) 'streamingUrl': notification.streamingUrl,
     });
 
-    await _showRich(notification, 'New Episode', payload);
+    await _showRich(l10n, notification, 'New Episode', payload);
     container.dispose();
   }
 }
@@ -199,7 +208,7 @@ String _extractRoute(String payload) {
 }
 
 @pragma('vm:entry-point')
-void _fetch() => Workmanager().executeTask((_, _) async {
+void _fetch() => Workmanager().executeTask((_, inputData) async {
   final container = ProviderContainer(retry: (retryCount, error) => null);
 
   await container.read(persistenceProvider.notifier).init();
@@ -229,6 +238,7 @@ void _fetch() => Workmanager().executeTask((_, _) async {
   if (count > notifications.length) count = notifications.length;
   if (count == 0) return true;
 
+  final l10n = _getLocalizations(inputData);
   final lastNotificationId = persistence.appMeta.lastNotificationId;
 
   appMeta = AppMeta(
@@ -246,72 +256,84 @@ void _fetch() => Workmanager().executeTask((_, _) async {
     switch (notification.type) {
       case .following:
         await _showRich(
+          l10n,
           notification,
           'New Follow',
           Routes.user((notification as FollowNotification).userId),
         );
       case .activityMention:
         await _showRich(
+          l10n,
           notification,
           'New Mention',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .activityMessage:
         await _showRich(
+          l10n,
           notification,
           'New Message',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .activityReply:
         await _showRich(
+          l10n,
           notification,
           'New Reply',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .activityReplySubscribed:
         await _showRich(
+          l10n,
           notification,
           'New Reply To Subscribed Activity',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .activityLike:
         await _showRich(
+          l10n,
           notification,
           'New Activity Like',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .acrivityReplyLike:
         await _showRich(
+          l10n,
           notification,
           'New Reply Like',
           Routes.activity((notification as ActivityNotification).activityId),
         );
       case .threadLike:
         await _showRich(
+          l10n,
           notification,
           'New Forum Like',
           Routes.thread((notification as ThreadNotification).threadId),
         );
       case .threadCommentReply:
         await _showRich(
+          l10n,
           notification,
           'New Forum Reply',
           Routes.comment((notification as ThreadCommentNotification).commentId),
         );
       case .threadCommentMention:
         await _showRich(
+          l10n,
           notification,
           'New Forum Mention',
           Routes.comment((notification as ThreadCommentNotification).commentId),
         );
       case .threadReplySubscribed:
         await _showRich(
+          l10n,
           notification,
           'New Forum Comment',
           Routes.comment((notification as ThreadCommentNotification).commentId),
         );
       case .threadCommentLike:
         await _showRich(
+          l10n,
           notification,
           'New Forum Comment Like',
           Routes.comment((notification as ThreadCommentNotification).commentId),
@@ -326,40 +348,57 @@ void _fetch() => Workmanager().executeTask((_, _) async {
                 if (n.streamingUrl != null) 'streamingUrl': n.streamingUrl,
               })
             : Routes.media(n.mediaId);
-        await _showRich(n, 'New Episode', payload);
+        await _showRich(l10n, n, 'New Episode', payload);
       case .relatedMediaAddition:
         await _showRich(
+          l10n,
           notification,
           'Added Media',
           Routes.media((notification as MediaReleaseNotification).mediaId),
         );
       case .mediaDataChange:
         await _showRich(
+          l10n,
           notification,
           'Modified Media',
           Routes.media((notification as MediaChangeNotification).mediaId),
         );
       case .mediaMerge:
         await _showRich(
+          l10n,
           notification,
           'Merged Media',
           Routes.media((notification as MediaChangeNotification).mediaId),
         );
       case .mediaDeletion:
-        await _showRich(notification, 'Deleted Media', Routes.notifications);
+        await _showRich(l10n, notification, 'Deleted Media', Routes.notifications);
       case .mediaSubmissionUpdate:
-        await _showRich(notification, 'Media Submission Update', Routes.notifications);
+        await _showRich(l10n, notification, 'Media Submission Update', Routes.notifications);
       case .characterSubmissionUpdate:
-        await _showRich(notification, 'Character Submission Update', Routes.notifications);
+        await _showRich(l10n, notification, 'Character Submission Update', Routes.notifications);
       case .staffSubmissionUpdate:
-        await _showRich(notification, 'Staff Submission Update', Routes.notifications);
+        await _showRich(l10n, notification, 'Staff Submission Update', Routes.notifications);
     }
   }
 
   return true;
 });
 
-Future<void> _showRich(SiteNotification notification, String title, String payload) async {
+AppLocalizations _getLocalizations(Map<String, dynamic>? inputData) {
+  final languageCode = inputData?['languageCode'] ?? 'en';
+  try {
+    return lookupAppLocalizations(Locale(languageCode));
+  } catch (_) {
+    return AppLocalizationsEn();
+  }
+}
+
+Future<void> _showRich(
+  AppLocalizations l10n,
+  SiteNotification notification,
+  String title,
+  String payload,
+) async {
   //large icon
   FilePathAndroidBitmap? largeIcon;
   if (notification.imageUrl != null) {
@@ -436,8 +475,8 @@ Future<void> _showRich(SiteNotification notification, String title, String paylo
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         notification.type.name,
-        notification.type.label,
-        channelDescription: notification.type.label,
+        notification.type.localize(l10n),
+        channelDescription: notification.type.localize(l10n),
         icon: 'notification_icon_monochrome',
         largeIcon: largeIcon,
         styleInformation: style,
