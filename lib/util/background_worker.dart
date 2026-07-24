@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:otraku/feature/notification/notifications_provider.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/feature/viewer/repository_model.dart';
@@ -68,9 +69,23 @@ Future<String?> _downloadImage(String url, String filename) async {
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode != 200) return null;
+
+    final codec = await instantiateImageCodec(response.bodyBytes);
+    final image = (await codec.getNextFrame()).image;
+
+    final w = image.width.toDouble();
+    final h = image.height.toDouble();
+
+    final recorder = PictureRecorder();
+    Canvas(recorder)
+      ..clipRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), Radius.circular(w * 0.15)))
+      ..drawImage(image, Offset.zero, Paint());
+    final rounded = await recorder.endRecording().toImage(image.width, image.height);
+    final byteData = await rounded.toByteData(format: ImageByteFormat.png);
+
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$filename.png');
-    await file.writeAsBytes(response.bodyBytes);
+    await file.writeAsBytes(byteData!.buffer.asUint8List());
     return file.path;
   } catch (_) {
     return null;
@@ -159,7 +174,7 @@ class BackgroundWorker {
   static void clearNotifications() => _notificationPlugin.cancelAll();
 
   /// FOR TESTING ONLY — fires a dummy notification immediately.
-  static Future<void> sendTestNotification() async {
+  static Future<void> sendTestNotification(String type) async {
     final container = ProviderContainer(retry: (_, __) => null);
     await container.read(persistenceProvider.notifier).init();
     final persistence = container.read(persistenceProvider);
@@ -171,7 +186,7 @@ class BackgroundWorker {
     Map<String, dynamic> data;
     try {
       data = await container.read(repositoryProvider).request(GqlQuery.notifications, {
-        'filter': ['AIRING'],
+        'filter': [type],
       });
     } catch (_) {
       return;
@@ -179,21 +194,17 @@ class BackgroundWorker {
 
     final notifications = data['Page']?['notifications'] as List?;
     if (notifications == null || notifications.isEmpty) return;
+    await attachReplyText(container.read(repositoryProvider), notifications);
 
     final notification = SiteNotification.maybe(
       notifications.first as Map<String, dynamic>,
       persistence.options.imageQuality,
     );
-    if (notification is! MediaReleaseNotification) return;
+    //if (notification is! MediaReleaseNotification) return;
 
-    final payload = json.encode({
-      'route': Routes.media(notification.mediaId),
-      'mediaId': notification.mediaId,
-      'episode': notification.episode,
-      if (notification.streamingUrl != null) 'streamingUrl': notification.streamingUrl,
-    });
+    final payload = json.encode({'type': type});
 
-    await _showRich(l10n, notification, 'New Episode', payload);
+    await _showRich(l10n, notification!, 'Test:$type', payload);
     container.dispose();
   }
 }
@@ -234,6 +245,7 @@ void _fetch() => Workmanager().executeTask((_, inputData) async {
 
   int count = data['Viewer']?['unreadNotificationCount'] ?? 0;
   final List<dynamic> notifications = data['Page']?['notifications'] ?? const [];
+  await attachReplyText(repository, notifications);
 
   if (count > notifications.length) count = notifications.length;
   if (count == 0) return true;
@@ -248,139 +260,148 @@ void _fetch() => Workmanager().executeTask((_, inputData) async {
   );
   container.read(persistenceProvider.notifier).setAppMeta(appMeta);
 
+  final newItems = <SiteNotification>[];
   for (int i = 0; i < count && notifications[i]['id'] != lastNotificationId; i++) {
     final notification = SiteNotification.maybe(notifications[i], persistence.options.imageQuality);
 
-    if (notification == null) continue;
-
-    switch (notification.type) {
-      case .following:
-        await _showRich(
-          l10n,
-          notification,
-          'New Follow',
-          Routes.user((notification as FollowNotification).userId),
-        );
-      case .activityMention:
-        await _showRich(
-          l10n,
-          notification,
-          'New Mention',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .activityMessage:
-        await _showRich(
-          l10n,
-          notification,
-          'New Message',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .activityReply:
-        await _showRich(
-          l10n,
-          notification,
-          'New Reply',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .activityReplySubscribed:
-        await _showRich(
-          l10n,
-          notification,
-          'New Reply To Subscribed Activity',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .activityLike:
-        await _showRich(
-          l10n,
-          notification,
-          'New Activity Like',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .acrivityReplyLike:
-        await _showRich(
-          l10n,
-          notification,
-          'New Reply Like',
-          Routes.activity((notification as ActivityNotification).activityId),
-        );
-      case .threadLike:
-        await _showRich(
-          l10n,
-          notification,
-          'New Forum Like',
-          Routes.thread((notification as ThreadNotification).threadId),
-        );
-      case .threadCommentReply:
-        await _showRich(
-          l10n,
-          notification,
-          'New Forum Reply',
-          Routes.comment((notification as ThreadCommentNotification).commentId),
-        );
-      case .threadCommentMention:
-        await _showRich(
-          l10n,
-          notification,
-          'New Forum Mention',
-          Routes.comment((notification as ThreadCommentNotification).commentId),
-        );
-      case .threadReplySubscribed:
-        await _showRich(
-          l10n,
-          notification,
-          'New Forum Comment',
-          Routes.comment((notification as ThreadCommentNotification).commentId),
-        );
-      case .threadCommentLike:
-        await _showRich(
-          l10n,
-          notification,
-          'New Forum Comment Like',
-          Routes.comment((notification as ThreadCommentNotification).commentId),
-        );
-      case .airing:
-        final n = notification as MediaReleaseNotification;
-        final payload = n.episode != null
-            ? json.encode({
-                'route': Routes.media(n.mediaId),
-                'mediaId': n.mediaId,
-                'episode': n.episode,
-                if (n.streamingUrl != null) 'streamingUrl': n.streamingUrl,
-              })
-            : Routes.media(n.mediaId);
-        await _showRich(l10n, n, 'New Episode', payload);
-      case .relatedMediaAddition:
-        await _showRich(
-          l10n,
-          notification,
-          'Added Media',
-          Routes.media((notification as MediaReleaseNotification).mediaId),
-        );
-      case .mediaDataChange:
-        await _showRich(
-          l10n,
-          notification,
-          'Modified Media',
-          Routes.media((notification as MediaChangeNotification).mediaId),
-        );
-      case .mediaMerge:
-        await _showRich(
-          l10n,
-          notification,
-          'Merged Media',
-          Routes.media((notification as MediaChangeNotification).mediaId),
-        );
-      case .mediaDeletion:
-        await _showRich(l10n, notification, 'Deleted Media', Routes.notifications);
-      case .mediaSubmissionUpdate:
-        await _showRich(l10n, notification, 'Media Submission Update', Routes.notifications);
-      case .characterSubmissionUpdate:
-        await _showRich(l10n, notification, 'Character Submission Update', Routes.notifications);
-      case .staffSubmissionUpdate:
-        await _showRich(l10n, notification, 'Staff Submission Update', Routes.notifications);
-    }
+    if (notification != null) newItems.add(notification);
   }
 
+  for (final group in groupNotifications(newItems, 0)) {
+    if (group.items.length >= notificationGroupThreshold) {
+      await _showGroupedRich(l10n, group);
+      continue;
+    }
+
+    for (final notification in group.items) {
+      switch (notification.type) {
+        case .following:
+          await _showRich(
+            l10n,
+            notification,
+            'New Follow',
+            Routes.user((notification as FollowNotification).userId),
+          );
+        case .activityMention:
+          await _showRich(
+            l10n,
+            notification,
+            'New Mention',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .activityMessage:
+          await _showRich(
+            l10n,
+            notification,
+            'New Message',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .activityReply:
+          await _showRich(
+            l10n,
+            notification,
+            'New Reply',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .activityReplySubscribed:
+          await _showRich(
+            l10n,
+            notification,
+            'New Reply To Subscribed Activity',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .activityLike:
+          await _showRich(
+            l10n,
+            notification,
+            'New Activity Like',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .activityReplyLike:
+          await _showRich(
+            l10n,
+            notification,
+            'New Reply Like',
+            Routes.activity((notification as ActivityNotification).activityId),
+          );
+        case .threadLike:
+          await _showRich(
+            l10n,
+            notification,
+            'New Forum Like',
+            Routes.thread((notification as ThreadNotification).threadId),
+          );
+        case .threadCommentReply:
+          await _showRich(
+            l10n,
+            notification,
+            'New Forum Reply',
+            Routes.comment((notification as ThreadCommentNotification).commentId),
+          );
+        case .threadCommentMention:
+          await _showRich(
+            l10n,
+            notification,
+            'New Forum Mention',
+            Routes.comment((notification as ThreadCommentNotification).commentId),
+          );
+        case .threadReplySubscribed:
+          await _showRich(
+            l10n,
+            notification,
+            'New Forum Comment',
+            Routes.comment((notification as ThreadCommentNotification).commentId),
+          );
+        case .threadCommentLike:
+          await _showRich(
+            l10n,
+            notification,
+            'New Forum Comment Like',
+            Routes.comment((notification as ThreadCommentNotification).commentId),
+          );
+        case .airing:
+          final n = notification as MediaReleaseNotification;
+          final payload = n.episode != null
+              ? json.encode({
+                  'route': Routes.media(n.mediaId),
+                  'mediaId': n.mediaId,
+                  'episode': n.episode,
+                  if (n.streamingUrl != null) 'streamingUrl': n.streamingUrl,
+                })
+              : Routes.media(n.mediaId);
+          await _showRich(l10n, n, 'New Episode', payload);
+        case .relatedMediaAddition:
+          await _showRich(
+            l10n,
+            notification,
+            'Added Media',
+            Routes.media((notification as MediaReleaseNotification).mediaId),
+          );
+        case .mediaDataChange:
+          await _showRich(
+            l10n,
+            notification,
+            'Modified Media',
+            Routes.media((notification as MediaChangeNotification).mediaId),
+          );
+        case .mediaMerge:
+          await _showRich(
+            l10n,
+            notification,
+            'Merged Media',
+            Routes.media((notification as MediaChangeNotification).mediaId),
+          );
+        case .mediaDeletion:
+          await _showRich(l10n, notification, 'Deleted Media', Routes.notifications);
+        case .mediaSubmissionUpdate:
+          await _showRich(l10n, notification, 'Media Submission Update', Routes.notifications);
+        case .characterSubmissionUpdate:
+          await _showRich(l10n, notification, 'Character Submission Update', Routes.notifications);
+        case .staffSubmissionUpdate:
+          await _showRich(l10n, notification, 'Staff Submission Update', Routes.notifications);
+      }
+    }
+  }
   return true;
 });
 
@@ -408,9 +429,14 @@ Future<void> _showRich(
   StyleInformation? style;
   List<AndroidNotificationAction> actions = [];
 
+  final texts = notification.texts;
+  final hasDetail = texts.isNotEmpty && texts.last.startsWith('\n"');
+  final headline = hasDetail ? texts.sublist(0, texts.length - 1).join() : texts.join();
+  final body = hasDetail ? texts.last.substring(2, texts.last.length - 1) : '';
+
   switch (notification) {
     case MediaReleaseNotification _:
-      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+      style = BigTextStyleInformation(body, contentTitle: headline);
 
       if (notification.type == NotificationType.airing) {
         final n = notification;
@@ -420,8 +446,12 @@ Future<void> _showRich(
             const AndroidNotificationAction(_actionPlay, 'Play', showsUserInterface: true),
         ];
       }
+
+    case ThreadNotification _:
+      style = BigTextStyleInformation(body, contentTitle: headline);
+
     case ActivityNotification _:
-      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+      style = BigTextStyleInformation(body, contentTitle: headline);
       if (notification.type == NotificationType.activityReply ||
           notification.type == NotificationType.activityMessage ||
           notification.type == NotificationType.activityMention ||
@@ -437,7 +467,7 @@ Future<void> _showRich(
       }
 
     case ThreadCommentNotification _:
-      style = BigTextStyleInformation(notification.texts.join(), contentTitle: title);
+      style = BigTextStyleInformation(body, contentTitle: headline);
       if (notification.type == NotificationType.threadCommentReply ||
           notification.type == NotificationType.threadCommentMention ||
           notification.type == NotificationType.threadReplySubscribed) {
@@ -453,14 +483,20 @@ Future<void> _showRich(
 
     case MediaChangeNotification _:
       style = BigTextStyleInformation(
-        notification.reason.isNotEmpty ? notification.reason : notification.texts.join(),
-        contentTitle: title,
+        notification.reason.isNotEmpty ? notification.reason : headline,
+        contentTitle: headline,
       );
 
     case MediaDeletionNotification _:
       style = BigTextStyleInformation(
-        notification.reason.isNotEmpty ? notification.reason : notification.texts.join(),
-        contentTitle: title,
+        notification.reason.isNotEmpty ? notification.reason : headline,
+        contentTitle: headline,
+      );
+
+    case SubmissionUpdateNotification _:
+      style = BigTextStyleInformation(
+        notification.notes.isNotEmpty ? notification.notes : headline,
+        contentTitle: headline,
       );
 
     default:
@@ -469,8 +505,8 @@ Future<void> _showRich(
 
   await _notificationPlugin.show(
     id: notification.id,
-    title: title,
-    body: notification.texts.join(),
+    title: headline,
+    body: body,
     payload: payload,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
@@ -481,6 +517,24 @@ Future<void> _showRich(
         largeIcon: largeIcon,
         styleInformation: style,
         actions: actions,
+      ),
+    ),
+  );
+}
+
+Future<void> _showGroupedRich(AppLocalizations l10n, NotificationGroup group) async {
+  final name = group.first.texts.isNotEmpty ? group.first.texts[0] : '?';
+
+  await _notificationPlugin.show(
+    id: group.first.id,
+    title: '$name ${group.verb} ${group.items.length} of your ${group.subject}',
+    body: 'Tap to view all in the app',
+    payload: Routes.notifications,
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'grouped',
+        'Grouped notifications',
+        channelDescription: 'Multiple notification from the same user',
       ),
     ),
   );

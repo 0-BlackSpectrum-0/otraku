@@ -9,7 +9,7 @@ enum NotificationType {
   activityMessage('ACTIVITY_MESSAGE'),
   activityLike('ACTIVITY_LIKE'),
   activityReply('ACTIVITY_REPLY'),
-  acrivityReplyLike('ACTIVITY_REPLY_LIKE'),
+  activityReplyLike('ACTIVITY_REPLY_LIKE'),
   activityReplySubscribed('ACTIVITY_REPLY_SUBSCRIBED'),
   threadLike('THREAD_LIKE'),
   threadReplySubscribed('THREAD_SUBSCRIBED'),
@@ -35,7 +35,7 @@ enum NotificationType {
     activityMessage => l10n.notificationsTypeMessages,
     activityLike => l10n.notificationsTypeActivityLikes,
     activityReply => l10n.notificationsTypeActivityReplies,
-    acrivityReplyLike => l10n.notificationsTypeActivityRepliesLikes,
+    activityReplyLike => l10n.notificationsTypeActivityRepliesLikes,
     activityReplySubscribed => l10n.notificationsTypeThreadRepliesSubscribed,
     threadLike => l10n.notificationsTypeThreadLikes,
     threadReplySubscribed => l10n.notificationsTypeThreadRepliesSubscribed,
@@ -56,6 +56,20 @@ enum NotificationType {
       NotificationType.values.firstWhereOrNull((v) => v.value == value);
 }
 
+String _preview(String? text, [int maxLength = 200]) {
+  if (text == null || text.isEmpty) return '';
+  final t = _stripMarkdown(text.replaceAll('\n', ' ')).trim();
+  return t.length > maxLength ? '${t.substring(0, maxLength)}...' : t;
+}
+
+String _stripMarkdown(String text) => text
+    .replaceAll(RegExp(r'~!.*?!~', dotAll: true), 'Spoiler')
+    .replaceAll(RegExp(r'img\d*%?\(.*?\)', dotAll: true), 'Media(image)')
+    .replaceAll(RegExp(r'webm\d*\(.*?\)', dotAll: true), 'Media(video)')
+    .replaceAll(RegExp(r'youtube\d*\(.*?\)', dotAll: true), 'Media(youtube)')
+    .replaceAll(RegExp(r'\[.*?\]\(.*?\)'), 'Link')
+    .replaceAll(RegExp(r'[*_~`#>]+'), '');
+
 sealed class SiteNotification {
   SiteNotification({
     required Map<String, dynamic> map,
@@ -75,7 +89,7 @@ sealed class SiteNotification {
       .activityMessage ||
       .activityLike ||
       .activityReply ||
-      .acrivityReplyLike ||
+      .activityReplyLike ||
       .activityReplySubscribed => ActivityNotification(map, type),
       .threadLike => ThreadNotification(map, type),
       .threadReplySubscribed ||
@@ -127,18 +141,62 @@ class ActivityNotification extends SiteNotification {
     required super.texts,
     required this.userId,
     required this.activityId,
+    this.message,
+    this.activityText,
   });
 
   factory ActivityNotification(Map<String, dynamic> map, NotificationType type) {
+    final activity = map['activity'] as Map<String, dynamic>?;
+    final message = map['message']?['message'] as String?;
+    final mediaTitle = activity?['media']?['title']?['userPreferred'] as String?;
+    final hasProgress = activity?['progress'] != null;
+    final mediaSuffix = mediaTitle == null
+        ? ''
+        : (hasProgress ? ' of $mediaTitle ' : ' $mediaTitle ');
+    final listProgress = (activity?['status'] != null || hasProgress)
+        ? '${activity?['status'] ?? ''} ${activity?['progress'] ?? ''}$mediaSuffix'
+              .replaceAll(RegExp(r' +'), ' ')
+              .trim()
+        : null;
+    final rawOriginal = message ?? activity?['text'] ?? activity?['message'] ?? listProgress;
+    final rawReply = map['_replyText'] as String?;
+    final content = type == .activityReplyLike
+        ? [_preview(rawOriginal, 40), _preview(rawReply, 200)].where((s) => s.isNotEmpty).join('\n')
+        : [
+            _preview(rawOriginal, 200),
+            _preview(rawReply, 200),
+          ].where((s) => s.isNotEmpty).join('\n');
+
     final List<String> texts = switch (type) {
-      .activityMention => [map['user']?['name'] ?? '?', ' mentioned you in an activity'],
-      .activityMessage => [map['user']?['name'] ?? '?', ' sent you a message'],
-      .activityLike => [map['user']?['name'] ?? '?', ' liked your activity'],
-      .activityReply => [map['user']?['name'] ?? '?', ' replied to your activity'],
-      .acrivityReplyLike => [map['user']?['name'] ?? '?', ' liked your reply'],
+      .activityMention => [
+        map['user']?['name'] ?? '?',
+        ' mentioned you in an activity',
+        if (content.isNotEmpty) '\n"$content"',
+      ],
+      .activityMessage => [
+        map['user']?['name'] ?? '?',
+        ' sent you a message',
+        if (content.isNotEmpty) '\n"$content"',
+      ],
+      .activityLike => [
+        map['user']?['name'] ?? '?',
+        ' liked your activity',
+        if (content.isNotEmpty) '\n"$content"',
+      ],
+      .activityReply => [
+        map['user']?['name'] ?? '?',
+        ' replied to your activity',
+        if (content.isNotEmpty) '\n"$content"',
+      ],
+      .activityReplyLike => [
+        map['user']?['name'] ?? '?',
+        ' liked your reply',
+        if (content.isNotEmpty) '\n"$content"',
+      ],
       .activityReplySubscribed => [
         map['user']?['name'] ?? '?',
         ' replied to a subscribed activity',
+        if (content.isNotEmpty) '\n"$content"',
       ],
       _ => const [],
     };
@@ -150,11 +208,15 @@ class ActivityNotification extends SiteNotification {
       texts: texts,
       userId: map['user']?['id'] ?? 0,
       activityId: map['activityId'] ?? 0,
+      message: message,
+      activityText: content,
     );
   }
 
   final int userId;
   final int activityId;
+  final String? message;
+  final String? activityText;
 }
 
 class ThreadNotification extends SiteNotification {
@@ -168,16 +230,22 @@ class ThreadNotification extends SiteNotification {
     required this.threadSiteUrl,
   });
 
-  factory ThreadNotification(Map<String, dynamic> map, NotificationType type) =>
-      ThreadNotification._(
-        map: map,
-        type: type,
-        imageUrl: map['user']?['avatar']?['large'],
-        texts: [map['user']?['name'] ?? '?', ' liked your thread ', map['thread']?['title'] ?? ''],
-        userId: map['user']?['id'] ?? 0,
-        threadId: map['thread']?['id'] ?? 0,
-        threadSiteUrl: map['thread']?['siteUrl'],
-      );
+  factory ThreadNotification(Map<String, dynamic> map, NotificationType type) {
+    final title = map['thread']?['title'] as String?;
+    return ThreadNotification._(
+      map: map,
+      type: type,
+      imageUrl: map['user']?['avatar']?['large'],
+      texts: [
+        map['user']?['name'] ?? '?',
+        ' liked your thread ',
+        if (title != null && title.isNotEmpty) '\n$title',
+      ],
+      userId: map['user']?['id'] ?? 0,
+      threadId: map['thread']?['id'] ?? 0,
+      threadSiteUrl: map['thread']?['siteUrl'],
+    );
+  }
 
   final int userId;
   final int threadId;
@@ -193,9 +261,13 @@ class ThreadCommentNotification extends SiteNotification {
     required this.userId,
     required this.commentId,
     required this.commentSiteUrl,
+    this.comment,
   });
 
   factory ThreadCommentNotification(Map<String, dynamic> map, NotificationType type) {
+    final comment = map['comment']?['comment'] as String?;
+    final content = _preview(comment);
+
     final List<String> texts = switch (type) {
       .threadReplySubscribed => [
         map['user']?['name'] ?? '?',
@@ -204,6 +276,7 @@ class ThreadCommentNotification extends SiteNotification {
           map['thread']['title'],
         ] else
           ' commented in a subscribed thread',
+        if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentMention => [
         map['user']?['name'] ?? '?',
@@ -212,6 +285,7 @@ class ThreadCommentNotification extends SiteNotification {
           map['thread']['title'],
         ] else
           ' mentioned you in a subscribed thread',
+        if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentReply => [
         map['user']?['name'] ?? '?',
@@ -220,6 +294,7 @@ class ThreadCommentNotification extends SiteNotification {
           map['thread']['title'],
         ] else
           ' replied to your comment in a subscribed thread',
+        if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentLike => [
         map['user']?['name'] ?? '?',
@@ -228,6 +303,7 @@ class ThreadCommentNotification extends SiteNotification {
           map['thread']['title'],
         ] else
           ' liked your comment in a subscribed thread',
+        if (content.isNotEmpty) '\n"$content"',
       ],
       _ => const [],
     };
@@ -240,12 +316,14 @@ class ThreadCommentNotification extends SiteNotification {
       userId: map['user']?['id'] ?? 0,
       commentId: map['comment']?['id'] ?? 0,
       commentSiteUrl: map['comment']?['siteUrl'],
+      comment: comment,
     );
   }
 
   final int userId;
   final int commentId;
   final String? commentSiteUrl;
+  final String? comment;
 }
 
 class MediaReleaseNotification extends SiteNotification {
@@ -450,4 +528,59 @@ class StaffSubmissionUpdateNotification extends SubmissionUpdateNotification {
         ],
         itemId: map['staff']?['id'],
       );
+}
+
+const notificationGroupThreshold = 2;
+
+class NotificationGroup {
+  const NotificationGroup(this.items, this.hasUnread);
+
+  final List<SiteNotification> items;
+  final bool hasUnread;
+
+  SiteNotification get first => items.first;
+
+  String get verb => switch (first.type) {
+    .activityLike || .activityReplyLike || .threadCommentLike || .threadLike => 'liked',
+    .activityReply ||
+    .activityReplySubscribed ||
+    .threadCommentReply ||
+    .threadReplySubscribed => 'replied to',
+    .activityMention || .threadCommentMention => 'mentioned you in',
+    _ => 'notified you about',
+  };
+
+  String get subject => switch (first.type) {
+    .threadCommentLike ||
+    .threadCommentReply ||
+    .threadCommentMention ||
+    .threadReplySubscribed => 'comments',
+    .threadLike => 'threads',
+    _ => 'activities',
+  };
+}
+
+int? _actorId(SiteNotification n) => switch (n) {
+  FollowNotification n => n.userId,
+  ActivityNotification n => n.userId,
+  ThreadNotification n => n.userId,
+  ThreadCommentNotification n => n.userId,
+  _ => null,
+};
+
+List<NotificationGroup> groupNotifications(List<SiteNotification> items, int unreadCount) {
+  final groups = <NotificationGroup>[];
+  var i = 0;
+  while (i < items.length) {
+    final actorId = _actorId(items[i]);
+    var j = i + 1;
+    if (actorId != null) {
+      while (j < items.length && items[j].type == items[i].type && _actorId(items[j]) == actorId) {
+        j++;
+      }
+    }
+    groups.add(NotificationGroup(items.sublist(i, j), i < unreadCount));
+    i = j;
+  }
+  return groups;
 }

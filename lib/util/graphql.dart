@@ -709,84 +709,98 @@ abstract class GqlQuery {
           ... on FollowingNotification {
             id
             type
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles
             createdAt
           }
           ... on ActivityMentionNotification {
             id
             type
             activityId
-            context
             activity{
             ... on TextActivity { text }
+            ... on MessageActivity { message }
+            ... on ListActivity { status progress media { title {userPreferred } } }
             }
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityMessageNotification {
             id
             type
             activityId
-            context
             message { message }
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityLikeNotification {
             id
             type
             activityId
-            user {id name avatar {large}}
+            activity {
+            ... on TextActivity { text }
+            ... on MessageActivity { message }
+            ... on ListActivity { status progress media { title {userPreferred } } }
+            }
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityReplyNotification {
             id
             type
             activityId
-            context
             activity {
             ... on TextActivity { text }
             ... on MessageActivity{ message }
+            ... on ListActivity { status progress media { title {userPreferred } } }
             }
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityReplyLikeNotification {
             id
             type
             activityId
-            user {id name avatar {large}}
+            activity {
+            ... on TextActivity { text }
+            ... on MessageActivity { message }
+            ... on ListActivity { status progress media { title {userPreferred } } }
+            }
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityReplySubscribedNotification {
             id
             type
             activityId
-            user {id name avatar {large}}
+            activity {
+            ... on TextActivity { text }
+            ... on MessageActivity { message }
+            ... on ListActivity { status progress media { title {userPreferred } } }
+            }
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ThreadLikeNotification {
             id
             type
             thread {id title siteUrl}
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ThreadCommentLikeNotification {
             id
             type
             thread {title}
-            comment {id siteUrl}
-            user {id name avatar {large}}
+            comment {id siteUrl comment}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ThreadCommentReplyNotification {
             id
             type
-            context
             thread {title}
             comment {id siteUrl comment}
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ThreadCommentMentionNotification {
@@ -795,15 +809,15 @@ abstract class GqlQuery {
             context
             thread {title}
             comment {id siteUrl comment}
-            user {id name avatar {large}}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ThreadCommentSubscribedNotification {
             id
             type
             thread {title}
-            comment {id siteUrl}
-            user {id name avatar {large}}
+            comment {id siteUrl comment}
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on RelatedMediaAdditionNotification {
@@ -871,6 +885,17 @@ abstract class GqlQuery {
       }
     }
   ''';
+
+  static String activityReplyLookup(Iterable<int> activityIds) {
+    final buffer = StringBuffer('query ActivityReplyLookup{ viewer: Viewer { id }');
+    for (final id in activityIds) {
+      buffer.write(
+        'a$id: Page(page:1) { activityReplies(activityId: $id) { userId text createdAt } }',
+      );
+    }
+    buffer.write('}');
+    return buffer.toString();
+  }
 
   static const genresAndTags = '''
     query Filters {
