@@ -253,6 +253,13 @@ class _BottomBarState extends State<_BottomBar> {
                 textCtrl: widget.textCtrl,
               ),
               _FormatButton(
+                startDelimiter: '<u>',
+                endDelimiter: '</u>',
+                name: 'Underline',
+                icon: Icons.format_underline_outlined,
+                textCtrl: widget.textCtrl,
+              ),
+              _FormatButton(
                 startDelimiter: '~~',
                 endDelimiter: '~~',
                 name: 'Strikethrough',

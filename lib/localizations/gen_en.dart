@@ -742,40 +742,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaRelationTypeAdaptation => 'Adaptation';
 
   @override
-  String get mediaRelationTypePrequel => 'Prequel';
-
-  @override
-  String get mediaRelationTypeSequel => 'Sequel';
-
-  @override
-  String get mediaRelationTypeParent => 'Parent';
-
-  @override
-  String get mediaRelationTypeSideStory => 'Side Story';
-
-  @override
-  String get mediaRelationTypeCharacter => 'Character';
-
-  @override
-  String get mediaRelationTypeSummary => 'Summary';
-
-  @override
   String get mediaRelationTypeAlternative => 'Alternative';
 
   @override
-  String get mediaRelationTypeSpinOff => 'Spin Off';
-
-  @override
-  String get mediaRelationTypeOther => 'Other';
-
-  @override
-  String get mediaRelationTypeSource => 'Source';
+  String get mediaRelationTypeCharacter => 'Character';
 
   @override
   String get mediaRelationTypeCompilation => 'Compilation';
 
   @override
   String get mediaRelationTypeContains => 'Contains';
+
+  @override
+  String get mediaRelationTypeOther => 'Other';
+
+  @override
+  String get mediaRelationTypeParent => 'Parent';
+
+  @override
+  String get mediaRelationTypePrequel => 'Prequel';
+
+  @override
+  String get mediaRelationTypeSameUniverse => 'Same Universe';
+
+  @override
+  String get mediaRelationTypeSequel => 'Sequel';
+
+  @override
+  String get mediaRelationTypeSideStory => 'Side Story';
+
+  @override
+  String get mediaRelationTypeSource => 'Source';
+
+  @override
+  String get mediaRelationTypeSpinOff => 'Spin Off';
+
+  @override
+  String get mediaRelationTypeSummary => 'Summary';
 
   @override
   String get mediaRelease => 'Release';

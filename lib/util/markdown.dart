@@ -30,6 +30,7 @@ final document = Document(
     _VideoSyntax(),
     _MentionSyntax(),
     _LineBreakSyntax(),
+    _UnderlineSyntax(),
   ],
   encodeHtml: false,
   withDefaultBlockSyntaxes: false,
@@ -189,6 +190,19 @@ class _LineBreakSyntax extends InlineSyntax {
   @override
   bool onMatch(InlineParser parser, Match match) {
     parser.addNode(Element.empty('br'));
+    return true;
+  }
+}
+
+/// Anilist uses both <u> and <ins> html elements for underlining.
+class _UnderlineSyntax extends InlineSyntax {
+  _UnderlineSyntax() : super(r'<(u|ins)>(.*?)</\1>', startCharacter: 60);
+
+  @override
+  bool onMatch(InlineParser parser, Match match) {
+    final content = match[2]!;
+    final children = InlineParser(content, parser.document).parse();
+    parser.addNode(Element('u', children));
     return true;
   }
 }
