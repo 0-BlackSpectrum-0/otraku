@@ -46,7 +46,7 @@ class ActivityCard extends StatelessWidget {
             if (activity is MediaActivity)
               _ActivityMediaBox(activity as MediaActivity)
             else
-              HtmlContent(activity.text),
+              SelectionArea(child: HtmlContent(activity.text)),
             Row(
               mainAxisAlignment: .spaceBetween,
               spacing: 5,

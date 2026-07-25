@@ -9,7 +9,6 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
-import 'package:otraku/widget/html_content.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -434,16 +433,6 @@ class TextDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _DialogColumn(title: title, child: SelectableText(text));
-}
-
-class HtmlDialog extends StatelessWidget {
-  const HtmlDialog({required this.title, required this.text});
-
-  final String title;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => _DialogColumn(title: title, child: HtmlContent(text));
 }
 
 class _DialogColumn extends StatelessWidget {

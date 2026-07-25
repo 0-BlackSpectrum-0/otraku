@@ -22,54 +22,56 @@ class ReviewView extends StatelessWidget {
         builder: (context, ref, _) {
           final data = ref.watch(reviewProvider(id).select((s) => s.value));
 
-          return CustomScrollView(
-            slivers: [
-              ReviewHeader(id: id, review: data, bannerUrl: bannerUrl),
-              if (data != null) ...[
-                SliverConstrainedView(
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      data.summary,
-                      style: TextTheme.of(context).labelMedium,
-                      textAlign: .center,
-                    ),
-                  ),
-                ),
-                SliverConstrainedView(sliver: HtmlContent(data.text, renderMode: .sliverList)),
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: Container(
-                      margin: Theming.paddingAll,
-                      padding: Theming.paddingAll,
-                      decoration: BoxDecoration(
-                        color: ColorScheme.of(context).primary,
-                        borderRadius: Theming.borderRadiusBig,
-                      ),
+          return SelectionArea(
+            child: CustomScrollView(
+              slivers: [
+                ReviewHeader(id: id, review: data, bannerUrl: bannerUrl),
+                if (data != null) ...[
+                  SliverConstrainedView(
+                    sliver: SliverToBoxAdapter(
                       child: Text(
-                        '${data.score}/100',
-                        style: TextTheme.of(
-                          context,
-                        ).bodyMedium?.copyWith(color: ColorScheme.of(context).onPrimary),
+                        data.summary,
+                        style: TextTheme.of(context).labelMedium,
+                        textAlign: .center,
                       ),
                     ),
                   ),
-                ),
-                _RateButtons(data, ref.read(reviewProvider(id).notifier).rate),
-                SliverPadding(
-                  padding: .only(
-                    top: 20,
-                    bottom: MediaQuery.viewPaddingOf(context).bottom + Theming.offset,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      data.createdAt,
-                      style: TextTheme.of(context).labelMedium,
-                      textAlign: .center,
+                  SliverConstrainedView(sliver: HtmlContent(data.text, renderMode: .sliverList)),
+                  SliverToBoxAdapter(
+                    child: Center(
+                      child: Container(
+                        margin: Theming.paddingAll,
+                        padding: Theming.paddingAll,
+                        decoration: BoxDecoration(
+                          color: ColorScheme.of(context).primary,
+                          borderRadius: Theming.borderRadiusBig,
+                        ),
+                        child: Text(
+                          '${data.score}/100',
+                          style: TextTheme.of(
+                            context,
+                          ).bodyMedium?.copyWith(color: ColorScheme.of(context).onPrimary),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  _RateButtons(data, ref.read(reviewProvider(id).notifier).rate),
+                  SliverPadding(
+                    padding: .only(
+                      top: 20,
+                      bottom: MediaQuery.viewPaddingOf(context).bottom + Theming.offset,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        data.createdAt,
+                        style: TextTheme.of(context).labelMedium,
+                        textAlign: .center,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           );
         },
       ),

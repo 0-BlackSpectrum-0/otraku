@@ -74,7 +74,10 @@ class CommentTile extends StatelessWidget {
         mainAxisSize: .min,
         crossAxisAlignment: .start,
         children: [
-          Padding(padding: const .only(right: 10, bottom: 5), child: HtmlContent(comment.text)),
+          Padding(
+            padding: const .only(right: 10, bottom: 5),
+            child: SelectionArea(child: HtmlContent(comment.text)),
+          ),
           Padding(
             padding: const .only(right: 10, bottom: 10),
             child: Row(

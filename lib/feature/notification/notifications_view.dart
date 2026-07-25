@@ -610,8 +610,8 @@ class _NotificationDialog extends StatelessWidget {
               ),
             ),
             ?switch (item) {
-              MediaChangeNotification item => HtmlContent(item.reason),
-              MediaDeletionNotification item => HtmlContent(item.reason),
+              MediaChangeNotification item => SelectionArea(child: HtmlContent(item.reason)),
+              MediaDeletionNotification item => SelectionArea(child: HtmlContent(item.reason)),
               SubmissionUpdateNotification item => Text(item.notes),
               _ => null,
             },

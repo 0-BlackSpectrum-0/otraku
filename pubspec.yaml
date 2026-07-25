@@ -37,7 +37,7 @@ dependencies:
   markdown: ^7.3.1
 
   # Used for configuring [cached_network_image].
-  flutter_cache_manager: ^3.4.1
+  flutter_cache_manager: ^3.4.2
 
   # Image caching.
   cached_network_image: ^3.4.1
@@ -55,7 +55,7 @@ dependencies:
   workmanager: ^0.9.0+3
 
   # Sending device notifications.
-  flutter_local_notifications: ^22.0.1
+  flutter_local_notifications: ^22.1.0
 
   # Parsing html into flutter widgets.
   flutter_widget_from_html_core: ^0.17.2
@@ -70,7 +70,7 @@ dependencies:
   video_player: ^2.11.1
 
   # Sharing content.
-  share_plus: ^13.1.0
+  share_plus: ^13.2.1
 
   # Saving media to gallery.
   gal: ^2.3.2

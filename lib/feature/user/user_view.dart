@@ -150,26 +150,28 @@ class _UserView extends StatelessWidget {
               const SliverFillRemaining(child: Center(child: Loader())),
             ],
           ),
-          data: (data) => CustomScrollView(
-            controller: scrollCtrl,
-            physics: Theming.bouncyPhysics,
-            slivers: [
-              header,
-              refreshControl,
-              _ButtonRow(data.id, isViewer, highContrast),
-              if (data.description.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
-                SliverConstrainedView(
-                  sliver: SliverToBoxAdapter(
-                    child: GestureDetector(
-                      onLongPress: () => showRawMarkdown(context, data.description),
-                      child: HtmlContent(data.description),
+          data: (data) => SelectionArea(
+            child: CustomScrollView(
+              controller: scrollCtrl,
+              physics: Theming.bouncyPhysics,
+              slivers: [
+                header,
+                refreshControl,
+                _ButtonRow(data.id, isViewer, highContrast),
+                if (data.description.isNotEmpty) ...[
+                  const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
+                  SliverConstrainedView(
+                    sliver: SliverToBoxAdapter(
+                      child: GestureDetector(
+                        onLongPress: () => showRawMarkdown(context, data.description),
+                        child: HtmlContent(data.description),
+                      ),
                     ),
                   ),
-                ),
+                ],
+                const SliverFooter(),
               ],
-              const SliverFooter(),
-            ],
+            ),
           ),
         );
       },

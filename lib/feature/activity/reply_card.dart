@@ -69,7 +69,7 @@ class ReplyCard extends StatelessWidget {
                 UnconstrainedBox(
                   constrainedAxis: .horizontal,
                   alignment: .topLeft,
-                  child: HtmlContent(reply.text),
+                  child: SelectionArea(child: HtmlContent(reply.text)),
                 ),
                 Row(
                   mainAxisAlignment: .spaceBetween,
