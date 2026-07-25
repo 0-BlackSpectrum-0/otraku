@@ -303,38 +303,26 @@ class ThreadCommentNotification extends SiteNotification {
     final List<String> texts = switch (type) {
       .threadReplySubscribed => [
         map['user']?['name'] ?? '?',
-        if (map['thread']?['title'] != null) ...[
-          ' commented in ',
-          map['thread']['title'],
-        ] else
-          ' commented in a subscribed thread',
+        ' commented',
+        '\n${map['thread']?['title'] ?? 'a subscribed thread'}',
         if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentMention => [
         map['user']?['name'] ?? '?',
-        if (map['thread']?['title'] != null) ...[
-          ' mentioned you in ',
-          map['thread']['title'],
-        ] else
-          ' mentioned you in a subscribed thread',
+        ' mentioned you',
+        '\n${map['thread']?['title'] ?? 'a subscribed thread'}',
         if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentReply => [
         map['user']?['name'] ?? '?',
-        if (map['thread']?['title'] != null) ...[
-          ' replied to your comment in ',
-          map['thread']['title'],
-        ] else
-          ' replied to your comment in a subscribed thread',
+        ' replied to your comment',
+        '\n${map['thread']?['title'] ?? 'a subscribed thread'}',
         if (content.isNotEmpty) '\n"$content"',
       ],
       .threadCommentLike => [
         map['user']?['name'] ?? '?',
-        if (map['thread']?['title'] != null) ...[
-          ' liked your comment in ',
-          map['thread']['title'],
-        ] else
-          ' liked your comment in a subscribed thread',
+        ' liked your comment',
+        '\n${map['thread']?['title'] ?? 'a subscribed thread'}',
         if (content.isNotEmpty) '\n"$content"',
       ],
       _ => const [],

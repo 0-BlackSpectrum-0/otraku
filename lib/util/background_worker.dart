@@ -3,17 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:otraku/feature/notification/notifications_provider.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
-import 'package:otraku/feature/viewer/repository_model.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/localizations/gen_en.dart';
@@ -21,49 +17,9 @@ import 'package:otraku/util/routes.dart';
 import 'package:otraku/feature/notification/notifications_model.dart';
 import 'package:otraku/util/graphql.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
 final _notificationPlugin = FlutterLocalNotificationsPlugin();
-
-const _actionDone = 'DONE';
-const _actionPlay = 'PLAY';
-const _actionReply = 'REPLY';
-
-@pragma('vm:entry-point')
-Future<void> _onBackgroundAction(NotificationResponse response) async {
-  if (response.actionId != _actionDone) return;
-  final payload = response.payload;
-  if (payload == null) return;
-
-  try {
-    final data = json.decode(payload) as Map<String, dynamic>;
-    final mediaId = data['mediaId'] as int?;
-    final episode = data['episode'] as int?;
-    if (mediaId == null || episode == null) return;
-
-    // Read the active account's token directly from storage
-    if (!kIsWeb) Hive.init((await getApplicationDocumentsDirectory()).path);
-    final box = await Hive.openBox('persistence');
-    final persistence = box.toMap();
-
-    final accountIndex = persistence['accountIndex'] as int?;
-    final accounts = persistence['accounts'] as List?;
-    if (accountIndex == null || accounts == null || accountIndex >= accounts.length) return;
-
-    final accountId = accounts[accountIndex]['id'] as int?;
-    if (accountId == null) return;
-
-    final token = (await const FlutterSecureStorage().readAll())['auth$accountId'];
-    if (token == null) return;
-
-    await Repository(
-      token,
-    ).request(GqlMutation.updateProgress, {'mediaId': mediaId, 'progress': episode});
-
-    await FlutterLocalNotificationsPlugin().cancel(id: response.id!);
-  } catch (_) {}
-}
 
 Future<String?> _downloadImage(String url, String filename) async {
   try {
@@ -103,27 +59,6 @@ class BackgroundWorker {
         android: AndroidInitializationSettings('notification_icon_monochrome'),
         iOS: DarwinInitializationSettings(),
       ),
-      onDidReceiveNotificationResponse: (response) async {
-        if (response.actionId == _actionDone) {
-          await _onBackgroundAction(response);
-          return;
-        }
-
-        if (response.actionId == _actionPlay) {
-          try {
-            final data = json.decode(response.payload ?? '{}') as Map<String, dynamic>;
-            final url = data['streamingUrl'] as String?;
-            if (url != null) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-          } catch (_) {}
-          return;
-        }
-
-        if (response.payload == null) return;
-
-        notificationCtrl.add(_extractRoute(response.payload!));
-      },
-
-      onDidReceiveBackgroundNotificationResponse: _onBackgroundAction,
     );
 
     // Check if the app was launched by a notification.
@@ -206,15 +141,6 @@ class BackgroundWorker {
 
     await _showRich(l10n, notification!, 'Test:$type', payload);
     container.dispose();
-  }
-}
-
-String _extractRoute(String payload) {
-  try {
-    final map = json.decode(payload) as Map<String, dynamic>;
-    return map['route'] as String? ?? payload;
-  } catch (_) {
-    return payload;
   }
 }
 
@@ -366,7 +292,6 @@ void _fetch() => Workmanager().executeTask((_, inputData) async {
                   'route': Routes.media(n.mediaId),
                   'mediaId': n.mediaId,
                   'episode': n.episode,
-                  if (n.streamingUrl != null) 'streamingUrl': n.streamingUrl,
                 })
               : Routes.media(n.mediaId);
           await _showRich(l10n, n, 'New Episode', payload);
@@ -414,6 +339,11 @@ AppLocalizations _getLocalizations(Map<String, dynamic>? inputData) {
   }
 }
 
+String _capitalize(String text) {
+  final t = text.trim().replaceFirst(RegExp(r'^[^a-zA-Z]+'), '');
+  return t.isEmpty ? t : t[0].toUpperCase() + t.substring(1);
+}
+
 Future<void> _showRich(
   AppLocalizations l10n,
   SiteNotification notification,
@@ -426,82 +356,37 @@ Future<void> _showRich(
     final path = await _downloadImage(notification.imageUrl!, 'notif_${notification.id}');
     if (path != null) largeIcon = FilePathAndroidBitmap(path);
   }
-  StyleInformation? style;
-  List<AndroidNotificationAction> actions = [];
 
   final texts = notification.texts;
-  final hasDetail = texts.isNotEmpty && texts.last.startsWith('\n"');
-  final headline = hasDetail ? texts.sublist(0, texts.length - 1).join() : texts.join();
-  final body = hasDetail ? texts.last.substring(2, texts.last.length - 1) : '';
+  final firstDetailIndex = texts.indexWhere((t) => t.startsWith('\n'));
+  final hasDetail = firstDetailIndex != -1;
+  final isAiring = notification is MediaReleaseNotification && notification.type == .airing;
+  final isTrailingLabel =
+      notification is FollowNotification ||
+      notification is MediaChangeNotification ||
+      notification is MediaDeletionNotification ||
+      notification is SubmissionUpdateNotification ||
+      (notification is MediaReleaseNotification && !isAiring);
 
-  switch (notification) {
-    case MediaReleaseNotification _:
-      style = BigTextStyleInformation(body, contentTitle: headline);
+  final String headline;
+  final String body;
 
-      if (notification.type == NotificationType.airing) {
-        final n = notification;
-        actions = [
-          const AndroidNotificationAction(_actionDone, 'Done', showsUserInterface: false),
-          if (n.streamingUrl != null)
-            const AndroidNotificationAction(_actionPlay, 'Play', showsUserInterface: true),
-        ];
-      }
-
-    case ThreadNotification _:
-      style = BigTextStyleInformation(body, contentTitle: headline);
-
-    case ActivityNotification _:
-      style = BigTextStyleInformation(body, contentTitle: headline);
-      if (notification.type == NotificationType.activityReply ||
-          notification.type == NotificationType.activityMessage ||
-          notification.type == NotificationType.activityMention ||
-          notification.type == NotificationType.activityReplySubscribed) {
-        actions = [
-          const AndroidNotificationAction(
-            _actionReply,
-            '↩ Reply',
-            showsUserInterface: true,
-            inputs: [AndroidNotificationActionInput(label: 'Write a reply ...')],
-          ),
-        ];
-      }
-
-    case ThreadCommentNotification _:
-      style = BigTextStyleInformation(body, contentTitle: headline);
-      if (notification.type == NotificationType.threadCommentReply ||
-          notification.type == NotificationType.threadCommentMention ||
-          notification.type == NotificationType.threadReplySubscribed) {
-        actions = [
-          const AndroidNotificationAction(
-            _actionReply,
-            '↩ Reply',
-            showsUserInterface: true,
-            inputs: [AndroidNotificationActionInput(label: 'Write a reply ...')],
-          ),
-        ];
-      }
-
-    case MediaChangeNotification _:
-      style = BigTextStyleInformation(
-        notification.reason.isNotEmpty ? notification.reason : headline,
-        contentTitle: headline,
-      );
-
-    case MediaDeletionNotification _:
-      style = BigTextStyleInformation(
-        notification.reason.isNotEmpty ? notification.reason : headline,
-        contentTitle: headline,
-      );
-
-    case SubmissionUpdateNotification _:
-      style = BigTextStyleInformation(
-        notification.notes.isNotEmpty ? notification.notes : headline,
-        contentTitle: headline,
-      );
-
-    default:
-      break;
+  if (isAiring) {
+    // ignore: unnecessary_cast
+    headline = 'Episode ${(notification as MediaReleaseNotification).episode ?? '?'} aired';
+    body = texts.isNotEmpty ? texts[0] : headline;
+  } else if (isTrailingLabel) {
+    headline = _capitalize(texts.sublist(1).join());
+    body = texts.isNotEmpty ? texts[0] : '';
+  } else if (hasDetail) {
+    headline = texts.sublist(0, firstDetailIndex).join();
+    body = texts.sublist(firstDetailIndex).join().substring(1);
+  } else {
+    headline = texts.join();
+    body = texts.join();
   }
+
+  final style = BigTextStyleInformation(body, contentTitle: headline);
 
   await _notificationPlugin.show(
     id: notification.id,
@@ -516,7 +401,6 @@ Future<void> _showRich(
         icon: 'notification_icon_monochrome',
         largeIcon: largeIcon,
         styleInformation: style,
-        actions: actions,
       ),
     ),
   );
