@@ -165,7 +165,10 @@ class _CompositionBody extends StatelessWidget {
             ),
             SingleChildScrollView(
               controller: scrollCtrl,
-              child: Padding(padding: padding, child: HtmlContent(parsedText)),
+              child: Padding(
+                padding: padding,
+                child: SelectionArea(child: HtmlContent(parsedText)),
+              ),
             ),
           ],
         ),

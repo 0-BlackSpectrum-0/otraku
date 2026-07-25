@@ -33,49 +33,51 @@ class StaffOverviewSubview extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final refreshControl = SliverRefreshControl(onRefresh: invalidate);
 
-    return CustomScrollView(
-      physics: Theming.bouncyPhysics,
-      controller: scrollCtrl,
-      slivers: [
-        if (header != null) ...[
-          header!,
-          MediaQuery(
-            data: mediaQuery.copyWith(padding: mediaQuery.padding.copyWith(top: 0)),
-            child: refreshControl,
-          ),
-        ] else
-          refreshControl,
-        SliverPadding(
-          padding: const .symmetric(horizontal: Theming.offset),
-          sliver: SliverMainAxisGroup(
-            slivers: [
-              SliverTableList([
-                (l10n.personInfoNameFull, staff.fullName),
-                if (staff.nativeName != null) (l10n.personInfoNameNative, staff.nativeName!),
-                ...staff.altNames.map((s) => (l10n.personInfoNameAlternative, s)),
-              ], highContrast: highContrast),
-              const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
-              SliverTableList([
-                if (staff.dateOfBirth != null) (l10n.personInfoBirth, staff.dateOfBirth!),
-                if (staff.dateOfDeath != null) (l10n.personInfoDeath, staff.dateOfDeath!),
-                if (staff.age != null) (l10n.personInfoAge, staff.age!),
-                if (staff.startYear != null)
-                  (
-                    l10n.personInfoYearsActive,
-                    '${staff.startYear} - ${staff.endYear ?? l10n.dateTimePresent}',
-                  ),
-                if (staff.homeTown != null) (l10n.personInfoHomeTown, staff.homeTown!),
-                if (staff.bloodType != null) (l10n.personInfoBloodType, staff.bloodType!),
-              ], highContrast: highContrast),
-              if (staff.description.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 15)),
-                HtmlContent(staff.description, renderMode: .sliverList),
+    return SelectionArea(
+      child: CustomScrollView(
+        physics: Theming.bouncyPhysics,
+        controller: scrollCtrl,
+        slivers: [
+          if (header != null) ...[
+            header!,
+            MediaQuery(
+              data: mediaQuery.copyWith(padding: mediaQuery.padding.copyWith(top: 0)),
+              child: refreshControl,
+            ),
+          ] else
+            refreshControl,
+          SliverPadding(
+            padding: const .symmetric(horizontal: Theming.offset),
+            sliver: SliverMainAxisGroup(
+              slivers: [
+                SliverTableList([
+                  (l10n.personInfoNameFull, staff.fullName),
+                  if (staff.nativeName != null) (l10n.personInfoNameNative, staff.nativeName!),
+                  ...staff.altNames.map((s) => (l10n.personInfoNameAlternative, s)),
+                ], highContrast: highContrast),
+                const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
+                SliverTableList([
+                  if (staff.dateOfBirth != null) (l10n.personInfoBirth, staff.dateOfBirth!),
+                  if (staff.dateOfDeath != null) (l10n.personInfoDeath, staff.dateOfDeath!),
+                  if (staff.age != null) (l10n.personInfoAge, staff.age!),
+                  if (staff.startYear != null)
+                    (
+                      l10n.personInfoYearsActive,
+                      '${staff.startYear} - ${staff.endYear ?? l10n.dateTimePresent}',
+                    ),
+                  if (staff.homeTown != null) (l10n.personInfoHomeTown, staff.homeTown!),
+                  if (staff.bloodType != null) (l10n.personInfoBloodType, staff.bloodType!),
+                ], highContrast: highContrast),
+                if (staff.description.isNotEmpty) ...[
+                  const SliverToBoxAdapter(child: SizedBox(height: 15)),
+                  HtmlContent(staff.description, renderMode: .sliverList),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        const SliverFooter(),
-      ],
+          const SliverFooter(),
+        ],
+      ),
     );
   }
 }
