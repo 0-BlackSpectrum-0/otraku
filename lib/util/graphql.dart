@@ -709,7 +709,7 @@ abstract class GqlQuery {
           ... on FollowingNotification {
             id
             type
-            user {id name avatar {large} donatorBadge donatorTier moderatorRoles
+            user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
           }
           ... on ActivityMentionNotification {
@@ -719,7 +719,7 @@ abstract class GqlQuery {
             activity{
             ... on TextActivity { text }
             ... on MessageActivity { message }
-            ... on ListActivity { status progress media { title {userPreferred } } }
+            ... on ListActivity { status progress }
             }
             user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
@@ -739,7 +739,7 @@ abstract class GqlQuery {
             activity {
             ... on TextActivity { text }
             ... on MessageActivity { message }
-            ... on ListActivity { status progress media { title {userPreferred } } }
+            ... on ListActivity { status progress }
             }
             user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
@@ -751,7 +751,7 @@ abstract class GqlQuery {
             activity {
             ... on TextActivity { text }
             ... on MessageActivity{ message }
-            ... on ListActivity { status progress media { title {userPreferred } } }
+            ... on ListActivity { status progress }
             }
             user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
@@ -763,7 +763,7 @@ abstract class GqlQuery {
             activity {
             ... on TextActivity { text }
             ... on MessageActivity { message }
-            ... on ListActivity { status progress media { title {userPreferred } } }
+            ... on ListActivity { status progress }
             }
             user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt
@@ -775,7 +775,7 @@ abstract class GqlQuery {
             activity {
             ... on TextActivity { text }
             ... on MessageActivity { message }
-            ... on ListActivity { status progress media { title {userPreferred } } }
+            ... on ListActivity { status progress }
             }
             user {id name avatar {large} donatorBadge donatorTier moderatorRoles}
             createdAt

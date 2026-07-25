@@ -1,4 +1,4 @@
-import 'dart:math';
+//import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -244,11 +244,14 @@ class _ColapsedGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = TextTheme.of(context);
     final bodyMediumStyle = textTheme.bodyMedium!;
-    final accentedStyle = bodyMediumStyle.copyWith(color: ColorScheme.of(context).primary);
+    //final accentedStyle = bodyMediumStyle.copyWith(color: ColorScheme.of(context).primary);
     final first = group.first;
 
     return _AvatarNotificationCard(
       imageUrl: first.imageUrl,
+      name: first.texts.isNotEmpty ? first.texts[0] : '?',
+      donatorBadge: first.donatorBadge,
+      isModerator: first.isModerator,
       unread: group.hasUnread,
       highContrast: highContrast,
       onAvatarTap: onTap,
@@ -256,19 +259,9 @@ class _ColapsedGroupCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: first.texts.isNotEmpty ? first.texts[0] : '?',
-                    style: accentedStyle,
-                  ),
-                  TextSpan(
-                    text: ' ${group.verb} ${group.items.length} of your ${group.subject}',
-                    style: bodyMediumStyle,
-                  ),
-                ],
-              ),
+            child: Text(
+              ' ${group.verb} ${group.items.length} of your ${group.subject}',
+              style: bodyMediumStyle,
             ),
           ),
           const Icon(Icons.expand_more),
@@ -278,11 +271,14 @@ class _ColapsedGroupCard extends StatelessWidget {
   }
 }
 
-const _avatarSize = 44.0;
+const _avatarSize = 48.0;
 
 class _AvatarNotificationCard extends StatelessWidget {
   const _AvatarNotificationCard({
     required this.imageUrl,
+    required this.name,
+    required this.donatorBadge,
+    required this.isModerator,
     required this.unread,
     required this.highContrast,
     required this.onAvatarTap,
@@ -291,6 +287,9 @@ class _AvatarNotificationCard extends StatelessWidget {
   });
 
   final String? imageUrl;
+  final String name;
+  final String? donatorBadge;
+  final bool isModerator;
   final bool unread;
   final bool highContrast;
   final VoidCallback? onAvatarTap;
@@ -299,6 +298,9 @@ class _AvatarNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = TextTheme.of(context);
+    final colors = ColorScheme.of(context);
+
     return Column(
       crossAxisAlignment: .start,
       children: [
@@ -306,14 +308,51 @@ class _AvatarNotificationCard extends StatelessWidget {
           GestureDetector(
             behavior: .opaque,
             onTap: onAvatarTap,
-            child: ClipRRect(
-              borderRadius: Theming.borderRadiusSmall,
-              child: CachedImage(imageUrl!, width: _avatarSize, height: _avatarSize),
+            child: Row(
+              crossAxisAlignment: .center,
+              children: [
+                ClipRRect(
+                  borderRadius: Theming.borderRadiusSmall,
+                  child: CachedImage(imageUrl!, width: _avatarSize, height: _avatarSize),
+                ),
+                const SizedBox(width: Theming.offset),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: .min,
+                    crossAxisAlignment: .start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: .ellipsis,
+                              style: textTheme.bodyMedium,
+                            ),
+                          ),
+                          if (isModerator) ...[
+                            const SizedBox(width: Theming.offset / 2),
+                            Icon(Icons.verified, size: 12, color: colors.primary),
+                          ],
+                        ],
+                      ),
+                      if (donatorBadge != null && donatorBadge!.isNotEmpty)
+                        Text(
+                          donatorBadge!,
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: textTheme.labelSmall?.copyWith(color: colors.outline),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           Padding(
             padding: const .only(left: (_avatarSize - 2) / 2),
-            child: Container(width: 2, height: 10, color: ColorScheme.of(context).outlineVariant),
+            child: Container(width: 2, height: 10, color: colors.outlineVariant),
           ),
         ],
         GestureDetector(
@@ -330,8 +369,7 @@ class _AvatarNotificationCard extends StatelessWidget {
                     Expanded(
                       child: Padding(padding: Theming.paddingAll, child: child),
                     ),
-                    if (unread)
-                      Container(width: Theming.offset, color: ColorScheme.of(context).primary),
+                    if (unread) Container(width: Theming.offset, color: colors.primary),
                   ],
                 ),
               ),
@@ -365,29 +403,32 @@ class _NotificationItem extends StatelessWidget {
       _ => false,
     };
 
-    final textColumn = Column(
-      mainAxisSize: .min,
-      crossAxisAlignment: .stretch,
-      spacing: 3,
-      children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              for (int i = 0; i < item.texts.length; i++)
-                TextSpan(
-                  text: item.texts[i],
-                  style: (i % 2 == 0) ? accentedStyle : bodyMediumStyle,
-                ),
-            ],
-          ),
-        ),
-        Timestamp(item.createdAt, analogClock),
-      ],
-    );
-
     if (isAvatar) {
+      final avatarTextColumn = Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        spacing: 3,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                for (int i = 1; i < item.texts.length; i++)
+                  TextSpan(
+                    text: item.texts[i],
+                    style: (i % 2 == 0) ? accentedStyle : bodyMediumStyle,
+                  ),
+              ],
+            ),
+          ),
+          Timestamp(item.createdAt, analogClock),
+        ],
+      );
+
       return _AvatarNotificationCard(
         imageUrl: item.imageUrl,
+        name: item.texts.isNotEmpty ? item.texts[0] : '?',
+        donatorBadge: item.donatorBadge,
+        isModerator: item.isModerator,
         unread: unread,
         highContrast: highContrast,
         onAvatarTap: () => switch (item) {
@@ -404,7 +445,7 @@ class _NotificationItem extends StatelessWidget {
           ThreadCommentNotification item => context.push(Routes.comment(item.commentId)),
           _ => null,
         },
-        child: textColumn,
+        child: avatarTextColumn,
       );
     }
 
@@ -483,7 +524,35 @@ class _NotificationItem extends StatelessWidget {
                     ),
                     _ => null,
                   },
-                  child: Padding(padding: Theming.paddingAll, child: textColumn),
+                  child: Padding(
+                    padding: Theming.paddingAll,
+                    child: Column(
+                      mainAxisSize: .min,
+                      crossAxisAlignment: .stretch,
+                      spacing: 3,
+                      children: [
+                        Text(
+                          item.texts.isNotEmpty ? item.texts[0] : '?',
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style: accentedStyle,
+                        ),
+                        if (item.texts.length > 1)
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                for (int i = 1; i < item.texts.length; i++)
+                                  TextSpan(
+                                    text: item.texts[i],
+                                    style: (i % 2 == 0) ? accentedStyle : bodyMediumStyle,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        Timestamp(item.createdAt, analogClock),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               if (unread) Container(width: Theming.offset, color: ColorScheme.of(context).primary),

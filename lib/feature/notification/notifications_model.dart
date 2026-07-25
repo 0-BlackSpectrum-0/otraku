@@ -70,12 +70,23 @@ String _stripMarkdown(String text) => text
     .replaceAll(RegExp(r'\[.*?\]\(.*?\)'), 'Link')
     .replaceAll(RegExp(r'[*_~`#>]+'), '');
 
+({String? donatorBadge, bool isModerator}) _actorBadges(Map<String, dynamic>? user) {
+  final tier = user?['donatorTier'] as int?;
+  final badge = user?['donatorBadge'] as String?;
+  return (
+    donatorBadge: (tier != null && tier > 0 && badge != null && badge.isNotEmpty) ? badge : null,
+    isModerator: ((user?['moderatorRoles'] as List?)?.isNotEmpty) ?? false,
+  );
+}
+
 sealed class SiteNotification {
   SiteNotification({
     required Map<String, dynamic> map,
     required this.type,
     required this.imageUrl,
     required this.texts,
+    this.donatorBadge,
+    this.isModerator = false,
   }) : id = map['id'],
        createdAt = DateTimeExtension.fromSecondsSinceEpoch(map['createdAt'] ?? 0);
 
@@ -110,6 +121,8 @@ sealed class SiteNotification {
   final DateTime createdAt;
   final String? imageUrl;
   final List<String> texts;
+  final String? donatorBadge;
+  final bool isModerator;
 }
 
 class FollowNotification extends SiteNotification {
@@ -119,16 +132,22 @@ class FollowNotification extends SiteNotification {
     required super.imageUrl,
     required super.texts,
     required this.userId,
+    super.donatorBadge,
+    super.isModerator,
   });
 
-  factory FollowNotification(Map<String, dynamic> map, NotificationType type) =>
-      FollowNotification._(
-        map: map,
-        type: type,
-        imageUrl: map['user']?['avatar']?['large'],
-        texts: [map['user']?['name'] ?? '?', ' followed you'],
-        userId: map['user']?['id'] ?? 0,
-      );
+  factory FollowNotification(Map<String, dynamic> map, NotificationType type) {
+    final badges = _actorBadges(map['user']);
+    return FollowNotification._(
+      map: map,
+      type: type,
+      imageUrl: map['user']?['avatar']?['large'],
+      texts: [map['user']?['name'] ?? '?', ' followed you'],
+      userId: map['user']?['id'] ?? 0,
+      donatorBadge: badges.donatorBadge,
+      isModerator: badges.isModerator,
+    );
+  }
 
   final int userId;
 }
@@ -143,6 +162,8 @@ class ActivityNotification extends SiteNotification {
     required this.activityId,
     this.message,
     this.activityText,
+    super.donatorBadge,
+    super.isModerator,
   });
 
   factory ActivityNotification(Map<String, dynamic> map, NotificationType type) {
@@ -201,6 +222,8 @@ class ActivityNotification extends SiteNotification {
       _ => const [],
     };
 
+    final badges = _actorBadges(map['user']);
+
     return ActivityNotification._(
       map: map,
       type: type,
@@ -210,6 +233,8 @@ class ActivityNotification extends SiteNotification {
       activityId: map['activityId'] ?? 0,
       message: message,
       activityText: content,
+      donatorBadge: badges.donatorBadge,
+      isModerator: badges.isModerator,
     );
   }
 
@@ -228,10 +253,13 @@ class ThreadNotification extends SiteNotification {
     required this.userId,
     required this.threadId,
     required this.threadSiteUrl,
+    super.donatorBadge,
+    super.isModerator,
   });
 
   factory ThreadNotification(Map<String, dynamic> map, NotificationType type) {
     final title = map['thread']?['title'] as String?;
+    final badges = _actorBadges(map['user']);
     return ThreadNotification._(
       map: map,
       type: type,
@@ -244,6 +272,8 @@ class ThreadNotification extends SiteNotification {
       userId: map['user']?['id'] ?? 0,
       threadId: map['thread']?['id'] ?? 0,
       threadSiteUrl: map['thread']?['siteUrl'],
+      donatorBadge: badges.donatorBadge,
+      isModerator: badges.isModerator,
     );
   }
 
@@ -262,6 +292,8 @@ class ThreadCommentNotification extends SiteNotification {
     required this.commentId,
     required this.commentSiteUrl,
     this.comment,
+    super.donatorBadge,
+    super.isModerator,
   });
 
   factory ThreadCommentNotification(Map<String, dynamic> map, NotificationType type) {
@@ -308,6 +340,8 @@ class ThreadCommentNotification extends SiteNotification {
       _ => const [],
     };
 
+    final badges = _actorBadges(map['user']);
+
     return ThreadCommentNotification._(
       map: map,
       type: type,
@@ -317,6 +351,8 @@ class ThreadCommentNotification extends SiteNotification {
       commentId: map['comment']?['id'] ?? 0,
       commentSiteUrl: map['comment']?['siteUrl'],
       comment: comment,
+      donatorBadge: badges.donatorBadge,
+      isModerator: badges.isModerator,
     );
   }
 
