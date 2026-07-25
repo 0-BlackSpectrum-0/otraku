@@ -177,18 +177,22 @@ class _NotificationItem extends StatelessWidget {
       child: CardExtension.highContrast(highContrast)(
         margin: const .only(bottom: Theming.offset),
         child: ClipRRect(
-        borderRadius: Theming.borderRadiusSmall,
+          borderRadius: Theming.borderRadiusSmall,
           child: Row(
             children: [
               if (item.imageUrl != null)
                 GestureDetector(
                   behavior: .opaque,
                   onTap: () => switch (item) {
-                    FollowNotification item => context.push(Routes.user(item.userId, item.imageUrl)),
+                    FollowNotification item => context.push(
+                      Routes.user(item.userId, item.imageUrl),
+                    ),
                     ActivityNotification item => context.push(
                       Routes.user(item.userId, item.imageUrl),
                     ),
-                    ThreadNotification item => context.push(Routes.user(item.userId, item.imageUrl)),
+                    ThreadNotification item => context.push(
+                      Routes.user(item.userId, item.imageUrl),
+                    ),
                     ThreadCommentNotification item => context.push(
                       Routes.user(item.userId, item.imageUrl),
                     ),
@@ -226,7 +230,9 @@ class _NotificationItem extends StatelessWidget {
                 child: GestureDetector(
                   behavior: .opaque,
                   onTap: () => switch (item) {
-                    FollowNotification item => context.push(Routes.user(item.userId, item.imageUrl)),
+                    FollowNotification item => context.push(
+                      Routes.user(item.userId, item.imageUrl),
+                    ),
                     ActivityNotification item => context.push(Routes.activity(item.activityId)),
                     ThreadNotification item => context.push(Routes.thread(item.threadId)),
                     ThreadCommentNotification item => context.push(Routes.comment(item.commentId)),
@@ -285,7 +291,7 @@ class _NotificationItem extends StatelessWidget {
                 Container(
                   height: height,
                   width: Theming.offset,
-                  color: ColorScheme.of(context).primary,  
+                  color: ColorScheme.of(context).primary,
                 ),
             ],
           ),
@@ -341,8 +347,8 @@ class _NotificationDialog extends StatelessWidget {
               ),
             ),
             ?switch (item) {
-              MediaChangeNotification item => HtmlContent(item.reason),
-              MediaDeletionNotification item => HtmlContent(item.reason),
+              MediaChangeNotification item => SelectionArea(child: HtmlContent(item.reason)),
+              MediaDeletionNotification item => SelectionArea(child: HtmlContent(item.reason)),
               SubmissionUpdateNotification item => Text(item.notes),
               _ => null,
             },

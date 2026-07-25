@@ -34,38 +34,40 @@ class CharacterOverviewSubview extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final refreshControl = SliverRefreshControl(onRefresh: invalidate);
 
-    return CustomScrollView(
-      physics: Theming.bouncyPhysics,
-      controller: scrollCtrl,
-      slivers: [
-        if (header != null) ...[
-          header!,
-          MediaQuery(
-            data: mediaQuery.copyWith(padding: mediaQuery.padding.copyWith(top: 0)),
-            child: refreshControl,
-          ),
-        ] else
-          refreshControl,
-        SliverPadding(
-          padding: const .symmetric(horizontal: Theming.offset),
-          sliver: SliverMainAxisGroup(
-            slivers: [
-              _NameTable(character, l10n, highContrast),
-              const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
-              SliverTableList([
-                if (character.dateOfBirth != null) (l10n.personInfoBirth, character.dateOfBirth!),
-                if (character.age != null) (l10n.personInfoAge, character.age!),
-                if (character.bloodType != null) (l10n.personInfoBloodType, character.bloodType!),
-              ], highContrast: highContrast),
-              if (character.description.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: SizedBox(height: 15)),
-                HtmlContent(character.description, renderMode: .sliverList),
+    return SelectionArea(
+      child: CustomScrollView(
+        physics: Theming.bouncyPhysics,
+        controller: scrollCtrl,
+        slivers: [
+          if (header != null) ...[
+            header!,
+            MediaQuery(
+              data: mediaQuery.copyWith(padding: mediaQuery.padding.copyWith(top: 0)),
+              child: refreshControl,
+            ),
+          ] else
+            refreshControl,
+          SliverPadding(
+            padding: const .symmetric(horizontal: Theming.offset),
+            sliver: SliverMainAxisGroup(
+              slivers: [
+                _NameTable(character, l10n, highContrast),
+                const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
+                SliverTableList([
+                  if (character.dateOfBirth != null) (l10n.personInfoBirth, character.dateOfBirth!),
+                  if (character.age != null) (l10n.personInfoAge, character.age!),
+                  if (character.bloodType != null) (l10n.personInfoBloodType, character.bloodType!),
+                ], highContrast: highContrast),
+                if (character.description.isNotEmpty) ...[
+                  const SliverToBoxAdapter(child: SizedBox(height: 15)),
+                  HtmlContent(character.description, renderMode: .sliverList),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        const SliverFooter(),
-      ],
+          const SliverFooter(),
+        ],
+      ),
     );
   }
 }

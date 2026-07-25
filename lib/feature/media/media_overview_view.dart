@@ -257,33 +257,33 @@ class _DescriptionState extends State<_Description> {
   @override
   Widget build(BuildContext context) {
     final content = _expanded
-        ? HtmlContent(widget.text)
-        : ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment(0.0, 0.3),
-              end: Alignment(0.0, 1.0),
-              colors: [Colors.white, Colors.transparent],
-            ).createShader(bounds),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 72),
-              child: HtmlContent(widget.text),
+        ? Padding(
+            padding: const .all(Theming.offset),
+            child: SelectionArea(child: HtmlContent(widget.text)),
+          )
+        : InkWell(
+            borderRadius: Theming.borderRadiusSmall,
+            onTap: () => setState(() => _expanded = true),
+            child: Padding(
+              padding: const .all(Theming.offset),
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment(0.0, 0.3),
+                  end: Alignment(0.0, 1.0),
+                  colors: [Colors.white, Colors.transparent],
+                ).createShader(bounds),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 72),
+                  child: HtmlContent(widget.text),
+                ),
+              ),
             ),
           );
 
     return SliverToBoxAdapter(
       child: Padding(
         padding: const .only(bottom: Theming.offset),
-        child: CardExtension.highContrast(widget.highContrast)(
-          child: InkWell(
-            borderRadius: Theming.borderRadiusSmall,
-            onTap: () => setState(() => _expanded = !_expanded),
-            onLongPress: () {
-              final text = widget.text.replaceAll(RegExp(r'<br>'), '');
-              SnackBarExtension.copy(context, text);
-            },
-            child: Padding(padding: const .all(Theming.offset), child: content),
-          ),
-        ),
+        child: CardExtension.highContrast(widget.highContrast)(child: content),
       ),
     );
   }

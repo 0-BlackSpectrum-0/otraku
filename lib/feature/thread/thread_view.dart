@@ -266,139 +266,143 @@ class _Content extends StatelessWidget {
     const spacing = SliverToBoxAdapter(child: SizedBox(height: Theming.offset));
     final info = thread.info;
 
-    return CustomScrollView(
-      controller: scrollCtrl,
-      physics: Theming.bouncyPhysics,
-      slivers: [
-        SliverRefreshControl(onRefresh: () => ref.invalidate(threadProvider(thread.info.id))),
-        SliverToBoxAdapter(child: Timestamp(info.createdAt, analogClock)),
-        spacing,
-        SliverToBoxAdapter(child: Text(thread.info.title, style: TextTheme.of(context).bodyMedium)),
-        spacing,
-        HtmlContent(thread.info.body, renderMode: .sliverList),
-        spacing,
-        if (info.media.isNotEmpty)
+    return SelectionArea(
+      child: CustomScrollView(
+        controller: scrollCtrl,
+        physics: Theming.bouncyPhysics,
+        slivers: [
+          SliverRefreshControl(onRefresh: () => ref.invalidate(threadProvider(thread.info.id))),
+          SliverToBoxAdapter(child: Timestamp(info.createdAt, analogClock)),
+          spacing,
+          SliverToBoxAdapter(
+            child: Text(thread.info.title, style: TextTheme.of(context).bodyMedium),
+          ),
+          spacing,
+          HtmlContent(thread.info.body, renderMode: .sliverList),
+          spacing,
+          if (info.media.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: Theming.minTapTarget,
+                child: ShadowedOverflowList(
+                  itemCount: info.media.length,
+                  itemBuilder: (context, i) {
+                    final media = info.media[i];
+
+                    return ActionChip(
+                      label: Text(media.title),
+                      avatar: CachedImage(media.coverUrl),
+                      onPressed: () => context.push(Routes.media(media.id)),
+                    );
+                  },
+                ),
+              ),
+            ),
           SliverToBoxAdapter(
             child: SizedBox(
               height: Theming.minTapTarget,
               child: ShadowedOverflowList(
-                itemCount: info.media.length,
+                itemCount: info.categories.length,
                 itemBuilder: (context, i) {
-                  final media = info.media[i];
+                  final label = info.categories[i];
 
                   return ActionChip(
-                    label: Text(media.title),
-                    avatar: CachedImage(media.coverUrl),
-                    onPressed: () => context.push(Routes.media(media.id)),
+                    label: Text(label),
+                    onPressed: () {
+                      context.push(Routes.forum);
+
+                      ref.invalidate(forumFilterProvider);
+                      ref
+                          .read(forumFilterProvider.notifier)
+                          .update(
+                            (filter) => filter.copyWith(category: (ThreadCategory.from(label),)),
+                          );
+                    },
                   );
                 },
               ),
             ),
           ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: Theming.minTapTarget,
-            child: ShadowedOverflowList(
-              itemCount: info.categories.length,
-              itemBuilder: (context, i) {
-                final label = info.categories[i];
-
-                return ActionChip(
-                  label: Text(label),
-                  onPressed: () {
-                    context.push(Routes.forum);
-
-                    ref.invalidate(forumFilterProvider);
-                    ref
-                        .read(forumFilterProvider.notifier)
-                        .update(
-                          (filter) => filter.copyWith(category: (ThreadCategory.from(label),)),
-                        );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const .symmetric(vertical: Theming.offset),
-            child: Row(
-              spacing: Theming.offset,
-              children: [
-                if (info.isPinned)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const .symmetric(vertical: Theming.offset),
+              child: Row(
+                spacing: Theming.offset,
+                children: [
+                  if (info.isPinned)
+                    Tooltip(
+                      message: l10n.postsPinned,
+                      triggerMode: .tap,
+                      child: Icon(Icons.push_pin_outlined, size: Theming.iconSmall),
+                    ),
+                  if (info.isLocked)
+                    Tooltip(
+                      message: l10n.postsLocked,
+                      triggerMode: .tap,
+                      child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
+                    ),
+                  const Spacer(),
                   Tooltip(
-                    message: l10n.postsPinned,
+                    message: l10n.postsViews,
                     triggerMode: .tap,
-                    child: Icon(Icons.push_pin_outlined, size: Theming.iconSmall),
+                    child: Row(
+                      mainAxisSize: .min,
+                      children: [
+                        Text(
+                          info.viewCount.toString(),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        const SizedBox(width: 5),
+                        Icon(Icons.remove_red_eye_outlined, size: Theming.iconSmall),
+                      ],
+                    ),
                   ),
-                if (info.isLocked)
                   Tooltip(
-                    message: l10n.postsLocked,
+                    message: l10n.postsReplies,
                     triggerMode: .tap,
-                    child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
+                    child: Row(
+                      mainAxisSize: .min,
+                      spacing: 5,
+                      children: [
+                        Text(
+                          info.replyCount.toString(),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        Icon(Icons.reply_all_rounded, size: Theming.iconSmall),
+                      ],
+                    ),
                   ),
-                const Spacer(),
-                Tooltip(
-                  message: l10n.postsViews,
-                  triggerMode: .tap,
-                  child: Row(
-                    mainAxisSize: .min,
-                    children: [
-                      Text(
-                        info.viewCount.toString(),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                      const SizedBox(width: 5),
-                      Icon(Icons.remove_red_eye_outlined, size: Theming.iconSmall),
-                    ],
-                  ),
-                ),
-                Tooltip(
-                  message: l10n.postsReplies,
-                  triggerMode: .tap,
-                  child: Row(
-                    mainAxisSize: .min,
-                    spacing: 5,
-                    children: [
-                      Text(
-                        info.replyCount.toString(),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                      Icon(Icons.reply_all_rounded, size: Theming.iconSmall),
-                    ],
-                  ),
-                ),
-                _LikeButton(ref, info),
-              ],
-            ),
-          ),
-        ),
-        spacing,
-        SliverList.builder(
-          itemCount: thread.comments.length,
-          itemBuilder: (context, i) {
-            final comment = thread.comments[i];
-
-            return Padding(
-              padding: const .only(bottom: Theming.offset),
-              child: CommentTile(
-                comment,
-                viewerId: viewerId,
-                highContrast: highContrast,
-                analogClock: analogClock,
-                interaction: (
-                  onReplySaved: (map, commentId) =>
-                      ref.read(threadProvider(info.id).notifier).appendComment(map, commentId),
-                  toggleLike: (commentId) =>
-                      ref.read(threadProvider(info.id).notifier).toggleCommentLike(commentId),
-                ),
+                  _LikeButton(ref, info),
+                ],
               ),
-            );
-          },
-        ),
-        const SliverFooter(),
-      ],
+            ),
+          ),
+          spacing,
+          SliverList.builder(
+            itemCount: thread.comments.length,
+            itemBuilder: (context, i) {
+              final comment = thread.comments[i];
+
+              return Padding(
+                padding: const .only(bottom: Theming.offset),
+                child: CommentTile(
+                  comment,
+                  viewerId: viewerId,
+                  highContrast: highContrast,
+                  analogClock: analogClock,
+                  interaction: (
+                    onReplySaved: (map, commentId) =>
+                        ref.read(threadProvider(info.id).notifier).appendComment(map, commentId),
+                    toggleLike: (commentId) =>
+                        ref.read(threadProvider(info.id).notifier).toggleCommentLike(commentId),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SliverFooter(),
+        ],
+      ),
     );
   }
 }
