@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
+import 'package:otraku/feature/composition/composition_drafts.dart';
 import 'package:otraku/localizations/gen.dart';
+import 'package:otraku/util/debounce.dart';
 import 'package:otraku/util/markdown.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/util/theming.dart';
@@ -44,6 +46,7 @@ class CompositionView extends StatelessWidget {
 
                 return _CompositionView(
                   composition: data,
+                  saveDraft: (text) => CompositionDrafts.save(tag, text),
                   trySave: () async {
                     final result = await ref.read(compositionProvider(tag).notifier).save();
 
@@ -65,10 +68,15 @@ class CompositionView extends StatelessWidget {
 }
 
 class _CompositionView extends StatefulWidget {
-  const _CompositionView({required this.composition, required this.trySave});
+  const _CompositionView({
+    required this.composition,
+    required this.trySave,
+    required this.saveDraft,
+  });
 
   final Composition composition;
   final Future<bool> Function() trySave;
+  final void Function(String) saveDraft;
 
   @override
   State<_CompositionView> createState() => __CompositionViewState();
@@ -77,8 +85,10 @@ class _CompositionView extends StatefulWidget {
 class __CompositionViewState extends State<_CompositionView> with SingleTickerProviderStateMixin {
   late final _textCtrl = TextEditingController(text: widget.composition.text);
   late final _tabCtrl = TabController(length: 2, vsync: this);
+  final _draftDebounce = Debounce();
   String _parsedText = '';
   final _focus = FocusNode();
+  bool _saved = false;
 
   @override
   void initState() {
@@ -92,10 +102,16 @@ class __CompositionViewState extends State<_CompositionView> with SingleTickerPr
         _parsedText = parseMarkdown(_textCtrl.text);
       }
     });
+    _textCtrl.addListener(() {
+      if (_saved) return;
+      _draftDebounce.run(() => widget.saveDraft(_textCtrl.text));
+    });
   }
 
   @override
   void dispose() {
+    _draftDebounce.cancel();
+    if (!_saved) widget.saveDraft(_textCtrl.text);
     _tabCtrl.dispose();
     _textCtrl.dispose();
     _focus.dispose();
@@ -116,7 +132,14 @@ class __CompositionViewState extends State<_CompositionView> with SingleTickerPr
         composition: widget.composition,
         textCtrl: _textCtrl,
         isEditing: _tabCtrl.index == 0,
-        trySave: widget.trySave,
+        trySave: () async {
+          final ok = await widget.trySave();
+          if (ok) {
+            _saved = true;
+            widget.saveDraft('');
+          }
+          return ok;
+        },
       ),
     );
   }

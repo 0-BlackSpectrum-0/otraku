@@ -5,6 +5,14 @@ sealed class CompositionTag {
   const CompositionTag({required this.id});
 
   final int? id;
+
+  String get draftKey => switch (this) {
+    StatusActivityCompositionTag() => 'status:$id',
+    MessageActivityCompositionTag(:final recipientId) => 'message:$id:$recipientId',
+    ActivityReplyCompositionTag(:final activityId) => 'activityReply:$id:$activityId',
+    CommentCompositionTag(:final threadId, :final parentCommentId) =>
+      'comment$id:$threadId:$parentCommentId',
+  };
 }
 
 class StatusActivityCompositionTag extends CompositionTag {
