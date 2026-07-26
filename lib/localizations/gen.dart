@@ -1346,65 +1346,17 @@ abstract class AppLocalizations {
   /// **'Adaptation'**
   String get mediaRelationTypeAdaptation;
 
-  /// No description provided for @mediaRelationTypePrequel.
-  ///
-  /// In en, this message translates to:
-  /// **'Prequel'**
-  String get mediaRelationTypePrequel;
-
-  /// No description provided for @mediaRelationTypeSequel.
-  ///
-  /// In en, this message translates to:
-  /// **'Sequel'**
-  String get mediaRelationTypeSequel;
-
-  /// No description provided for @mediaRelationTypeParent.
-  ///
-  /// In en, this message translates to:
-  /// **'Parent'**
-  String get mediaRelationTypeParent;
-
-  /// No description provided for @mediaRelationTypeSideStory.
-  ///
-  /// In en, this message translates to:
-  /// **'Side Story'**
-  String get mediaRelationTypeSideStory;
-
-  /// No description provided for @mediaRelationTypeCharacter.
-  ///
-  /// In en, this message translates to:
-  /// **'Character'**
-  String get mediaRelationTypeCharacter;
-
-  /// No description provided for @mediaRelationTypeSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get mediaRelationTypeSummary;
-
   /// No description provided for @mediaRelationTypeAlternative.
   ///
   /// In en, this message translates to:
   /// **'Alternative'**
   String get mediaRelationTypeAlternative;
 
-  /// No description provided for @mediaRelationTypeSpinOff.
+  /// No description provided for @mediaRelationTypeCharacter.
   ///
   /// In en, this message translates to:
-  /// **'Spin Off'**
-  String get mediaRelationTypeSpinOff;
-
-  /// No description provided for @mediaRelationTypeOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get mediaRelationTypeOther;
-
-  /// No description provided for @mediaRelationTypeSource.
-  ///
-  /// In en, this message translates to:
-  /// **'Source'**
-  String get mediaRelationTypeSource;
+  /// **'Character'**
+  String get mediaRelationTypeCharacter;
 
   /// No description provided for @mediaRelationTypeCompilation.
   ///
@@ -1417,6 +1369,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contains'**
   String get mediaRelationTypeContains;
+
+  /// No description provided for @mediaRelationTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get mediaRelationTypeOther;
+
+  /// No description provided for @mediaRelationTypeParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent'**
+  String get mediaRelationTypeParent;
+
+  /// No description provided for @mediaRelationTypePrequel.
+  ///
+  /// In en, this message translates to:
+  /// **'Prequel'**
+  String get mediaRelationTypePrequel;
+
+  /// No description provided for @mediaRelationTypeSameUniverse.
+  ///
+  /// In en, this message translates to:
+  /// **'Same Universe'**
+  String get mediaRelationTypeSameUniverse;
+
+  /// No description provided for @mediaRelationTypeSequel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sequel'**
+  String get mediaRelationTypeSequel;
+
+  /// No description provided for @mediaRelationTypeSideStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Side Story'**
+  String get mediaRelationTypeSideStory;
+
+  /// No description provided for @mediaRelationTypeSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get mediaRelationTypeSource;
+
+  /// No description provided for @mediaRelationTypeSpinOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin Off'**
+  String get mediaRelationTypeSpinOff;
+
+  /// No description provided for @mediaRelationTypeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get mediaRelationTypeSummary;
 
   /// No description provided for @mediaRelease.
   ///

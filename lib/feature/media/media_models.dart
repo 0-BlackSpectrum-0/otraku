@@ -709,7 +709,8 @@ enum MediaRelationType {
   other('OTHER'),
   source('SOURCE'),
   compilation('COMPILATION'),
-  contains('CONTAINS');
+  contains('CONTAINS'),
+  sameUniverse('SAME_UNIVERSE');
 
   const MediaRelationType(this.value);
 
@@ -732,6 +733,7 @@ enum MediaRelationType {
     .source => l10n.mediaRelationTypeSource,
     .compilation => l10n.mediaRelationTypeCompilation,
     .contains => l10n.mediaRelationTypeContains,
+    .sameUniverse => l10n.mediaRelationTypeSameUniverse,
   };
 }
 

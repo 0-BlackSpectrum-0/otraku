@@ -79,7 +79,7 @@ abstract class GqlQuery {
       externalLinks {url site type color language}
       relations {
         edges {
-          relationType(version: 2)
+          relationType(version: 3)
           node {
             id
             type
