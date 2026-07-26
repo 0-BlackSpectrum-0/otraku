@@ -527,28 +527,34 @@ class _NotificationItem extends StatelessWidget {
                   child: Padding(
                     padding: Theming.paddingAll,
                     child: Column(
-                      mainAxisSize: .min,
                       crossAxisAlignment: .stretch,
-                      spacing: 3,
                       children: [
-                        Text(
-                          item.texts.isNotEmpty ? item.texts[0] : '?',
-                          maxLines: 1,
-                          overflow: .ellipsis,
-                          style: accentedStyle,
-                        ),
-                        if (item.texts.length > 1)
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                for (int i = 1; i < item.texts.length; i++)
-                                  TextSpan(
-                                    text: item.texts[i],
-                                    style: (i % 2 == 0) ? accentedStyle : bodyMediumStyle,
-                                  ),
-                              ],
+                        Column(
+                          mainAxisSize: .min,
+                          crossAxisAlignment: .stretch,
+                          spacing: 3,
+                          children: [
+                            Text(
+                              item.texts.isNotEmpty ? item.texts[0] : '?',
+                              maxLines: 2,
+                              overflow: .ellipsis,
+                              style: accentedStyle,
                             ),
-                          ),
+                            if (item.texts.length > 1)
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    for (int i = 1; i < item.texts.length; i++)
+                                      TextSpan(
+                                        text: item.texts[i],
+                                        style: (i % 2 == 0) ? accentedStyle : bodyMediumStyle,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const Spacer(),
                         Timestamp(item.createdAt, analogClock),
                       ],
                     ),

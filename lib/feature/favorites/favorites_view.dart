@@ -431,7 +431,7 @@ class _EditListState extends State<_EditList> {
     return SliverReorderableList(
       itemExtent: itemExtent,
       itemCount: widget.items.length,
-      onReorder: (oldIndex, newIndex) => setState(() {
+      onReorderItem: (oldIndex, newIndex) => setState(() {
         final item = widget.items.removeAt(oldIndex);
         widget.items.insert(newIndex, item);
       }),
