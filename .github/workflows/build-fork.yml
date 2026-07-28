@@ -112,6 +112,15 @@ jobs:
 
       - name: Fix WorkManager Crash
         run: echo "-keep class androidx.work.impl.** { *; }" >> android/app/proguard-rules.pro
+        
+      - name: Fix Notification Icon Resource Shrinking
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          cat > android/app/src/main/res/raw/keep.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources xmlns:tools="http://schemas.android.com/tools"
+              tools:keep="@drawable/notification_icon_monochrome" />
+          EOF
 
       - name: Build Release APK
         run: flutter build apk --release
