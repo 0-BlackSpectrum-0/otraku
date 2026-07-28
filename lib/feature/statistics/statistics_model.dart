@@ -13,6 +13,8 @@ class Statistics {
     required this.formats,
     required this.statuses,
     required this.countries,
+    required this.genres,
+    required this.tags,
   });
 
   factory Statistics(Map<String, dynamic> map, bool ofAnime) {
@@ -21,6 +23,8 @@ class Statistics {
     final formats = <FormatStatistic>[];
     final statuses = <StatusStatistic>[];
     final countries = <CountryStatistic>[];
+    final genres = <GenreOrTagStat>[];
+    final tags = <GenreOrTagStat>[];
 
     for (final m in map['scores']) {
       scores.add((
@@ -62,6 +66,22 @@ class Statistics {
         name: OriginCountry.fromCode(m['country'])!,
       ));
     }
+    for (final m in map['genres'] ?? const []) {
+      genres.add((
+        count: m['count'],
+        meanScore: m['meanScore'].toDouble(),
+        amount: ofAnime ? m['minutesWatched'] ~/ 60 : m['chaptersRead'],
+        name: m['genre'] ?? '?',
+      ));
+    }
+    for (final m in map['tags'] ?? const []) {
+      genres.add((
+        count: m['count'],
+        meanScore: m['meanScore'].toDouble(),
+        amount: ofAnime ? m['minutesWatched'] ~/ 60 : m['chaptersRead'],
+        name: m['tags']?['name'] ?? '?',
+      ));
+    }
 
     // The backend can't sort them by length, so it has to be done locally.
     lengths.sort((a, b) {
@@ -88,6 +108,8 @@ class Statistics {
       formats: formats,
       statuses: statuses,
       countries: countries,
+      genres: genres,
+      tags: tags,
     );
   }
 
@@ -101,6 +123,8 @@ class Statistics {
   final List<FormatStatistic> formats;
   final List<StatusStatistic> statuses;
   final List<CountryStatistic> countries;
+  final List<GenreOrTagStat> genres;
+  final List<GenreOrTagStat> tags;
 }
 
 typedef ScoreStatistic = ({int count, double meanScore, int amount, String name});
@@ -112,3 +136,5 @@ typedef FormatStatistic = ({int count, double meanScore, int amount, MediaFormat
 typedef StatusStatistic = ({int count, double meanScore, int amount, ListStatus name});
 
 typedef CountryStatistic = ({int count, double meanScore, int amount, OriginCountry name});
+
+typedef GenreOrTagStat = ({int count, double meanScore, int amount, String name});

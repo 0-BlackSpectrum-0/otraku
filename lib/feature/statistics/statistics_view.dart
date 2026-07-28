@@ -6,6 +6,7 @@ import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
+import 'package:otraku/feature/statistics/genre_tag_cloud.dart';
 import 'package:otraku/feature/statistics/statistics_model.dart';
 import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
@@ -210,6 +211,40 @@ class _StatisticsView extends StatelessWidget {
             ]),
           ),
         ],
+        if (statistics.genres.isNotEmpty || statistics.tags.isNotEmpty) ...[
+          spacing,
+          SliverToBoxAdapter(
+            child: GenreTagCloud(
+              items: [...statistics.genres, ...statistics.tags],
+              highContrast: highContrast,
+            ),
+          ),
+        ],
+        if (statistics.genres.isNotEmpty) ...[
+          spacing,
+          SliverToBoxAdapter(
+            child: GenreTagStatChips(
+              title: 'Genres',
+              items: statistics.genres,
+              ofAnime: ofAnime,
+              isTag: false,
+              highContrast: highContrast,
+            ),
+          ),
+        ],
+        if (statistics.tags.isNotEmpty) ...[
+          spacing,
+          SliverToBoxAdapter(
+            child: GenreTagStatChips(
+              title: 'Tags',
+              items: statistics.tags,
+              ofAnime: ofAnime,
+              isTag: true,
+              highContrast: highContrast,
+            ),
+          ),
+        ],
+
         const SliverFooter(),
       ],
     );
