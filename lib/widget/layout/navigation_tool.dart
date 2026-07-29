@@ -196,19 +196,16 @@ class BottomBar extends StatelessWidget {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return ClipRect(
-      child: BackdropFilter(
-        filter: Theming.blurFilter,
-        child: SizedBox(
-          height: height + bottomPadding,
-          child: Material(
-            elevation: 3,
-            color: Theme.of(context).navigationBarTheme.backgroundColor,
-            surfaceTintColor: ColorScheme.of(context).surfaceTint,
-            shadowColor: Colors.transparent,
-            child: Padding(
-              padding: .only(bottom: bottomPadding),
-              child: Row(mainAxisAlignment: .spaceEvenly, children: items),
-            ),
+      child: SizedBox(
+        height: height + bottomPadding,
+        child: Material(
+          elevation: 3,
+          color: Theme.of(context).navigationBarTheme.backgroundColor,
+          surfaceTintColor: ColorScheme.of(context).surfaceTint,
+          shadowColor: Colors.transparent,
+          child: Padding(
+            padding: .only(bottom: bottomPadding),
+            child: Row(mainAxisAlignment: .spaceEvenly, children: items),
           ),
         ),
       ),

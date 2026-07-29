@@ -99,6 +99,9 @@ flutter:
     - family: Catways
       fonts:
         - asset: assets/fonts/Catways.ttf
+    - family: EmojiFont
+      fonts: 
+        - asset: assets/fonts/NotoColorEmoji.ttf
     - family: Rubik
       fonts:
         - asset: assets/fonts/Rubik-VariableFont_wght.ttf

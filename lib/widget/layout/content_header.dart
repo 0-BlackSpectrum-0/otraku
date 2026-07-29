@@ -326,12 +326,9 @@ class _Delegate extends SliverPersistentHeaderDelegate {
     return transition < 1
         ? body
         : ClipRect(
-            child: BackdropFilter(
-              filter: Theming.blurFilter,
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: theme.navigationBarTheme.backgroundColor),
-                child: body,
-              ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: theme.navigationBarTheme.backgroundColor),
+              child: body,
             ),
           );
   }

@@ -92,6 +92,7 @@ class Theming extends ThemeExtension<Theming> {
       labelStyle: TextStyle(
         color: scheme.onSecondaryContainer,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
     ),
     segmentedButtonTheme: const SegmentedButtonThemeData(
@@ -112,6 +113,7 @@ class Theming extends ThemeExtension<Theming> {
         textStyle: const TextStyle(
           fontSize: fontMedium,
           fontVariations: [FontVariation('wght', 500)],
+          fontFamilyFallback: ['EmojiFont'],
         ),
       ),
     ),
@@ -120,6 +122,7 @@ class Theming extends ThemeExtension<Theming> {
         textStyle: const TextStyle(
           fontSize: fontMedium,
           fontVariations: [FontVariation('wght', 400)],
+          fontFamilyFallback: ['EmojiFont'],
         ),
       ),
     ),
@@ -128,6 +131,7 @@ class Theming extends ThemeExtension<Theming> {
         textStyle: const TextStyle(
           fontSize: fontMedium,
           fontVariations: [FontVariation('wght', 450)],
+          fontFamilyFallback: ['EmojiFont'],
         ),
       ),
     ),
@@ -137,11 +141,13 @@ class Theming extends ThemeExtension<Theming> {
         fontSize: fontMedium,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       subtitleTextStyle: TextStyle(
         fontSize: fontSmall,
         color: scheme.onSurfaceVariant,
         fontVariations: const [FontVariation('wght', 350)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
     ),
     textTheme: TextTheme(
@@ -149,36 +155,43 @@ class Theming extends ThemeExtension<Theming> {
         fontSize: fontBig,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 450)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       titleSmall: TextStyle(
         fontSize: fontMedium,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 450)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       bodyLarge: TextStyle(
         fontSize: fontBig,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       bodyMedium: TextStyle(
         fontSize: fontMedium,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       labelLarge: TextStyle(
         fontSize: fontMedium,
         color: scheme.onSurfaceVariant,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       labelMedium: TextStyle(
         fontSize: fontMedium,
         color: scheme.onSurfaceVariant,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       labelSmall: TextStyle(
         fontSize: fontSmall,
         color: scheme.onSurfaceVariant,
         fontVariations: const [FontVariation('wght', 350)],
+        fontFamilyFallback: ['EmojiFont'],
         letterSpacing: 0.5,
       ),
     ),
@@ -194,11 +207,13 @@ class Theming extends ThemeExtension<Theming> {
         fontSize: fontMedium,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 500)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       contentTextStyle: TextStyle(
         fontSize: fontMedium,
         color: scheme.onSurface,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
     ),
     tooltipTheme: TooltipThemeData(
@@ -223,6 +238,7 @@ class Theming extends ThemeExtension<Theming> {
         fontSize: fontMedium,
         color: scheme.onSurfaceVariant,
         fontVariations: const [FontVariation('wght', 400)],
+        fontFamilyFallback: ['EmojiFont'],
       ),
       border: const OutlineInputBorder(
         borderRadius: borderRadiusSmall,

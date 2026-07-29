@@ -276,31 +276,28 @@ class _FilterTagSheetState extends ConsumerState<_FilterTagSheet> {
           Center(child: Text(l10n.noResults)),
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Theming.radiusBig),
-          child: BackdropFilter(
-            filter: Theming.blurFilter,
-            child: Container(
-              height: 110,
-              color: Theme.of(context).navigationBarTheme.backgroundColor,
-              padding: const .symmetric(vertical: Theming.offset),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const .only(
-                      left: Theming.offset,
-                      right: Theming.offset,
-                      bottom: Theming.offset,
-                    ),
-                    child: SearchField(hint: l10n.tags(1), value: _filter, onChanged: _onSearch),
+          child: Container(
+            height: 110,
+            color: Theme.of(context).navigationBarTheme.backgroundColor,
+            padding: const .symmetric(vertical: Theming.offset),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const .only(
+                    left: Theming.offset,
+                    right: Theming.offset,
+                    bottom: Theming.offset,
                   ),
-                  SizedBox(
-                    height: 40,
-                    child: ShadowedOverflowList(
-                      itemCount: _categoryIndexes.length,
-                      itemBuilder: _categoryChipBuilder,
-                    ),
+                  child: SearchField(hint: l10n.tags(1), value: _filter, onChanged: _onSearch),
+                ),
+                SizedBox(
+                  height: 40,
+                  child: ShadowedOverflowList(
+                    itemCount: _categoryIndexes.length,
+                    itemBuilder: _categoryChipBuilder,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

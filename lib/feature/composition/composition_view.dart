@@ -178,27 +178,24 @@ class _CompositionBody extends StatelessWidget {
           right: 0,
           child: ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Theming.radiusBig),
-            child: BackdropFilter(
-              filter: Theming.blurFilter,
-              child: Container(
-                padding: Theming.paddingAll,
-                color: Theme.of(context).navigationBarTheme.backgroundColor,
-                child: SegmentedButton(
-                  segments: [
-                    ButtonSegment(
-                      value: 0,
-                      label: Text(l10n.compositionsAdd),
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
-                    ButtonSegment(
-                      value: 1,
-                      label: Text(l10n.compositionsPreview),
-                      icon: const Icon(Icons.preview_outlined),
-                    ),
-                  ],
-                  selected: {tabCtrl.index},
-                  onSelectionChanged: (i) => tabCtrl.index = i.first,
-                ),
+            child: Container(
+              padding: Theming.paddingAll,
+              color: Theme.of(context).navigationBarTheme.backgroundColor,
+              child: SegmentedButton(
+                segments: [
+                  ButtonSegment(
+                    value: 0,
+                    label: Text(l10n.compositionsAdd),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  ButtonSegment(
+                    value: 1,
+                    label: Text(l10n.compositionsPreview),
+                    icon: const Icon(Icons.preview_outlined),
+                  ),
+                ],
+                selected: {tabCtrl.index},
+                onSelectionChanged: (i) => tabCtrl.index = i.first,
               ),
             ),
           ),

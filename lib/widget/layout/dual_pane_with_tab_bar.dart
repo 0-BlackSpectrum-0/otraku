@@ -41,30 +41,27 @@ class DualPaneWithTabBar extends StatelessWidget {
               Align(
                 alignment: .topCenter,
                 child: ClipRect(
-                  child: BackdropFilter(
-                    filter: Theming.blurFilter,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).navigationBarTheme.backgroundColor,
-                      ),
-                      child: SizedBox(
-                        height: topPadding,
-                        child: Align(
-                          alignment: .bottomCenter,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: TabBar(
-                              isScrollable: true,
-                              tabAlignment: .center,
-                              splashBorderRadius: Theming.borderRadiusSmall,
-                              tabs: tabs,
-                              controller: tabCtrl,
-                              onTap: (index) {
-                                if (index == tabCtrl.index) {
-                                  scrollToTop();
-                                }
-                              },
-                            ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).navigationBarTheme.backgroundColor,
+                    ),
+                    child: SizedBox(
+                      height: topPadding,
+                      child: Align(
+                        alignment: .bottomCenter,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: TabBar(
+                            isScrollable: true,
+                            tabAlignment: .center,
+                            splashBorderRadius: Theming.borderRadiusSmall,
+                            tabs: tabs,
+                            controller: tabCtrl,
+                            onTap: (index) {
+                              if (index == tabCtrl.index) {
+                                scrollToTop();
+                              }
+                            },
                           ),
                         ),
                       ),
