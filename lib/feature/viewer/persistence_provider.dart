@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/calendar/calendar_models.dart';
 import 'package:otraku/feature/collection/collection_filter_model.dart';
+import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/util/background_worker.dart';
@@ -77,6 +78,12 @@ class PersistenceNotifier extends Notifier<Persistence> {
   void setCalendarFilter(CalendarFilter calendarFilter) {
     _box.put('calendarFilter', calendarFilter.toPersistenceMap());
     state = state.copyWith(calendarFilter: calendarFilter);
+  }
+
+  void setCompositionDraft(CompositionTag tag, String text) {
+    final compositionDrafts = state.compositionDrafts.withDraft(tag, text);
+    _box.put('compositionDrafts', compositionDrafts.toPersistenceMap());
+    state = state.copyWith(compositionDrafts: compositionDrafts);
   }
 
   void refreshViewerDetails(String newName, String newAvatarUrl) {

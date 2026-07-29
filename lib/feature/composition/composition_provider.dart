@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:otraku/extension/string_extension.dart';
-import 'package:otraku/feature/composition/composition_drafts.dart';
 import 'package:otraku/util/graphql.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
@@ -16,43 +15,35 @@ class CompositionNotifier extends AsyncNotifier<Composition> {
   final CompositionTag arg;
 
   @override
-  FutureOr<Composition> build() async {
-    final draft = await CompositionDrafts.read(arg);
-
-    final Composition composition;
-
+  FutureOr<Composition> build() {
     if (arg.id == null) {
-      composition = switch (arg) {
+      return switch (arg) {
         MessageActivityCompositionTag _ => PrivateComposition('', false),
         _ => Composition(''),
       };
-    } else {
-      composition = await switch (arg) {
-        StatusActivityCompositionTag(id: var id) =>
-          ref
-              .read(repositoryProvider)
-              .request(GqlQuery.activityComposition, {'id': id})
-              .then((data) => Composition(data['Activity']['text'])),
-        MessageActivityCompositionTag(id: var id) =>
-          ref
-              .read(repositoryProvider)
-              .request(GqlQuery.activityComposition, {'id': id})
-              .then((data) => Composition(data['Activity']['message'])),
-        ActivityReplyCompositionTag(id: var id) =>
-          ref
-              .read(repositoryProvider)
-              .request(GqlQuery.activityReplyComposition, {'id': id})
-              .then((data) => Composition(data['ActivityReply']['text'])),
-        CommentCompositionTag(id: var id) =>
-          ref
-              .read(repositoryProvider)
-              .request(GqlQuery.commentComposition, {'id': id})
-              .then((data) => Composition(_findComment(data['ThreadComment'][0]))),
-      };
     }
-
-    if (draft != null && draft.isNotEmpty) composition.text = draft;
-    return composition;
+    return switch (arg) {
+      StatusActivityCompositionTag(id: var id) =>
+        ref
+            .read(repositoryProvider)
+            .request(GqlQuery.activityComposition, {'id': id})
+            .then((data) => Composition(data['Activity']['text'])),
+      MessageActivityCompositionTag(id: var id) =>
+        ref
+            .read(repositoryProvider)
+            .request(GqlQuery.activityComposition, {'id': id})
+            .then((data) => Composition(data['Activity']['message'])),
+      ActivityReplyCompositionTag(id: var id) =>
+        ref
+            .read(repositoryProvider)
+            .request(GqlQuery.activityReplyComposition, {'id': id})
+            .then((data) => Composition(data['ActivityReply']['text'])),
+      CommentCompositionTag(id: var id) =>
+        ref
+            .read(repositoryProvider)
+            .request(GqlQuery.commentComposition, {'id': id})
+            .then((data) => Composition(_findComment(data['ThreadComment'][0]))),
+    };
   }
 
   /// The API always returns the root comment,

@@ -4,6 +4,7 @@ import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/calendar/calendar_models.dart';
 import 'package:otraku/feature/collection/collection_filter_model.dart';
 import 'package:otraku/feature/collection/collection_models.dart';
+import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
 import 'package:otraku/feature/discover/discover_model.dart';
 import 'package:otraku/feature/home/home_model.dart';
@@ -23,6 +24,7 @@ class Persistence {
     required this.homeActivitiesFilter,
     required this.mediaActivitiesFilter,
     required this.calendarFilter,
+    required this.compositionDrafts,
   });
 
   factory Persistence.empty() => Persistence(
@@ -36,6 +38,7 @@ class Persistence {
     homeActivitiesFilter: .empty(),
     mediaActivitiesFilter: .empty(),
     calendarFilter: .empty(),
+    compositionDrafts: .empty(),
   );
 
   factory Persistence.fromPersistenceMap(
@@ -69,6 +72,7 @@ class Persistence {
         accountGroup.account?.id,
       ),
       calendarFilter: .fromPersistenceMap(map['calendarFilter'] ?? const {}),
+      compositionDrafts: .fromPersistenceMap(map['compositionDrafts'] ?? const {}),
     );
   }
 
@@ -82,6 +86,7 @@ class Persistence {
   final HomeActivitiesFilter homeActivitiesFilter;
   final MediaActivitiesFilter mediaActivitiesFilter;
   final CalendarFilter calendarFilter;
+  final CompositionDrafts compositionDrafts;
 
   Persistence copyWith({
     SystemColors? systemColors,
@@ -94,6 +99,7 @@ class Persistence {
     HomeActivitiesFilter? homeActivitiesFilter,
     CalendarFilter? calendarFilter,
     MediaActivitiesFilter? mediaActivitiesFilter,
+    CompositionDrafts? compositionDrafts,
   }) => Persistence(
     systemColors: systemColors ?? this.systemColors,
     accountGroup: accountGroup ?? this.accountGroup,
@@ -105,6 +111,7 @@ class Persistence {
     homeActivitiesFilter: homeActivitiesFilter ?? this.homeActivitiesFilter,
     calendarFilter: calendarFilter ?? this.calendarFilter,
     mediaActivitiesFilter: mediaActivitiesFilter ?? this.mediaActivitiesFilter,
+    compositionDrafts: compositionDrafts ?? this.compositionDrafts,
   );
 }
 
@@ -341,5 +348,75 @@ class AppMeta {
     'lastNotificationId': lastNotificationId,
     'lastAppVersion': lastAppVersion,
     'lastBackgroundJob': lastBackgroundJob,
+  };
+}
+
+class CompositionDrafts {
+  const CompositionDrafts({
+    required this.statusDraft,
+    required this.messageDraft,
+    required this.activityDraft,
+    required this.replyDraft,
+    required this.commentDraft,
+  });
+
+  factory CompositionDrafts.empty() => const CompositionDrafts(
+    statusDraft: '',
+    messageDraft: '',
+    activityDraft: '',
+    replyDraft: '',
+    commentDraft: '',
+  );
+
+  factory CompositionDrafts.fromPersistenceMap(Map<dynamic, dynamic> map) => CompositionDrafts(
+    statusDraft: map['statusDraft'] ?? '',
+    messageDraft: map['messageDraft'] ?? '',
+    activityDraft: map['activityDraft'] ?? '',
+    replyDraft: map['replyDraft'] ?? '',
+    commentDraft: map['commentDraft'] ?? '',
+  );
+
+  final String statusDraft;
+  final String messageDraft;
+  final String activityDraft;
+  final String replyDraft;
+  final String commentDraft;
+
+  String draftFor(CompositionTag tag) => switch (tag) {
+    StatusActivityCompositionTag() => statusDraft,
+    MessageActivityCompositionTag() => messageDraft,
+    ActivityReplyCompositionTag() => activityDraft,
+    CommentCompositionTag(parentCommentId: null) => commentDraft,
+    CommentCompositionTag() => replyDraft,
+  };
+
+  CompositionDrafts withDraft(CompositionTag tag, String text) => switch (tag) {
+    StatusActivityCompositionTag() => copyWith(statusDraft: text),
+    MessageActivityCompositionTag() => copyWith(messageDraft: text),
+    ActivityReplyCompositionTag() => copyWith(activityDraft: text),
+    CommentCompositionTag(parentCommentId: null) => copyWith(commentDraft: text),
+    CommentCompositionTag() => copyWith(replyDraft: text),
+  };
+
+  CompositionDrafts copyWith({
+    String? statusDraft,
+    String? messageDraft,
+    String? activityDraft,
+    String? replyDraft,
+    String? commentDraft,
+  }) => CompositionDrafts(
+    statusDraft: statusDraft ?? this.statusDraft,
+    messageDraft: messageDraft ?? this.messageDraft,
+    activityDraft: activityDraft ?? this.activityDraft,
+    replyDraft: replyDraft ?? this.replyDraft,
+    commentDraft: commentDraft ?? this.commentDraft,
+  );
+
+  Map<String, dynamic> toPersistenceMap() => {
+    'statusDraft': statusDraft,
+    'messageDraft': messageDraft,
+    'activityDraft': activityDraft,
+    'replyDraft': replyDraft,
+    'commentDraft': commentDraft,
   };
 }

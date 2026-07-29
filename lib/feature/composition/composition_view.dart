@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
-import 'package:otraku/feature/composition/composition_drafts.dart';
+import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/debounce.dart';
 import 'package:otraku/util/markdown.dart';
@@ -28,6 +28,8 @@ class CompositionView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
+        final draftsNotifier = ref.read(persistenceProvider.notifier);
+
         return ref
             .watch(compositionProvider(tag))
             .when(
@@ -40,13 +42,16 @@ class CompositionView extends StatelessWidget {
                 ),
               ),
               data: (data) {
-                if (data.text.isEmpty) {
+                if (tag.id == null) {
+                  final draft = ref.read(persistenceProvider).compositionDrafts.draftFor(tag);
+                  data.text = draft.isNotEmpty ? draft : defaultText;
+                } else if (data.text.isEmpty) {
                   data.text = defaultText;
                 }
 
                 return _CompositionView(
                   composition: data,
-                  saveDraft: (text) => CompositionDrafts.save(tag, text),
+                  saveDraft: (text) => draftsNotifier.setCompositionDraft(tag, text),
                   trySave: () async {
                     final result = await ref.read(compositionProvider(tag).notifier).save();
 
@@ -85,7 +90,7 @@ class _CompositionView extends StatefulWidget {
 class __CompositionViewState extends State<_CompositionView> with SingleTickerProviderStateMixin {
   late final _textCtrl = TextEditingController(text: widget.composition.text);
   late final _tabCtrl = TabController(length: 2, vsync: this);
-  final _draftDebounce = Debounce();
+  final _draftDebounce = Debounce(delay: const Duration(milliseconds: 1200));
   String _parsedText = '';
   final _focus = FocusNode();
   bool _saved = false;
@@ -108,10 +113,15 @@ class __CompositionViewState extends State<_CompositionView> with SingleTickerPr
     });
   }
 
+  void _clear() {
+    _draftDebounce.cancel();
+    _textCtrl.clear();
+    widget.saveDraft('');
+  }
+
   @override
   void dispose() {
     _draftDebounce.cancel();
-    if (!_saved) widget.saveDraft(_textCtrl.text);
     _tabCtrl.dispose();
     _textCtrl.dispose();
     _focus.dispose();
@@ -120,26 +130,35 @@ class __CompositionViewState extends State<_CompositionView> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    return SheetWithButtonRow(
-      builder: (context, scrollCtrl) => _CompositionBody(
-        focus: _focus,
-        tabCtrl: _tabCtrl,
-        textCtrl: _textCtrl,
-        scrollCtrl: scrollCtrl,
-        parsedText: _parsedText,
-      ),
-      buttons: _BottomBar(
-        composition: widget.composition,
-        textCtrl: _textCtrl,
-        isEditing: _tabCtrl.index == 0,
-        trySave: () async {
-          final ok = await widget.trySave();
-          if (ok) {
-            _saved = true;
-            widget.saveDraft('');
-          }
-          return ok;
-        },
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop && !_saved) {
+          _draftDebounce.cancel();
+          widget.saveDraft(_textCtrl.text);
+        }
+      },
+      child: SheetWithButtonRow(
+        builder: (context, scrollCtrl) => _CompositionBody(
+          focus: _focus,
+          tabCtrl: _tabCtrl,
+          textCtrl: _textCtrl,
+          scrollCtrl: scrollCtrl,
+          parsedText: _parsedText,
+        ),
+        buttons: _BottomBar(
+          composition: widget.composition,
+          textCtrl: _textCtrl,
+          onClear: _clear,
+          isEditing: _tabCtrl.index == 0,
+          trySave: () async {
+            final ok = await widget.trySave();
+            if (ok) {
+              _saved = true;
+              widget.saveDraft('');
+            }
+            return ok;
+          },
+        ),
       ),
     );
   }
@@ -239,12 +258,14 @@ class _BottomBar extends StatefulWidget {
     required this.isEditing,
     required this.textCtrl,
     required this.trySave,
+    required this.onClear,
   });
 
   final Composition composition;
   final bool isEditing;
   final TextEditingController textCtrl;
   final Future<bool> Function() trySave;
+  final VoidCallback onClear;
 
   @override
   State<_BottomBar> createState() => _BottomBarState();
@@ -256,6 +277,7 @@ class _BottomBarState extends State<_BottomBar> {
   @override
   Widget build(BuildContext context) {
     return BottomBar([
+      TextButton(onPressed: widget.onClear, child: const Text('Clear')),
       if (widget.isEditing) ...[
         Expanded(
           child: ListView(
