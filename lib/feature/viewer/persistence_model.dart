@@ -4,7 +4,6 @@ import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/calendar/calendar_models.dart';
 import 'package:otraku/feature/collection/collection_filter_model.dart';
 import 'package:otraku/feature/collection/collection_models.dart';
-import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
 import 'package:otraku/feature/discover/discover_model.dart';
 import 'package:otraku/feature/home/home_model.dart';
@@ -355,48 +354,24 @@ class CompositionDrafts {
   const CompositionDrafts({
     required this.statusDraft,
     required this.messageDraft,
-    required this.activityDraft,
     required this.replyDraft,
     required this.commentDraft,
   });
 
-  factory CompositionDrafts.empty() => const CompositionDrafts(
-    statusDraft: '',
-    messageDraft: '',
-    activityDraft: '',
-    replyDraft: '',
-    commentDraft: '',
-  );
+  factory CompositionDrafts.empty() =>
+      const CompositionDrafts(statusDraft: '', messageDraft: '', replyDraft: '', commentDraft: '');
 
   factory CompositionDrafts.fromPersistenceMap(Map<dynamic, dynamic> map) => CompositionDrafts(
     statusDraft: map['statusDraft'] ?? '',
     messageDraft: map['messageDraft'] ?? '',
-    activityDraft: map['activityDraft'] ?? '',
     replyDraft: map['replyDraft'] ?? '',
     commentDraft: map['commentDraft'] ?? '',
   );
 
   final String statusDraft;
   final String messageDraft;
-  final String activityDraft;
   final String replyDraft;
   final String commentDraft;
-
-  String draftFor(CompositionTag tag) => switch (tag) {
-    StatusActivityCompositionTag() => statusDraft,
-    MessageActivityCompositionTag() => messageDraft,
-    ActivityReplyCompositionTag() => activityDraft,
-    CommentCompositionTag(parentCommentId: null) => commentDraft,
-    CommentCompositionTag() => replyDraft,
-  };
-
-  CompositionDrafts withDraft(CompositionTag tag, String text) => switch (tag) {
-    StatusActivityCompositionTag() => copyWith(statusDraft: text),
-    MessageActivityCompositionTag() => copyWith(messageDraft: text),
-    ActivityReplyCompositionTag() => copyWith(activityDraft: text),
-    CommentCompositionTag(parentCommentId: null) => copyWith(commentDraft: text),
-    CommentCompositionTag() => copyWith(replyDraft: text),
-  };
 
   CompositionDrafts copyWith({
     String? statusDraft,
@@ -407,7 +382,6 @@ class CompositionDrafts {
   }) => CompositionDrafts(
     statusDraft: statusDraft ?? this.statusDraft,
     messageDraft: messageDraft ?? this.messageDraft,
-    activityDraft: activityDraft ?? this.activityDraft,
     replyDraft: replyDraft ?? this.replyDraft,
     commentDraft: commentDraft ?? this.commentDraft,
   );
@@ -415,7 +389,6 @@ class CompositionDrafts {
   Map<String, dynamic> toPersistenceMap() => {
     'statusDraft': statusDraft,
     'messageDraft': messageDraft,
-    'activityDraft': activityDraft,
     'replyDraft': replyDraft,
     'commentDraft': commentDraft,
   };

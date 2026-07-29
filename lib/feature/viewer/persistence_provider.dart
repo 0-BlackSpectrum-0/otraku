@@ -80,8 +80,7 @@ class PersistenceNotifier extends Notifier<Persistence> {
     state = state.copyWith(calendarFilter: calendarFilter);
   }
 
-  void setCompositionDraft(CompositionTag tag, String text) {
-    final compositionDrafts = state.compositionDrafts.withDraft(tag, text);
+  void setCompositionDraft(CompositionDrafts compositionDrafts) {
     _box.put('compositionDrafts', compositionDrafts.toPersistenceMap());
     state = state.copyWith(compositionDrafts: compositionDrafts);
   }

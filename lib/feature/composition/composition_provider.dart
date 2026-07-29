@@ -22,6 +22,7 @@ class CompositionNotifier extends AsyncNotifier<Composition> {
         _ => Composition(''),
       };
     }
+
     return switch (arg) {
       StatusActivityCompositionTag(id: var id) =>
         ref
