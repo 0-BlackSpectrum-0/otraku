@@ -449,6 +449,7 @@ abstract class GqlQuery {
         formats {count meanScore minutesWatched chaptersRead format}
         statuses {count meanScore minutesWatched chaptersRead status}
         countries {count meanScore minutesWatched chaptersRead country}
+        voiceActors {count meanScore minutesWatched chaptersRead mediaIds characterIds voiceActor{name {userPreferred} gender image{large}}}
       }
     ''';
 
