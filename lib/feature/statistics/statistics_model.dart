@@ -72,14 +72,16 @@ class Statistics {
         meanScore: m['meanScore'].toDouble(),
         amount: ofAnime ? m['minutesWatched'] ~/ 60 : m['chaptersRead'],
         name: m['genre'] ?? '?',
+        isTag: false,
       ));
     }
     for (final m in map['tags'] ?? const []) {
-      genres.add((
+      tags.add((
         count: m['count'],
         meanScore: m['meanScore'].toDouble(),
-        amount: ofAnime ? m['minutesWatched'] ~/ 60 : m['chaptersRead'],
-        name: m['tags']?['name'] ?? '?',
+        amount: ofAnime ? m['minutesWatched'] : m['chaptersRead'],
+        name: m['tag']?['name'] ?? '?',
+        isTag: true,
       ));
     }
 
@@ -137,4 +139,4 @@ typedef StatusStatistic = ({int count, double meanScore, int amount, ListStatus 
 
 typedef CountryStatistic = ({int count, double meanScore, int amount, OriginCountry name});
 
-typedef GenreOrTagStat = ({int count, double meanScore, int amount, String name});
+typedef GenreOrTagStat = ({int count, double meanScore, int amount, String name, bool isTag});

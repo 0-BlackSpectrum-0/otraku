@@ -450,7 +450,7 @@ abstract class GqlQuery {
         statuses {count meanScore minutesWatched chaptersRead status}
         countries {count meanScore minutesWatched chaptersRead country}
         genres(sort: COUNT_DESC) {count meanScore minutesWatched chaptersRead genre}
-        tags(sort: COUNT_DESC) {count meanScore minutesWatched chaptersRead tag{name}}
+        tags(limit: 500, sort: COUNT_DESC) {count meanScore minutesWatched chaptersRead tag{name}}
       }
     ''';
 

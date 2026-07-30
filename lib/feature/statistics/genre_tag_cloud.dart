@@ -17,8 +17,12 @@ import 'package:otraku/widget/sheets.dart';
 enum GenreTagSort {
   az('A-Z'),
   za('Z-A'),
-  countDsc('Count Descending'),
-  countAsc('Count Ascending');
+  countDsc('Count ↓'),
+  countAsc('Count ↑'),
+  meanScoreDsc('Mean Score ↓'),
+  meanScoreAsc('Mean Score ↑'),
+  timeDsc('Watchtime ↓'),
+  timeAsc('Watchtime ↑');
 
   const GenreTagSort(this.label);
 
@@ -30,6 +34,10 @@ enum GenreTagSort {
       .za => (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
       .countDsc => (a, b) => b.count.compareTo(a.count),
       .countAsc => (a, b) => a.count.compareTo(b.count),
+      .meanScoreDsc => (a, b) => b.meanScore.compareTo(a.meanScore),
+      .meanScoreAsc => (a, b) => a.meanScore.compareTo(b.meanScore),
+      .timeDsc => (a, b) => b.amount.compareTo(a.amount),
+      .timeAsc => (a, b) => a.amount.compareTo(b.amount),
     });
 }
 
@@ -43,35 +51,91 @@ class GenreTagCloud extends StatefulWidget {
   State<GenreTagCloud> createState() => _GenreTagCloudState();
 }
 
+typedef _CloudWord = ({GenreOrTagStat item, Rect rect, double fontSize, bool rotated});
+
 class _GenreTagCloudState extends State<GenreTagCloud> {
-  late final List<GenreOrTagStat> _cloud;
-  late final List<int> _quaterTurn;
+  late final List<_CloudWord> _words;
+  late final Size _bounds;
 
   @override
   void initState() {
     super.initState();
+    final (words, bounds) = _layout(widget.items);
+    _words = words;
+    _bounds = bounds;
+  }
 
-    final sorted = [...widget.items]..sort((a, b) => b.count.compareTo(a.count));
-    final cloud = <GenreOrTagStat>[];
-    for (int i = 0, j = sorted.length - 1; i <= j; i++, j--) {
-      cloud.add(sorted[i]);
-      if (i != j) cloud.add(sorted[j]);
-    }
-    cloud.shuffle();
+  static (List<_CloudWord>, Size) _layout(List<GenreOrTagStat> items) {
+    if (items.isEmpty) return (const [], Size.zero);
 
+    final sorted = [...items]..sort((a, b) => b.count.compareTo(a.count));
+    final minCount = sorted.last.count;
+    final maxCount = sorted.first.count;
     final random = Random();
-    _cloud = cloud;
-    _quaterTurn = List.generate(cloud.length, (_) => random.nextBool() ? 1 : 0);
+
+    final placed = <Rect>[];
+    final words = <_CloudWord>[];
+
+    for (final item in sorted) {
+      final weight = maxCount == minCount ? 1.0 : (item.count - minCount) / (maxCount - minCount);
+      final fontSize = 8 + weight * 16;
+      final rotated = random.nextBool();
+
+      final painter = TextPainter(
+        text: TextSpan(
+          text: item.name,
+          style: TextStyle(fontSize: fontSize, fontVariations: const [FontVariation('wght', 500)]),
+        ),
+        textDirection: .ltr,
+      )..layout();
+      var w = painter.width + 4;
+      var h = painter.height;
+      if (rotated) {
+        final t = w;
+        w = h;
+        h = t;
+      }
+
+      var angle = random.nextDouble() * 2 * pi;
+      var radius = 0.0;
+      var attempts = 0;
+      Rect rect;
+
+      while (true) {
+        rect = Rect.fromLTWH(radius * cos(angle) - w / 2, radius * sin(angle) * 0.7 - h / 2, w, h);
+        if (placed.every((r) => !r.inflate(2).overlaps(rect))) break;
+        angle += 0.2;
+        radius += 1.4;
+        if (++attempts > 3000) break;
+      }
+
+      placed.add(rect);
+      words.add((item: item, rect: rect, fontSize: fontSize, rotated: rotated));
+    }
+    var bounds = placed.first;
+    for (final r in placed.skip(1)) {
+      bounds = bounds.expandToInclude(r);
+    }
+
+    final offset = Offset(-bounds.left, -bounds.top);
+    return (
+      [
+        for (final w in words)
+          (item: w.item, rect: w.rect.shift(offset), fontSize: w.fontSize, rotated: w.rotated),
+      ],
+      bounds.size,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_cloud.isEmpty) return const SizedBox();
+    if (_words.isEmpty) return const SizedBox();
 
-    final minCount = _cloud.map((e) => e.count).reduce(min);
-    final maxCount = _cloud.map((e) => e.count).reduce(max);
     final primary = ColorScheme.of(context).primary;
+    final secondary = ColorScheme.of(context).secondary;
     final muted = ColorScheme.of(context).onSurfaceVariant;
+    final minCount = _words.map((w) => w.item.count).reduce(min);
+    final maxCount = _words.map((w) => w.item.count).reduce(max);
 
     return Column(
       mainAxisSize: .min,
@@ -83,31 +147,31 @@ class _GenreTagCloudState extends State<GenreTagCloud> {
           child: Padding(
             padding: Theming.paddingAll,
             child: AspectRatio(
-              aspectRatio: 4 / 3,
+              aspectRatio: _bounds.width / _bounds.height,
               child: FittedBox(
                 fit: .contain,
-                child: SizedBox(
-                  width: 500,
-                  child: Wrap(
-                    alignment: .center,
-                    runAlignment: .center,
-                    crossAxisAlignment: .center,
-                    spacing: 6,
-                    runSpacing: 3,
+                child: SizedBox.fromSize(
+                  size: _bounds,
+                  child: Stack(
                     children: [
-                      for (int i = 0; i < _cloud.length; i++)
-                        RotatedBox(
-                          quarterTurns: _quaterTurn[i],
-                          child: Text(
-                            _cloud[i].name,
-                            style: TextStyle(
-                              fontSize: 8 + _weight(_cloud[i].count, minCount, maxCount) * 12,
-                              color: Color.lerp(
-                                muted,
-                                primary,
-                                _weight(_cloud[i].count, minCount, maxCount),
+                      for (final w in _words)
+                        Positioned(
+                          left: w.rect.left,
+                          top: w.rect.top,
+                          child: RotatedBox(
+                            quarterTurns: w.rotated ? 1 : 0,
+                            child: Text(
+                              w.item.name,
+                              textScaler: TextScaler.noScaling,
+                              style: TextStyle(
+                                fontSize: w.fontSize,
+                                color: Color.lerp(
+                                  muted,
+                                  w.item.isTag ? secondary : primary,
+                                  _weight(w.item.count, minCount, maxCount),
+                                ),
+                                fontVariations: const [FontVariation('wght', 500)],
                               ),
-                              fontVariations: const [FontVariation('wght', 500)],
                             ),
                           ),
                         ),
@@ -155,9 +219,26 @@ class _GenreTagStatChipsState extends ConsumerState<GenreTagStatChips> {
         Row(
           children: [
             Expanded(child: Text(widget.title)),
-            IconButton(
-              tooltip: 'Sort',
+            ElevatedButton.icon(
+              label: Text(_sort.label),
               icon: const Icon(Ionicons.funnel_outline),
+              style: ElevatedButton.styleFrom(
+                iconSize: 16,
+                iconColor: widget.highContrast
+                    ? ColorScheme.of(context).onSurface
+                    : ColorScheme.of(context).onTertiaryContainer,
+                padding: Theming.paddingAll,
+                shape: RoundedRectangleBorder(borderRadius: Theming.borderRadiusSmall),
+                backgroundColor: widget.highContrast
+                    ? Colors.transparent
+                    : ColorScheme.of(context).tertiaryContainer,
+                side: widget.highContrast
+                    ? BorderSide(color: ColorScheme.of(context).outlineVariant)
+                    : BorderSide(color: Colors.transparent),
+                foregroundColor: widget.highContrast
+                    ? ColorScheme.of(context).onSurface
+                    : ColorScheme.of(context).onTertiaryContainer,
+              ),
               onPressed: _showSortSheet,
             ),
           ],
@@ -168,7 +249,14 @@ class _GenreTagStatChipsState extends ConsumerState<GenreTagStatChips> {
           children: [
             for (final item in _sort.apply(widget.items))
               ActionChipExtension.highContrast(widget.highContrast)(
-                label: Text('${item.name} ${item.count}'),
+                label: Text(
+                  '${item.name} '
+                  '${_sort == .timeDsc || _sort == .timeAsc
+                      ? (item.amount >= 1440 ? '${item.amount ~/ 1440}D ${(item.amount % 1440) ~/ 60}H ${item.amount % 60}M' : '${item.amount ~/ 60}H ${item.amount % 60}M')
+                      : _sort == .meanScoreDsc || _sort == .meanScoreAsc
+                      ? '${item.meanScore}%'
+                      : item.count}',
+                ),
                 onPressed: () {
                   final notifier = ref.read(discoverFilterProvider.notifier);
                   final filter = notifier.state.copyWith(
