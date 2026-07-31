@@ -5,11 +5,17 @@ import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/util/theming.dart';
 
 class BarChart extends StatelessWidget {
-  const BarChart({required this.title, required this.categories, this.toolbar});
+  const BarChart({
+    required this.title,
+    required this.categories,
+    this.toolbar,
+    this.showTitle = true,
+  });
 
   final String title;
   final List<(String key, num val)> categories;
   final Widget? toolbar;
+  final bool showTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +35,11 @@ class BarChart extends StatelessWidget {
         return Column(
           crossAxisAlignment: .start,
           children: [
-            Padding(
-              padding: const .symmetric(vertical: 5),
-              child: Text(title, style: textTheme.titleSmall),
-            ),
+            if (showTitle)
+              Padding(
+                padding: const .symmetric(vertical: 5),
+                child: Text(title, style: textTheme.titleSmall),
+              ),
             if (toolbar != null) ...[
               SizedBox(width: .infinity, child: toolbar!),
               const SizedBox(height: Theming.offset),

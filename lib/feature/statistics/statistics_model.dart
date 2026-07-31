@@ -1,5 +1,7 @@
 import 'package:otraku/feature/collection/collection_models.dart';
 import 'package:otraku/feature/media/media_models.dart';
+import 'package:otraku/feature/staff/staff_item_model.dart';
+import 'package:otraku/feature/studio/studio_item_model.dart';
 
 class Statistics {
   Statistics._({
@@ -112,3 +114,37 @@ typedef FormatStatistic = ({int count, double meanScore, int amount, MediaFormat
 typedef StatusStatistic = ({int count, double meanScore, int amount, ListStatus name});
 
 typedef CountryStatistic = ({int count, double meanScore, int amount, OriginCountry name});
+
+typedef GenreOrTagStat = ({
+  int count,
+  double meanScore,
+  int amount,
+  String name,
+  bool isTag,
+  List<int> mediaIds,
+});
+
+typedef VoiceActorStat = ({
+  StaffItem staff,
+  int count,
+  double meanScore,
+  int amount,
+  List<int> mediaIds,
+  List<int> characterIds,
+});
+
+typedef StaffStat = ({
+  StaffItem staff,
+  int count,
+  double meanScore,
+  int amount,
+  List<int> mediaIds,
+});
+
+typedef StudioStat = ({
+  StudioItem studio,
+  int count,
+  double meanScore,
+  int amount,
+  List<int> mediaIds,
+});

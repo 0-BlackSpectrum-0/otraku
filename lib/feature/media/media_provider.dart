@@ -7,6 +7,7 @@ import 'package:otraku/extension/iterable_extension.dart';
 import 'package:otraku/extension/string_extension.dart';
 import 'package:otraku/feature/edit/edit_model.dart';
 import 'package:otraku/feature/forum/forum_model.dart';
+import 'package:otraku/feature/media/media_item_model.dart';
 import 'package:otraku/feature/media/media_models.dart';
 import 'package:otraku/feature/settings/settings_provider.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
@@ -26,6 +27,15 @@ final mediaThreadsProvider = AsyncNotifierProvider.autoDispose
 
 final mediaFollowingProvider = AsyncNotifierProvider.autoDispose
     .family<MediaFollowingNotifier, Paged<MediaFollowing>, int>(MediaFollowingNotifier.new);
+
+final mediaByIdsProvider = FutureProvider.family<List<MediaItem>, List<int>>((ref, ids) async {
+  if (ids.isEmpty) return const [];
+
+  final data = await ref.read(repositoryProvider).request(GqlQuery.mediaByIds, {'ids': ids});
+  final imageQuality = ref.read(persistenceProvider).options.imageQuality;
+
+  return [for (final m in data['Page']['media']) MediaItem(m, imageQuality)];
+});
 
 class MediaNotifier extends AsyncNotifier<Media> {
   MediaNotifier(this.arg);

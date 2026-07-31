@@ -6,6 +6,7 @@ import 'package:otraku/extension/iterable_extension.dart';
 import 'package:otraku/extension/string_extension.dart';
 import 'package:otraku/feature/character/character_filter_model.dart';
 import 'package:otraku/feature/character/character_filter_provider.dart';
+import 'package:otraku/feature/character/character_item_model.dart';
 import 'package:otraku/feature/character/character_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/feature/viewer/repository_provider.dart';
@@ -17,6 +18,16 @@ final characterProvider = AsyncNotifierProvider.autoDispose
 
 final characterMediaProvider = AsyncNotifierProvider.autoDispose
     .family<CharacterMediaNotifier, CharacterMedia, int>(CharacterMediaNotifier.new);
+
+final charactersByIdsProvider = FutureProvider.family<List<CharacterItem>, List<int>>((
+  ref,
+  ids,
+) async {
+  if (ids.isEmpty) return const [];
+
+  final data = await ref.read(repositoryProvider).request(GqlQuery.charactersByIds, {'ids': ids});
+  return [for (final c in data['Page']['characters']) CharacterItem(c)];
+});
 
 class CharacterNotifier extends AsyncNotifier<Character> {
   CharacterNotifier(this.arg);

@@ -6,7 +6,9 @@ import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
+import 'package:otraku/feature/statistics/genre_tag_cloud.dart';
 import 'package:otraku/feature/statistics/statistics_model.dart';
+import 'package:otraku/feature/statistics/voice_actor_stats.dart';
 import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/statistics/charts.dart';
@@ -19,6 +21,9 @@ import 'package:otraku/widget/layout/adaptive_scaffold.dart';
 import 'package:otraku/widget/layout/constrained_view.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/loaders.dart';
+import 'package:otraku/feature/statistics/staff_stats.dart';
+import 'package:otraku/feature/statistics/studio_stats.dart';
+import 'package:otraku/feature/statistics/voice_actor_stats.dart';
 
 class StatisticsView extends StatefulWidget {
   const StatisticsView(this.id);
@@ -74,6 +79,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
                   children: [
                     ConstrainedView(
                       child: _StatisticsView(
+                        userId: widget.id,
                         statistics: data.animeStats,
                         ofAnime: true,
                         scrollCtrl: _scrollCtrl,
@@ -86,6 +92,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
                     ),
                     ConstrainedView(
                       child: _StatisticsView(
+                        userId: widget.id,
                         statistics: data.mangaStats,
                         ofAnime: false,
                         scrollCtrl: _scrollCtrl,
@@ -123,6 +130,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
 
 class _StatisticsView extends StatelessWidget {
   const _StatisticsView({
+    required this.userId,
     required this.statistics,
     required this.ofAnime,
     required this.scrollCtrl,
@@ -133,6 +141,7 @@ class _StatisticsView extends StatelessWidget {
     required this.highContrast,
   });
 
+  final int userId;
   final Statistics statistics;
   final bool ofAnime;
   final ScrollController scrollCtrl;
@@ -156,60 +165,128 @@ class _StatisticsView extends StatelessWidget {
         _Details(statistics, ofAnime, l10n, highContrast),
         if (statistics.scores.isNotEmpty) ...[
           spacing,
-          _BarChart(
-            title: l10n.entryScore,
-            statistics: statistics.scores,
-            ofAnime: ofAnime,
-            full: false,
-            l10n: l10n,
-            initialTab: primaryBarChartTab(),
-            onTabChanged: onPrimaryTabChanged,
+          SliverToBoxAdapter(
+            child: ExpansionTile(
+              title: Text(l10n.entryScore),
+              initiallyExpanded: true,
+              children: [
+                _BarChart(
+                  title: l10n.entryScore,
+                  statistics: statistics.scores,
+                  ofAnime: ofAnime,
+                  full: false,
+                  l10n: l10n,
+                  initialTab: primaryBarChartTab(),
+                  onTabChanged: onPrimaryTabChanged,
+                ),
+              ],
+            ),
           ),
         ],
         if (statistics.lengths.isNotEmpty) ...[
           spacing,
-          _BarChart(
-            title: ofAnime ? l10n.mediaEpisodes : l10n.mediaChapters,
-            statistics: statistics.lengths,
-            ofAnime: ofAnime,
-            full: true,
-            l10n: l10n,
-            initialTab: secondaryBarChartTab(),
-            onTabChanged: onSecondaryTabChanged,
+          SliverToBoxAdapter(
+            child: ExpansionTile(
+              title: Text(ofAnime ? l10n.mediaEpisodes : l10n.mediaChapters),
+              initiallyExpanded: true,
+              children: [
+                _BarChart(
+                  title: ofAnime ? l10n.mediaEpisodes : l10n.mediaChapters,
+                  statistics: statistics.lengths,
+                  ofAnime: ofAnime,
+                  full: true,
+                  l10n: l10n,
+                  initialTab: secondaryBarChartTab(),
+                  onTabChanged: onSecondaryTabChanged,
+                ),
+              ],
+            ),
           ),
         ],
         if (statistics.count > 0) ...[
           spacing,
-          SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMinWidthAndFixedHeight(
-              minWidth: 340,
-              height: 200,
+          SliverToBoxAdapter(
+            child: ExpansionTile(
+              title: const Text('Distribution'),
+              initiallyExpanded: true,
+              children: [
+                GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMinWidthAndFixedHeight(
+                    minWidth: 340,
+                    height: 200,
+                  ),
+                  children: [
+                    PieChart(
+                      title: l10n.statisticsDistributionFormat,
+                      categories: statistics.formats
+                          .map((e) => (e.name.localize(l10n), e.count))
+                          .toList(),
+                      highContrast: highContrast,
+                    ),
+                    PieChart(
+                      title: l10n.statisticsDistributionStatus,
+                      categories: statistics.statuses
+                          .map((e) => (e.name.localize(l10n, ofAnime), e.count))
+                          .toList(),
+                      highContrast: highContrast,
+                    ),
+                    PieChart(
+                      title: l10n.statisticsDistributionCountry,
+                      categories: statistics.countries
+                          .map((e) => (e.name.localize(l10n), e.count))
+                          .toList(),
+                      highContrast: highContrast,
+                    ),
+                  ],
+                ),
+              ],
             ),
-            delegate: SliverChildListDelegate([
-              PieChart(
-                title: l10n.statisticsDistributionFormat,
-                categories: statistics.formats
-                    .map((e) => (e.name.localize(l10n), e.count))
-                    .toList(),
-                highContrast: highContrast,
-              ),
-              PieChart(
-                title: l10n.statisticsDistributionStatus,
-                categories: statistics.statuses
-                    .map((e) => (e.name.localize(l10n, ofAnime), e.count))
-                    .toList(),
-                highContrast: highContrast,
-              ),
-              PieChart(
-                title: l10n.statisticsDistributionCountry,
-                categories: statistics.countries
-                    .map((e) => (e.name.localize(l10n), e.count))
-                    .toList(),
-                highContrast: highContrast,
-              ),
-            ]),
           ),
         ],
+        spacing,
+        SliverToBoxAdapter(
+          child: ExpansionTile(
+            title: const Text('Genre & Tag Cloud'),
+            initiallyExpanded: true,
+            children: [GenreTagCloud(userId: userId, ofAnime: ofAnime, highContrast: highContrast)],
+          ),
+        ),
+        spacing,
+        SliverToBoxAdapter(
+          child: GenreTagStatChips(
+            title: 'Genres',
+            userId: userId,
+            ofAnime: ofAnime,
+            isTag: false,
+            highContrast: highContrast,
+          ),
+        ),
+        spacing,
+        SliverToBoxAdapter(
+          child: GenreTagStatChips(
+            title: 'Tags',
+            userId: userId,
+            ofAnime: ofAnime,
+            isTag: true,
+            highContrast: highContrast,
+          ),
+        ),
+        if (ofAnime) ...[
+          spacing,
+          SliverToBoxAdapter(
+            child: VoiceActorStatSection(userId: userId, highContrast: highContrast),
+          ),
+        ],
+        spacing,
+        SliverToBoxAdapter(
+          child: StaffStatSection(userId: userId, ofAnime: ofAnime, highContrast: highContrast),
+        ),
+        spacing,
+        SliverToBoxAdapter(
+          child: StudioStatSection(userId: userId, ofAnime: ofAnime, highContrast: highContrast),
+        ),
         const SliverFooter(),
       ],
     );
@@ -330,43 +407,42 @@ class _BarChartState extends State<_BarChart> {
       _ => widget.statistics.map((e) => (e.name, e.meanScore)).toList(),
     };
 
-    return SliverToBoxAdapter(
-      child: BarChart(
-        title: widget.title,
-        toolbar: SegmentedButton(
-          segments: [
+    return BarChart(
+      title: widget.title,
+      showTitle: false,
+      toolbar: SegmentedButton(
+        segments: [
+          ButtonSegment(
+            value: 0,
+            label: Text(widget.l10n.statisticsTitles),
+            icon: const Icon(Icons.numbers_outlined),
+          ),
+          if (widget.ofAnime)
             ButtonSegment(
-              value: 0,
-              label: Text(widget.l10n.statisticsTitles),
-              icon: const Icon(Icons.numbers_outlined),
+              value: 1,
+              label: Text(widget.l10n.statisticsHours),
+              icon: const Icon(Icons.hourglass_bottom_outlined),
+            )
+          else
+            ButtonSegment(
+              value: 1,
+              label: Text(widget.l10n.mediaChapters),
+              icon: const Icon(Icons.hourglass_bottom_outlined),
             ),
-            if (widget.ofAnime)
-              ButtonSegment(
-                value: 1,
-                label: Text(widget.l10n.statisticsHours),
-                icon: const Icon(Icons.hourglass_bottom_outlined),
-              )
-            else
-              ButtonSegment(
-                value: 1,
-                label: Text(widget.l10n.mediaChapters),
-                icon: const Icon(Icons.hourglass_bottom_outlined),
-              ),
-            if (widget.full && widget.statistics.any((s) => s.meanScore > 0))
-              ButtonSegment(
-                value: 2,
-                label: Text(widget.l10n.entryScore),
-                icon: const Icon(Icons.star_half_outlined),
-              ),
-          ],
-          selected: {_tab},
-          onSelectionChanged: (v) {
-            setState(() => _tab = v.first);
-            widget.onTabChanged(v.first);
-          },
-        ),
-        categories: categories,
+          if (widget.full && widget.statistics.any((s) => s.meanScore > 0))
+            ButtonSegment(
+              value: 2,
+              label: Text(widget.l10n.entryScore),
+              icon: const Icon(Icons.star_half_outlined),
+            ),
+        ],
+        selected: {_tab},
+        onSelectionChanged: (v) {
+          setState(() => _tab = v.first);
+          widget.onTabChanged(v.first);
+        },
       ),
+      categories: categories,
     );
   }
 }

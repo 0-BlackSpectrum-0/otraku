@@ -452,6 +452,109 @@ abstract class GqlQuery {
       }
     ''';
 
+  static const userGenreStats = r'''
+    query UserGenreStats($id: Int, $sort: [UserStatisticsSort]) {
+      User(id: $id) {
+        statistics {
+          anime {genres(sort: $sort, limit: 500) {count meanScore minutesWatched chaptersRead genre mediaIds}}
+          manga {genres(sort: $sort, limit: 500) {count meanScore minutesWatched chaptersRead genre mediaIds}}
+        }
+      }
+    }
+  ''';
+
+  static const userTagStats = r'''
+    query UserTagStats($id: Int, $sort: [UserStatisticsSort]) {
+      User(id: $id) {
+        statistics {
+          anime {tags(sort: $sort, limit: 500) {count meanScore minutesWatched chaptersRead tag{name} mediaIds}}
+          manga {tags(sort: $sort, limit: 500) {count meanScore minutesWatched chaptersRead tag{name} mediaIds}}
+        }
+      }
+    }
+  ''';
+
+  static const userVoiceActorStats = r'''
+    query UserVoiceActorStats($id: Int, $sort: [UserStatisticsSort]) {
+      User(id: $id) {
+        statistics {
+          anime {
+            voiceActors(sort: $sort, limit: 100) {
+              count meanScore minutesWatched mediaIds characterIds
+              voiceActor {id name{userPreferred} image{large}}
+            }
+          }
+        }
+      }
+    }
+  ''';
+
+  static const userStaffStats = r'''
+    query UserStaffStats($id: Int, $sort: [UserStatisticsSort]) {
+      User(id: $id) {
+        statistics {
+          anime {
+            staff(sort: $sort, limit: 100) {
+              count meanScore minutesWatched chaptersRead mediaIds
+              staff {id name{userPreferred} image{large}}
+            }
+          }
+          manga {
+            staff(sort: $sort, limit: 100) {
+              count meanScore minutesWatched chaptersRead mediaIds
+              staff {id name{userPreferred} image{large}}
+            }
+          }
+        }
+      }
+    }
+  ''';
+
+  static const userStudioStats = r'''
+    query UserStudioStats($id: Int, $sort: [UserStatisticsSort]) {
+      User(id: $id) {
+        statistics {
+          anime {
+            studios(sort: $sort, limit: 100) {
+              count meanScore minutesWatched chaptersRead mediaIds
+              studio {id name}
+            }
+          }
+          manga {
+            studios(sort: $sort, limit: 100) {
+              count meanScore minutesWatched chaptersRead mediaIds
+              studio {id name}
+            }
+          }
+        }
+      }
+    }
+  ''';
+
+  static const mediaByIds = r'''
+    query MediaByIds($ids: [Int]) {
+      Page(perPage: 50) {
+        media(id_in: $ids) {
+          id
+          title {userPreferred}
+          coverImage {extraLarge large medium}
+        }
+      }
+    }
+  ''';
+
+  static const charactersByIds = r'''
+    query CharactersByIds($ids: [Int]) {
+      Page(perPage: 50) {
+        characters(id_in: $ids) {
+          id
+          name {userPreferred}
+          image {large}
+        }
+      }
+    }
+  ''';
+
   static const userPage = r'''
     query Users($page: Int, $search: String) {
       Page(page: $page) {
