@@ -7,6 +7,7 @@ import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
 import 'package:otraku/extension/scroll_controller_extension.dart';
 import 'package:otraku/feature/statistics/statistics_model.dart';
+import 'package:otraku/feature/statistics/voice_actor_stats.dart';
 import 'package:otraku/feature/user/user_model.dart';
 import 'package:otraku/feature/user/user_providers.dart';
 import 'package:otraku/feature/statistics/charts.dart';
@@ -208,6 +209,17 @@ class _StatisticsView extends StatelessWidget {
                 highContrast: highContrast,
               ),
             ]),
+          ),
+        ],
+        if (statistics.voiceActors.isNotEmpty && ofAnime == true) ...[
+          spacing,
+          SliverToBoxAdapter(
+            child: VoiceActorCards(
+              title: 'Voice Actors',
+              items: statistics.voiceActors,
+              ofAnime: ofAnime,
+              highContrast: highContrast,
+            ),
           ),
         ],
         const SliverFooter(),

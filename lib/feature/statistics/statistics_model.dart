@@ -13,6 +13,7 @@ class Statistics {
     required this.formats,
     required this.statuses,
     required this.countries,
+    required this.voiceActors,
   });
 
   factory Statistics(Map<String, dynamic> map, bool ofAnime) {
@@ -21,6 +22,7 @@ class Statistics {
     final formats = <FormatStatistic>[];
     final statuses = <StatusStatistic>[];
     final countries = <CountryStatistic>[];
+    final voiceActors = <VoiceActorStatistic>[];
 
     for (final m in map['scores']) {
       scores.add((
@@ -62,6 +64,18 @@ class Statistics {
         name: OriginCountry.fromCode(m['country'])!,
       ));
     }
+    for (final m in map['voiceActors']) {
+      voiceActors.add((
+        count: m['count'],
+        meanScore: m['meanScore'].toDouble(),
+        amount: m['minutesWatched'],
+        mediaIds: List<int>.from(m['mediaIds'] ?? const []),
+        characterIds: List<int>.from(m['characterIds'] ?? const []),
+        name: m['voiceActor']?['name']?['userPreferred'] ?? '?',
+        gender: m['voiceActor']?['gender'] ?? '?',
+        imageUrl: m['voiceActor']?['image']?['large'] ?? '?',
+      ));
+    }
 
     // The backend can't sort them by length, so it has to be done locally.
     lengths.sort((a, b) {
@@ -88,6 +102,7 @@ class Statistics {
       formats: formats,
       statuses: statuses,
       countries: countries,
+      voiceActors: voiceActors,
     );
   }
 
@@ -101,6 +116,7 @@ class Statistics {
   final List<FormatStatistic> formats;
   final List<StatusStatistic> statuses;
   final List<CountryStatistic> countries;
+  final List<VoiceActorStatistic> voiceActors;
 }
 
 typedef ScoreStatistic = ({int count, double meanScore, int amount, String name});
@@ -112,3 +128,14 @@ typedef FormatStatistic = ({int count, double meanScore, int amount, MediaFormat
 typedef StatusStatistic = ({int count, double meanScore, int amount, ListStatus name});
 
 typedef CountryStatistic = ({int count, double meanScore, int amount, OriginCountry name});
+
+typedef VoiceActorStatistic = ({
+  int count,
+  double meanScore,
+  int amount,
+  List<int> mediaIds,
+  List<int> characterIds,
+  String name,
+  String gender,
+  String imageUrl,
+});
