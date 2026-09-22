@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'gen_en.dart';
+import 'gen_tr.dart';
 
 // ignore_for_file: type=lint
 
@@ -90,7 +91,7 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('tr')];
 
   /// No description provided for @accountAdd.
   ///
@@ -968,6 +969,12 @@ abstract class AppLocalizations {
   /// **'Without Notes'**
   String get filterNotesWithout;
 
+  /// No description provided for @filterReadableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Readable On'**
+  String get filterReadableOn;
+
   /// No description provided for @filterReleaseEnd.
   ///
   /// In en, this message translates to:
@@ -1045,6 +1052,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Public'**
   String get filterVisibilityPublic;
+
+  /// No description provided for @filterWatchableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Watchable On'**
+  String get filterWatchableOn;
 
   /// No description provided for @followed.
   ///
@@ -2798,6 +2811,48 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Tag} other{Tags}}'**
   String tags(int count);
 
+  /// No description provided for @themeCaramel.
+  ///
+  /// In en, this message translates to:
+  /// **'Caramel'**
+  String get themeCaramel;
+
+  /// No description provided for @themeForest.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest'**
+  String get themeForest;
+
+  /// No description provided for @themeLavender.
+  ///
+  /// In en, this message translates to:
+  /// **'Lavender'**
+  String get themeLavender;
+
+  /// No description provided for @themeMint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mint'**
+  String get themeMint;
+
+  /// No description provided for @themeMustard.
+  ///
+  /// In en, this message translates to:
+  /// **'Mustard'**
+  String get themeMustard;
+
+  /// No description provided for @themeNavy.
+  ///
+  /// In en, this message translates to:
+  /// **'Navy'**
+  String get themeNavy;
+
+  /// No description provided for @themeWine.
+  ///
+  /// In en, this message translates to:
+  /// **'Wine'**
+  String get themeWine;
+
   /// No description provided for @threads.
   ///
   /// In en, this message translates to:
@@ -2826,7 +2881,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2837,6 +2892,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'tr':
+      return AppLocalizationsTr();
   }
 
   throw FlutterError(

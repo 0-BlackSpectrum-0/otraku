@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/feature/collection/collection_models.dart';
@@ -52,7 +52,7 @@ class CollectionFloatingAction extends StatelessWidget {
         showSheet(
           context,
           SimpleSheet(
-            initialHeight: PillSelector.expectedMinHeight(lists.length),
+            initialHeight: PillSelector.expectedMinHeight(lists.length + 1),
             builder: (context, scrollCtrl) => PillSelector(
               scrollCtrl: scrollCtrl,
               selected: index + 1,

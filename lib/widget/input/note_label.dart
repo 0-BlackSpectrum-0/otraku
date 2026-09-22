@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
@@ -24,7 +24,7 @@ class NotesLabel extends StatelessWidget {
           child: const Icon(Ionicons.chatbox, size: Theming.iconSmall),
           onTap: () => showDialog(
             context: context,
-            builder: (context) => TextDialog(title: l10n.entryComment, text: notes),
+            builder: (context) => HtmlDialog(title: l10n.entryComment, text: notes),
           ),
         ),
       ),

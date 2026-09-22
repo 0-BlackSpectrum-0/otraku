@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,13 +159,11 @@ class AppState extends ConsumerState<_App> {
           darkTheme: Theming.generateThemeData(darkScheme),
           themeMode: options.themeMode,
           routerConfig: _router,
-          localizationsDelegates: const [
+          supportedLocales: const [Locale('en'), Locale('tr')],
+          localizationsDelegates: [
             AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
           ],
-          supportedLocales: const [Locale('en')],
           builder: (context, child) {
             final directionality = Directionality.of(context);
 

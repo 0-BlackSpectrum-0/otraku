@@ -530,6 +530,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterNotesWithout => 'Without Notes';
 
   @override
+  String get filterReadableOn => 'Readable On';
+
+  @override
   String get filterReleaseEnd => 'Release End';
 
   @override
@@ -567,6 +570,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterVisibilityPublic => 'Public';
+
+  @override
+  String get filterWatchableOn => 'Watchable On';
 
   @override
   String get followed => 'Following';
@@ -1559,6 +1565,27 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'Tags', one: 'Tag');
     return '$_temp0';
   }
+
+  @override
+  String get themeCaramel => 'Caramel';
+
+  @override
+  String get themeForest => 'Forest';
+
+  @override
+  String get themeLavender => 'Lavender';
+
+  @override
+  String get themeMint => 'Mint';
+
+  @override
+  String get themeMustard => 'Mustard';
+
+  @override
+  String get themeNavy => 'Navy';
+
+  @override
+  String get themeWine => 'Wine';
 
   @override
   String get threads => 'Threads';

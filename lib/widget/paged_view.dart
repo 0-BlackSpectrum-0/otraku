@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:otraku/localizations/gen.dart';
@@ -59,7 +59,12 @@ class PagedView<T> extends StatelessWidget {
                   SliverRefreshControl(onRefresh: () => onRefresh(ref.invalidate)),
                   ?header,
                   SliverFillRemaining(
-                    child: Center(child: Text(l10n.errorFailedLoading(err.toString()))),
+                    child: Center(
+                      child: Padding(
+                        padding: Theming.paddingAll,
+                        child: Text(l10n.errorFailedLoading(err.toString()), textAlign: .center),
+                      ),
+                    ),
                   ),
                 ],
               ),

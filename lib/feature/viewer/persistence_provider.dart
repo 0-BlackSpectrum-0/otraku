@@ -79,6 +79,11 @@ class PersistenceNotifier extends Notifier<Persistence> {
     state = state.copyWith(calendarFilter: calendarFilter);
   }
 
+  void setDrafts(Drafts drafts) {
+    _box.put('drafts', drafts.toPersistenceMap());
+    state = state.copyWith(drafts: drafts);
+  }
+
   void refreshViewerDetails(String newName, String newAvatarUrl) {
     final accounts = state.accountGroup.accounts;
     final accountIndex = state.accountGroup.accountIndex;

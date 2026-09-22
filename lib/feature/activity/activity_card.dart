@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
@@ -9,6 +11,7 @@ import 'package:otraku/feature/activity/activity_model.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/composition/composition_view.dart';
 import 'package:otraku/feature/media/media_route_tile.dart';
+import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
@@ -264,6 +267,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
           height: 40,
           child: Tooltip(
             message: !activity.isLiked ? l10n.likesAdd : l10n.likesRemove,
+            message: !activity.isLiked ? l10n.likesAdd : l10n.likesRemove,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
               onTap: _toggleLike,
@@ -296,6 +300,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
 
   /// Show a sheet with additional options.
   void _showMoreSheet(AppLocalizations l10n) {
+  void _showMoreSheet(AppLocalizations l10n) {
     final activity = widget.activity;
 
     showSheet(
@@ -308,6 +313,9 @@ class _ActivityFooterState extends State<ActivityFooter> {
             if (activity is! MessageActivity) {
               ownershipButtons.add(
                 ListTile(
+                  title: activity.isPinned
+                      ? Text(l10n.postsPinnedRemove)
+                      : Text(l10n.postsPinnedAdd),
                   title: activity.isPinned
                       ? Text(l10n.postsPinnedRemove)
                       : Text(l10n.postsPinnedAdd),
@@ -325,6 +333,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
                   ownershipButtons.add(
                     ListTile(
                       title: Text(l10n.actionEdit),
+                      title: Text(l10n.actionEdit),
                       leading: const Icon(Icons.edit_outlined),
                       onTap: () => showSheet(
                         context,
@@ -341,6 +350,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
                 case MessageActivity _:
                   ownershipButtons.add(
                     ListTile(
+                      title: Text(l10n.actionEdit),
                       title: Text(l10n.actionEdit),
                       leading: const Icon(Icons.edit_outlined),
                       onTap: () => showSheet(
@@ -372,6 +382,9 @@ class _ActivityFooterState extends State<ActivityFooter> {
                   title: l10n.actionRemoveQuestion,
                   primaryAction: l10n.actionYes,
                   secondaryAction: l10n.actionNo,
+                  title: l10n.actionRemoveQuestion,
+                  primaryAction: l10n.actionYes,
+                  secondaryAction: l10n.actionNo,
                   onConfirm: _remove,
                 ),
               ),
@@ -381,6 +394,9 @@ class _ActivityFooterState extends State<ActivityFooter> {
           return SimpleSheet.link(context, activity.siteUrl, [
             ...ownershipButtons,
             ListTile(
+              title: !activity.isSubscribed
+                  ? Text(l10n.subscriptionsAdd)
+                  : Text(l10n.subscriptionsRemove),
               title: !activity.isSubscribed
                   ? Text(l10n.subscriptionsAdd)
                   : Text(l10n.subscriptionsRemove),
