@@ -48,59 +48,107 @@ class _AccountPickerState extends State<AccountPicker> {
             for (int i = 0; i < accounts.length; i++)
               SizedBox(
                 height: rowHeight,
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: .all(5),
-                      child: CachedImage(
-                        accounts[i].avatarUrl,
-                        width: _imageSize,
-                        height: _imageSize,
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: .center,
-                        crossAxisAlignment: .start,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final expandedWidth = constraints.maxWidth + Theming.offset * 3;
+                    final expandedHeight = rowHeight + Theming.offset;
+
+                    return OverflowBox(
+                      minWidth: expandedWidth,
+                      maxWidth: expandedWidth,
+                      minHeight: expandedHeight,
+                      maxHeight: expandedHeight,
+
+                      child: Stack(
+                        fit: .expand,
                         children: [
-                          Text(
-                            '${accounts[i].name} ${accounts[i].id}',
-                            overflow: .ellipsis,
-                            maxLines: 1,
-                          ),
-                          Text(
-                            DateTime.now().isBefore(accounts[i].expiration)
-                                ? l10n.accountExpiresIn(accounts[i].expiration.timeUntil)
-                                : l10n.accountExpired,
-                            style: TextTheme.of(context).labelSmall,
-                            overflow: .ellipsis,
-                            maxLines: 2,
+                          if (i == accountGroup.accountIndex)
+                            DecoratedBox(
+                              decoration: ShapeDecoration(
+                                shape: StadiumBorder(
+                                  side: BorderSide(
+                                    color: ColorScheme.of(context).primary,
+                                    width: 1.8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (accounts[i].bannerUrl != null)
+                            ClipPath(
+                              clipper: const ShapeBorderClipper(shape: StadiumBorder()),
+                              child: Opacity(
+                                opacity: 0.3,
+                                child: CachedImage(accounts[i].bannerUrl!, fit: .cover),
+                              ),
+                            ),
+                          Padding(
+                            padding: const .symmetric(
+                              horizontal: Theming.offset * 1.5,
+                              vertical: Theming.offset * 0.5,
+                            ),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: .all(5),
+                                  child: ClipOval(
+                                    child: CachedImage(
+                                      accounts[i].avatarUrl,
+                                      width: _imageSize,
+                                      height: _imageSize,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: .center,
+                                    crossAxisAlignment: .start,
+                                    children: [
+                                      Text(
+                                        '${accounts[i].name} | ID: ${accounts[i].id}',
+                                        overflow: .ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      Text(
+                                        DateTime.now().isBefore(accounts[i].expiration)
+                                            ? l10n.accountExpiresIn(
+                                                accounts[i].expiration.timeUntil,
+                                              )
+                                            : l10n.accountExpired,
+                                        style: TextTheme.of(context).labelSmall,
+                                        overflow: .ellipsis,
+                                        maxLines: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                divider,
+                                IconButton(
+                                  tooltip: l10n.accountRemove,
+                                  icon: const Icon(Icons.close_rounded),
+                                  onPressed: () => ConfirmationDialog.show(
+                                    context,
+                                    title: l10n.accountRemoveQuestion,
+                                    primaryAction: l10n.actionYes,
+                                    secondaryAction: l10n.actionNo,
+                                    onConfirm: () {
+                                      if (i == accountGroup.accountIndex) {
+                                        ref.read(persistenceProvider.notifier).switchAccount(null);
+                                      }
+
+                                      ref
+                                          .read(persistenceProvider.notifier)
+                                          .removeAccount(i)
+                                          .then((_) => setState(() {}));
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    divider,
-                    IconButton(
-                      tooltip: l10n.accountRemove,
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => ConfirmationDialog.show(
-                        context,
-                        title: l10n.accountRemoveQuestion,
-                        primaryAction: l10n.actionYes,
-                        secondaryAction: l10n.actionNo,
-                        onConfirm: () {
-                          if (i == accountGroup.accountIndex) {
-                            ref.read(persistenceProvider.notifier).switchAccount(null);
-                          }
-
-                          ref
-                              .read(persistenceProvider.notifier)
-                              .removeAccount(i)
-                              .then((_) => setState(() {}));
-                        },
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
           ];

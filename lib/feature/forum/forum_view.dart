@@ -1,15 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ionicons_plus/ionicons_plus.dart';
-import 'package:otraku/feature/forum/forum_filter_provider.dart';
-import 'package:otraku/feature/forum/forum_filter_view.dart';
 import 'package:otraku/feature/forum/forum_provider.dart';
+import 'package:otraku/feature/forum/forum_top_bar.dart';
 import 'package:otraku/feature/forum/thread_item_list.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
-import 'package:otraku/localizations/gen.dart';
-import 'package:otraku/util/debounce.dart';
 import 'package:otraku/util/paged_controller.dart';
-import 'package:otraku/widget/input/search_field.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
 import 'package:otraku/widget/layout/top_bar.dart';
 import 'package:otraku/widget/paged_view.dart';
@@ -34,46 +29,30 @@ class _ForumViewState extends ConsumerState<ForumView> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final options = ref.watch(persistenceProvider.select((s) => s.options));
-
     return AdaptiveScaffold(
-      topBar: TopBar(
-        trailing: [
-          Consumer(
-            builder: (context, ref, filterButton) {
-              return Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SearchField(
-                        debounce: Debounce(),
-                        hint: l10n.forum,
-                        value: ref.watch(forumFilterProvider.select((s) => s.search)),
-                        onChanged: (search) => ref
-                            .read(forumFilterProvider.notifier)
-                            .update((s) => s.copyWith(search: search.trim())),
-                      ),
-                    ),
-                    filterButton!,
-                  ],
-                ),
-              );
-            },
-            child: IconButton(
-              tooltip: l10n.filter,
-              icon: const Icon(Ionicons.funnel_outline),
-              onPressed: () => showForumFilterSheet(context, ref),
-            ),
-          ),
-        ],
-      ),
-      child: PagedView(
-        provider: forumProvider,
-        scrollCtrl: _scrollCtrl,
-        onRefresh: (invalidate) => invalidate(forumProvider),
-        onData: (data) => ThreadItemList(data.items, options.highContrast, options.analogClock),
-      ),
+      topBar: TopBar(trailing: const [ForumTopBarTrailingContent()]),
+      child: ForumSubview(_scrollCtrl),
+    );
+  }
+}
+
+class ForumSubview extends StatelessWidget {
+  const ForumSubview(this.scrollCtrl);
+  final ScrollController scrollCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final options = ref.watch(persistenceProvider.select((s) => s.options));
+
+        return PagedView(
+          provider: forumProvider,
+          scrollCtrl: scrollCtrl,
+          onRefresh: (invalidate) => invalidate(forumProvider),
+          onData: (data) => ThreadItemList(data.items, options.highContrast, options.analogClock),
+        );
+      },
     );
   }
 }

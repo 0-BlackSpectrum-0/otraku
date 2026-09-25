@@ -48,6 +48,9 @@ class AdaptiveScaffold extends StatelessWidget {
             selectedItems: navigationConfig!.selectedItems,
             onChanged: navigationConfig!.onChanged,
             onSame: navigationConfig!.onSame,
+            onProfileLongPress: navigationConfig!.onProfileLongPress,
+            onProfileSwipe: navigationConfig!.onProfileSwipe,
+            profileAvatarUrl: navigationConfig!.profileAvatarUrl,
             scrollCtrl: navigationConfig!.scrollCtrl,
           );
         case .tablet:
@@ -57,6 +60,9 @@ class AdaptiveScaffold extends StatelessWidget {
             selectedItems: navigationConfig!.selectedItems,
             onChanged: navigationConfig!.onChanged,
             onSame: navigationConfig!.onSame,
+            onProfileLongPress: navigationConfig!.onProfileLongPress,
+            onProfileSwipe: navigationConfig!.onProfileSwipe,
+            profileAvatarUrl: navigationConfig!.profileAvatarUrl,
           );
 
           startFabLocation = _StartFloatFabLocation.withOffset;
@@ -99,6 +105,9 @@ class NavigationConfig {
     this.selectedItems,
     required this.onChanged,
     required this.onSame,
+    this.onProfileLongPress,
+    this.onProfileSwipe,
+    this.profileAvatarUrl,
     this.scrollCtrl,
   });
 
@@ -107,6 +116,9 @@ class NavigationConfig {
   final Map<String, IconData>? selectedItems;
   final void Function(int) onChanged;
   final void Function(int) onSame;
+  final VoidCallback? onProfileLongPress;
+  final void Function(bool isNext)? onProfileSwipe;
+  final String? profileAvatarUrl;
   final ScrollController? scrollCtrl;
 }
 

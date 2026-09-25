@@ -6,7 +6,6 @@ import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/activity/activities_filter_provider.dart';
 import 'package:otraku/feature/activity/activities_model.dart';
 import 'package:otraku/feature/activity/activity_date_filter.dart';
-import 'package:otraku/feature/activity/activity_filter_sheet.dart';
 import 'package:otraku/feature/feed/feed_date_filter_sheet.dart';
 import 'package:otraku/feature/auth/login_instructions.dart';
 import 'package:otraku/feature/settings/settings_provider.dart';
@@ -72,17 +71,7 @@ class FeedTopBarTrailingContent extends StatelessWidget {
               backgroundColor: isFiltered ? ColorScheme.of(context).primary : null,
               onPressed: () => showFeedDateFilterSheet(context, ref, HomeActivitiesTag.instance),
             ),
-            IconButton(
-              tooltip: l10n.forum,
-              icon: const Icon(Ionicons.chatbubbles_outline),
-              onPressed: () => context.push(Routes.forum),
-            ),
             notificationIcon,
-            IconButton(
-              tooltip: l10n.filter,
-              icon: const Icon(Ionicons.funnel_outline),
-              onPressed: () => showActivityFilterSheet(context, ref, HomeActivitiesTag.instance),
-            ),
           ],
         );
       },

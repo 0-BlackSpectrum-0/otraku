@@ -27,6 +27,7 @@ class CollectionFloatingAction extends StatelessWidget {
         return switch (collection) {
           null => const SizedBox(),
           PreviewCollection _ => FloatingActionButton(
+            heroTag: 'collectionFab-${tag.ofAnime}',
             tooltip: l10n.actionCollectionLoad,
             child: const Icon(Ionicons.enter_outline),
             onPressed: () => ref.read(homeProvider.notifier).expandCollection(tag.ofAnime),
@@ -47,6 +48,7 @@ class CollectionFloatingAction extends StatelessWidget {
     final items = buildFullCollectionSelectionItems(context, l10n, lists);
 
     return FloatingActionButton(
+      heroTag: 'collectionFab-${tag.ofAnime}',
       tooltip: l10n.list,
       onPressed: () {
         showSheet(

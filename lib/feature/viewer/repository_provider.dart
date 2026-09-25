@@ -19,11 +19,12 @@ class RepositoryNotifier extends Notifier<Repository> {
     try {
       final data = await Repository(
         token,
-      ).request('query Viewer {Viewer {id name avatar {large}}}');
+      ).request('query Viewer {Viewer {id name avatar {large} bannerImage}}');
 
       final id = data['Viewer']?['id'];
       final name = data['Viewer']?['name'];
       final avatarUrl = data['Viewer']?['avatar']?['large'];
+      final bannerUrl = data['Viewer']?['bannerImage'];
       if (id == null || name == null || avatarUrl == null) {
         return null;
       }
@@ -34,6 +35,7 @@ class RepositoryNotifier extends Notifier<Repository> {
         id: id,
         name: name,
         avatarUrl: avatarUrl,
+        bannerUrl: bannerUrl,
         expiration: expiration,
         accessToken: token,
       );

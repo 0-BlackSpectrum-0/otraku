@@ -18,16 +18,18 @@ class Home {
 
 enum HomeTab {
   feed,
+  forum,
+  discover,
   anime,
   manga,
-  discover,
   profile;
 
   String localize(AppLocalizations l10n) => switch (this) {
     feed => l10n.feed,
+    forum => l10n.forum,
+    discover => l10n.discover,
     anime => l10n.mediaTypeAnime,
     manga => l10n.mediaTypeManga,
-    discover => l10n.discover,
     profile => l10n.profile,
   };
 }

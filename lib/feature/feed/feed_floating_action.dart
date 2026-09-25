@@ -17,6 +17,7 @@ class FeedFloatingAction extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return FloatingActionButton(
+      heroTag: 'feedNewPostFab',
       tooltip: l10n.postsAdd,
       child: const Icon(Icons.edit_outlined),
       onPressed: () => showSheet(

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:otraku/util/theming.dart';
+import 'package:otraku/widget/cached_image.dart';
 
 class BottomNavigation extends StatefulWidget {
   const BottomNavigation({
@@ -8,6 +9,9 @@ class BottomNavigation extends StatefulWidget {
     required this.selectedItems,
     required this.onChanged,
     required this.onSame,
+    this.onProfileLongPress,
+    this.onProfileSwipe,
+    this.profileAvatarUrl,
     this.scrollCtrl,
   });
 
@@ -15,8 +19,11 @@ class BottomNavigation extends StatefulWidget {
   final Map<String, IconData> items;
   final Map<String, IconData>? selectedItems;
   final void Function(int) onChanged;
+  final VoidCallback? onProfileLongPress;
+  final void Function(bool isNext)? onProfileSwipe;
   final void Function(int) onSame;
   final ScrollController? scrollCtrl;
+  final String? profileAvatarUrl;
 
   @override
   State<BottomNavigation> createState() => _BottomNavigationState();
@@ -105,14 +112,34 @@ class _BottomNavigationState extends State<BottomNavigation> with SingleTickerPr
             }
           },
           destinations: [
-            for (final e in widget.items.entries)
+            for (final (i, e) in widget.items.entries.indexed)
               NavigationDestination(
                 label: e.key,
-                icon: Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant),
-                selectedIcon: Icon(
-                  widget.selectedItems?[e.key] ?? e.value,
-                  color: ColorScheme.of(context).primary,
-                ),
+                icon: i != widget.items.length - 1
+                    ? Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant)
+                    : _wrapProfileGesture(
+                        widget.onProfileLongPress,
+                        widget.onProfileSwipe,
+                        widget.profileAvatarUrl != null
+                            ? _ProfileAvatar(widget.profileAvatarUrl!)
+                            : Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant),
+                      ),
+
+                selectedIcon: i != widget.items.length - 1
+                    ? Icon(
+                        widget.selectedItems?[e.key] ?? e.value,
+                        color: ColorScheme.of(context).primary,
+                      )
+                    : _wrapProfileGesture(
+                        widget.onProfileLongPress,
+                        widget.onProfileSwipe,
+                        widget.profileAvatarUrl != null
+                            ? _ProfileAvatar(widget.profileAvatarUrl!, selected: true)
+                            : Icon(
+                                widget.selectedItems?[e.key] ?? e.value,
+                                color: ColorScheme.of(context).primary,
+                              ),
+                      ),
               ),
           ],
         ),
@@ -128,6 +155,9 @@ class SideNavigation extends StatefulWidget {
     this.selectedItems,
     required this.onChanged,
     required this.onSame,
+    this.onProfileLongPress,
+    this.onProfileSwipe,
+    this.profileAvatarUrl,
   });
 
   final int selected;
@@ -135,6 +165,9 @@ class SideNavigation extends StatefulWidget {
   final Map<String, IconData>? selectedItems;
   final void Function(int) onChanged;
   final void Function(int) onSame;
+  final VoidCallback? onProfileLongPress;
+  final void Function(bool isNext)? onProfileSwipe;
+  final String? profileAvatarUrl;
 
   @override
   State<SideNavigation> createState() => _SideNavigationState();
@@ -167,15 +200,34 @@ class _SideNavigationState extends State<SideNavigation> {
         }
       },
       destinations: [
-        for (final e in widget.items.entries)
+        for (final (i, e) in widget.items.entries.indexed)
           NavigationRailDestination(
             padding: const EdgeInsets.symmetric(vertical: 8),
             label: Text(e.key),
-            icon: Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant),
-            selectedIcon: Icon(
-              widget.selectedItems?[e.key] ?? e.value,
-              color: ColorScheme.of(context).primary,
-            ),
+            icon: i != widget.items.length - 1
+                ? Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant)
+                : _wrapProfileGesture(
+                    widget.onProfileLongPress,
+                    widget.onProfileSwipe,
+                    widget.profileAvatarUrl != null
+                        ? _ProfileAvatar(widget.profileAvatarUrl!)
+                        : Icon(e.value, color: ColorScheme.of(context).onSurfaceVariant),
+                  ),
+            selectedIcon: i != widget.items.length - 1
+                ? Icon(
+                    widget.selectedItems?[e.key] ?? e.value,
+                    color: ColorScheme.of(context).primary,
+                  )
+                : _wrapProfileGesture(
+                    widget.onProfileLongPress,
+                    widget.onProfileSwipe,
+                    widget.profileAvatarUrl != null
+                        ? _ProfileAvatar(widget.profileAvatarUrl!, selected: true)
+                        : Icon(
+                            widget.selectedItems?[e.key] ?? e.value,
+                            color: ColorScheme.of(context).primary,
+                          ),
+                  ),
           ),
       ],
     );
@@ -242,4 +294,36 @@ class BottomBarButton extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _wrapProfileGesture(
+  VoidCallback? onLongPress,
+  void Function(bool isNext)? onSwipe,
+  Widget child,
+) {
+  return GestureDetector(
+    onLongPress: onLongPress,
+    onHorizontalDragEnd: (details) {
+      final velocity = details.primaryVelocity ?? 0;
+      if (velocity != 0) onSwipe?.call(velocity < 0);
+    },
+    child: child,
+  );
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar(this.url, {this.selected = false});
+  final String url;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 24,
+    height: 24,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: selected ? Border.all(color: ColorScheme.of(context).primary, width: 1.8) : null,
+    ),
+    child: ClipOval(child: CachedImage(url, width: 24, height: 24)),
+  );
 }

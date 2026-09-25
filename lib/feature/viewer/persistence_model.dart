@@ -159,6 +159,7 @@ class Account {
     required this.id,
     required this.name,
     required this.avatarUrl,
+    this.bannerUrl,
     required this.expiration,
     required this.accessToken,
   });
@@ -167,6 +168,7 @@ class Account {
     id: map['id'],
     name: map['name'],
     avatarUrl: map['avatarUrl'],
+    bannerUrl: map['bannerUrl'],
     expiration: map['expiration'],
     accessToken: accessToken,
   );
@@ -174,6 +176,7 @@ class Account {
   final int id;
   final String name;
   final String avatarUrl;
+  final String? bannerUrl;
   final DateTime expiration;
   final String accessToken;
 
@@ -183,6 +186,7 @@ class Account {
     'id': id,
     'name': name,
     'avatarUrl': avatarUrl,
+    'bannerUrl': bannerUrl,
     'expiration': expiration,
   };
 }

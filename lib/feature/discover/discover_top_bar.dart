@@ -3,18 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/feature/discover/discover_filter_provider.dart';
-import 'package:otraku/feature/discover/discover_filter_model.dart';
-import 'package:otraku/feature/discover/discover_media_filter_view.dart';
-import 'package:otraku/feature/discover/discover_recommendations_filter_sheet.dart';
-import 'package:otraku/feature/discover/discover_users_filter_sheet.dart';
-import 'package:otraku/feature/review/reviews_filter_sheet.dart';
-import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
-import 'package:otraku/util/theming.dart';
 import 'package:otraku/util/debounce.dart';
 import 'package:otraku/widget/input/search_field.dart';
-import 'package:otraku/widget/sheets.dart';
 
 class DiscoverTopBarTrailingContent extends StatelessWidget {
   const DiscoverTopBarTrailingContent(this.focusNode);
@@ -28,22 +20,6 @@ class DiscoverTopBarTrailingContent extends StatelessWidget {
     return Consumer(
       builder: (context, ref, _) {
         final filter = ref.watch(discoverFilterProvider);
-        final highContrast = ref.watch(persistenceProvider.select((s) => s.options.highContrast));
-
-        late final filterIcon = IconButton(
-          tooltip: l10n.filter,
-          icon: const Icon(Ionicons.funnel_outline),
-          onPressed: () => showSheet(
-            context,
-            DiscoverMediaFilterView(
-              ofAnime: filter.type == .anime,
-              filter: filter.mediaFilter,
-              onChanged: (mediaFilter) => ref
-                  .read(discoverFilterProvider.notifier)
-                  .update((s) => s.copyWith(mediaFilter: mediaFilter)),
-            ),
-          ),
-        );
 
         return Expanded(
           child: Row(
@@ -79,62 +55,6 @@ class DiscoverTopBarTrailingContent extends StatelessWidget {
                   icon: const Icon(Ionicons.calendar_outline),
                   onPressed: () => context.push(Routes.calendar),
                 ),
-              switch (filter.type) {
-                .anime || .manga =>
-                  filter.mediaFilter.isActive
-                      ? Badge(
-                          smallSize: 10,
-                          alignment: .topLeft,
-                          backgroundColor: ColorScheme.of(context).primary,
-                          child: filterIcon,
-                        )
-                      : filterIcon,
-                .character || .staff => _BirthdayFilter(ref),
-                .user =>
-                  filter.usersFilter.isActive
-                      ? Badge(
-                          smallSize: 10,
-                          alignment: .topLeft,
-                          backgroundColor: ColorScheme.of(context).primary,
-                          child: _usersFilterIcon(context, ref, filter, highContrast),
-                        )
-                      : _usersFilterIcon(context, ref, filter, highContrast),
-                .review => IconButton(
-                  tooltip: l10n.filter,
-                  icon: const Icon(Ionicons.funnel_outline),
-                  onPressed: () => showReviewsFilterSheet(
-                    context: context,
-                    filter: filter.reviewsFilter,
-                    highContrast: highContrast,
-                    onDone: (filter) {
-                      final discoverFilter = ref.read(discoverFilterProvider);
-                      if (filter != discoverFilter.reviewsFilter) {
-                        ref
-                            .read(discoverFilterProvider.notifier)
-                            .update((s) => s.copyWith(reviewsFilter: filter));
-                      }
-                    },
-                  ),
-                ),
-                .recommendation => IconButton(
-                  tooltip: l10n.filter,
-                  icon: const Icon(Ionicons.funnel_outline),
-                  onPressed: () => showRecommendationsFilterSheet(
-                    context: context,
-                    filter: filter.recommendationsFilter,
-                    highContrast: highContrast,
-                    onDone: (filter) {
-                      final discoverFilter = ref.read(discoverFilterProvider);
-                      if (filter != discoverFilter.recommendationsFilter) {
-                        ref
-                            .read(discoverFilterProvider.notifier)
-                            .update((s) => s.copyWith(recommendationsFilter: filter));
-                      }
-                    },
-                  ),
-                ),
-                _ => const SizedBox(width: Theming.offset),
-              },
             ],
           ),
         );
@@ -142,57 +62,57 @@ class DiscoverTopBarTrailingContent extends StatelessWidget {
     );
   }
 
-  Widget _usersFilterIcon(
-    BuildContext context,
-    WidgetRef ref,
-    DiscoverFilter filter,
-    bool highContrast,
-  ) {
-    return IconButton(
-      tooltip: 'Filter',
-      icon: const Icon(Ionicons.funnel_outline),
-      onPressed: () => showUsersFilterSheet(
-        context: context,
-        filter: filter.usersFilter,
-        highContrast: highContrast,
-        onDone: (usersFilter) {
-          final discoverFilter = ref.read(discoverFilterProvider);
-          if (usersFilter != discoverFilter.usersFilter) {
-            ref
-                .read(discoverFilterProvider.notifier)
-                .update((s) => s.copyWith(usersFilter: usersFilter));
-          }
-        },
-      ),
-    );
-  }
-}
+  //   Widget _usersFilterIcon(
+  //     BuildContext context,
+  //     WidgetRef ref,
+  //     DiscoverFilter filter,
+  //     bool highContrast,
+  //   ) {
+  //     return IconButton(
+  //       tooltip: 'Filter',
+  //       icon: const Icon(Ionicons.funnel_outline),
+  //       onPressed: () => showUsersFilterSheet(
+  //         context: context,
+  //         filter: filter.usersFilter,
+  //         highContrast: highContrast,
+  //         onDone: (usersFilter) {
+  //           final discoverFilter = ref.read(discoverFilterProvider);
+  //           if (usersFilter != discoverFilter.usersFilter) {
+  //             ref
+  //                 .read(discoverFilterProvider.notifier)
+  //                 .update((s) => s.copyWith(usersFilter: usersFilter));
+  //           }
+  //         },
+  //       ),
+  //     );
+  //   }
+  // }
 
-class _BirthdayFilter extends StatelessWidget {
-  const _BirthdayFilter(this.ref);
+  // class _BirthdayFilter extends StatelessWidget {
+  //   const _BirthdayFilter(this.ref);
 
-  final WidgetRef ref;
+  //   final WidgetRef ref;
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final hasBirthday = ref.watch(discoverFilterProvider.select((s) => s.hasBirthday));
+  //   @override
+  //   Widget build(BuildContext context) {
+  //     final l10n = AppLocalizations.of(context)!;
+  //     final hasBirthday = ref.watch(discoverFilterProvider.select((s) => s.hasBirthday));
 
-    final icon = IconButton(
-      tooltip: hasBirthday ? l10n.filterShowAll : l10n.filterShowBirthdayPeople,
-      icon: const Icon(Icons.cake_outlined),
-      onPressed: () => ref
-          .read(discoverFilterProvider.notifier)
-          .update((s) => s.copyWith(hasBirthday: !hasBirthday)),
-    );
+  //     final icon = IconButton(
+  //       tooltip: hasBirthday ? l10n.filterShowAll : l10n.filterShowBirthdayPeople,
+  //       icon: const Icon(Icons.cake_outlined),
+  //       onPressed: () => ref
+  //           .read(discoverFilterProvider.notifier)
+  //           .update((s) => s.copyWith(hasBirthday: !hasBirthday)),
+  //     );
 
-    return hasBirthday
-        ? Badge(
-            smallSize: 10,
-            alignment: .topLeft,
-            backgroundColor: ColorScheme.of(context).primary,
-            child: icon,
-          )
-        : icon;
-  }
+  //     return hasBirthday
+  //         ? Badge(
+  //             smallSize: 10,
+  //             alignment: .topLeft,
+  //             backgroundColor: ColorScheme.of(context).primary,
+  //             child: icon,
+  //           )
+  //         : icon;
+  //   }
 }

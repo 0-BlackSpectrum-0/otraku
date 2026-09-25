@@ -8,6 +8,7 @@ import 'package:otraku/feature/calendar/calendar_models.dart';
 import 'package:otraku/feature/collection/collection_filter_model.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
+import 'package:otraku/feature/viewer/repository_model.dart';
 import 'package:otraku/util/background_worker.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -33,6 +34,8 @@ class PersistenceNotifier extends Notifier<Persistence> {
     final accessTokens = await const FlutterSecureStorage().readAll();
 
     state = .fromPersistenceMap(_box.toMap(), accessTokens);
+
+    _backfillMissingBanners();
   }
 
   void cacheSystemPrimaryColors(SystemColors systemColors) {
@@ -100,6 +103,7 @@ class PersistenceNotifier extends Notifier<Persistence> {
           Account(
             name: newName,
             avatarUrl: newAvatarUrl,
+            bannerUrl: account.bannerUrl,
             id: account.id,
             expiration: account.expiration,
             accessToken: account.accessToken,
@@ -109,6 +113,25 @@ class PersistenceNotifier extends Notifier<Persistence> {
         accountIndex: accountIndex,
       ),
     );
+  }
+
+  void switchToAdjacentAccount(bool next) {
+    final accountGroup = state.accountGroup;
+    final accounts = accountGroup.accounts;
+
+    if (accounts.length < 2) return;
+
+    var index = accountGroup.accountIndex ?? accounts.length - 1;
+
+    for (var step = 0; step < accounts.length; step++) {
+      index = next
+          ? (index + 1) % accounts.length
+          : (index - 1 + accounts.length) % accounts.length;
+      if (DateTime.now().isBefore(accounts[index].expiration)) {
+        switchAccount(index);
+        return;
+      }
+    }
   }
 
   /// Switches active account.
@@ -179,5 +202,44 @@ class PersistenceNotifier extends Notifier<Persistence> {
   void _setAccountGroup(AccountGroup accountGroup) {
     _box.put('accountGroup', accountGroup.toPersistenceMap());
     state = state.copyWith(accountGroup: accountGroup);
+  }
+
+  Future<void> _backfillMissingBanners() async {
+    for (final account in state.accountGroup.accounts) {
+      if (account.bannerUrl != null) continue;
+
+      try {
+        final data = await Repository(
+          null,
+        ).request('query(\$id: Int) {User(id: \$id) {bannerImage}}', {'id': account.id});
+
+        final bannerUrl = data['User']?['bannerImage'];
+        if (bannerUrl == null) continue;
+
+        final accounts = state.accountGroup.accounts;
+        final index = accounts.indexWhere((a) => a.id == account.id);
+        if (index == -1) continue;
+
+        _setAccountGroup(
+          AccountGroup(
+            accounts: [
+              ...accounts.sublist(0, index),
+              Account(
+                id: account.id,
+                name: account.name,
+                avatarUrl: account.avatarUrl,
+                bannerUrl: bannerUrl,
+                expiration: account.expiration,
+                accessToken: account.accessToken,
+              ),
+              ...accounts.sublist(index + 1),
+            ],
+            accountIndex: state.accountGroup.accountIndex,
+          ),
+        );
+      } catch (_) {
+        // Ignore - retries on next launch
+      }
+    }
   }
 }

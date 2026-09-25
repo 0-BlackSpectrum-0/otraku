@@ -95,6 +95,7 @@ flutter:
 
   assets:
     - assets/icons/about.png
+    
 
   fonts:
     - family: Catways
@@ -103,6 +104,11 @@ flutter:
     - family: EmojiFont
       fonts: 
         - asset: assets/fonts/NotoColorEmoji.ttf
+
+    - family: Icon_list_alt_rounded_filled
+      fonts:
+        - asset: assets/fonts/list_alt_rounded_filled.ttf
+
     - family: Rubik
       fonts:
         - asset: assets/fonts/Rubik-VariableFont_wght.ttf
