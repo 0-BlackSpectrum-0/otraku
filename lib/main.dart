@@ -86,8 +86,8 @@ class AppState extends ConsumerState<_App> {
 
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
-        Color lightSeed = (options.themeBase ?? .navy).seed;
-        Color darkSeed = lightSeed;
+        Color lightSeed = (options.lightThemeBase ?? .navy).seed;
+        Color darkSeed = (options.darkThemeBase ?? .navy).seed;
         if (lightDynamic != null && darkDynamic != null) {
           _systemLightPrimaryColor = lightDynamic.primary;
           _systemDarkPrimaryColor = darkDynamic.primary;
@@ -105,20 +105,17 @@ class AppState extends ConsumerState<_App> {
             )),
           );
 
-          if (options.themeBase == null &&
-              _systemLightPrimaryColor != null &&
-              _systemDarkPrimaryColor != null) {
+          if (options.lightThemeBase != null && _systemLightPrimaryColor != null) {
             lightSeed = _systemLightPrimaryColor!;
+          }
+
+          if (options.darkThemeBase != null && _systemDarkPrimaryColor != null) {
             darkSeed = _systemDarkPrimaryColor!;
           }
         }
 
-        Color? lightBackground;
-        Color? darkBackground;
-        if (options.highContrast) {
-          lightBackground = Colors.white;
-          darkBackground = Colors.black;
-        }
+        final lightBackground = options.lightHighContrast ? Colors.white : null;
+        final darkBackground = options.darkHighContrast ? Colors.black : null;
 
         final lightScheme = ColorScheme.fromSeed(
           seedColor: lightSeed,
@@ -132,6 +129,10 @@ class AppState extends ConsumerState<_App> {
         final isDark = options.themeMode == ThemeMode.system
             ? platformBrightness == Brightness.dark
             : options.themeMode == ThemeMode.dark;
+
+        if (options.isDarkActive != isDark) {
+          Future(() => ref.read(persistenceProvider.notifier).setEffectiveBrightness(isDark));
+        }
 
         final ColorScheme scheme;
         final Brightness overlayBrightness;

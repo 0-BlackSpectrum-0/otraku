@@ -194,8 +194,11 @@ class Account {
 class Options {
   const Options({
     required this.themeMode,
-    required this.themeBase,
-    required this.highContrast,
+    required this.lightThemeBase,
+    required this.darkThemeBase,
+    required this.lightHighContrast,
+    required this.darkHighContrast,
+    required this.isDarkActive,
     required this.homeTab,
     required this.discoverType,
     required this.imageQuality,
@@ -211,8 +214,11 @@ class Options {
 
   factory Options.empty() => const Options(
     themeMode: ThemeMode.system,
-    themeBase: null,
-    highContrast: false,
+    lightThemeBase: null,
+    darkThemeBase: null,
+    lightHighContrast: false,
+    darkHighContrast: false,
+    isDarkActive: false,
     homeTab: .feed,
     discoverType: .anime,
     imageQuality: .high,
@@ -228,8 +234,11 @@ class Options {
 
   factory Options.fromPersistenceMap(Map<dynamic, dynamic> map) => Options(
     themeMode: ThemeMode.values.getOrFirst(map['themeMode']),
-    themeBase: ThemeBase.values.getOrNull(map['themeBase']),
-    highContrast: map['highContrast'] ?? false,
+    lightThemeBase: ThemeBase.values.getOrNull(map['lightThemeBase']),
+    darkThemeBase: ThemeBase.values.getOrNull(map['darkThemeBase']),
+    lightHighContrast: map['lightHighContrast'] ?? false,
+    darkHighContrast: map['darkHighContrast'] ?? false,
+    isDarkActive: false,
     homeTab: HomeTab.values.getOrFirst(map['homeTab']),
     discoverType: DiscoverType.values.getOrFirst(map['discoverType']),
     imageQuality: ImageQuality.values.getOrNull(map['imageQuality']) ?? .high,
@@ -244,8 +253,11 @@ class Options {
   );
 
   final ThemeMode themeMode;
-  final ThemeBase? themeBase;
-  final bool highContrast;
+  final ThemeBase? lightThemeBase;
+  final ThemeBase? darkThemeBase;
+  final bool lightHighContrast;
+  final bool darkHighContrast;
+  final bool isDarkActive;
   final HomeTab homeTab;
   final DiscoverType discoverType;
   final ImageQuality imageQuality;
@@ -258,10 +270,16 @@ class Options {
   final CollectionItemView collectionItemView;
   final CollectionItemView collectionPreviewItemView;
 
+  ThemeBase? get themeBase => isDarkActive ? darkThemeBase : lightThemeBase;
+  bool get highContrast => isDarkActive ? darkHighContrast : lightHighContrast;
+
   Options copyWith({
     ThemeMode? themeMode,
-    (ThemeBase?,)? themeBase,
-    bool? highContrast,
+    (ThemeBase?,)? lightThemeBase,
+    (ThemeBase?,)? darkThemeBase,
+    bool? lightHighContrast,
+    bool? darkHighContrast,
+    bool? isDarkActive,
     HomeTab? homeTab,
     DiscoverType? discoverType,
     ImageQuality? imageQuality,
@@ -275,8 +293,11 @@ class Options {
     CollectionItemView? collectionPreviewItemView,
   }) => Options(
     themeMode: themeMode ?? this.themeMode,
-    themeBase: themeBase == null ? this.themeBase : themeBase.$1,
-    highContrast: highContrast ?? this.highContrast,
+    lightThemeBase: lightThemeBase == null ? this.lightThemeBase : lightThemeBase.$1,
+    darkThemeBase: darkThemeBase == null ? this.darkThemeBase : darkThemeBase.$1,
+    lightHighContrast: lightHighContrast ?? this.lightHighContrast,
+    darkHighContrast: darkHighContrast ?? this.darkHighContrast,
+    isDarkActive: isDarkActive ?? this.isDarkActive,
     homeTab: homeTab ?? this.homeTab,
     discoverType: discoverType ?? this.discoverType,
     imageQuality: imageQuality ?? this.imageQuality,
@@ -292,8 +313,10 @@ class Options {
 
   Map<String, dynamic> toPersistenceMap() => {
     'themeMode': themeMode.index,
-    'themeBase': themeBase?.index,
-    'highContrast': highContrast,
+    'lightThemeBase': lightThemeBase?.index,
+    'darkThemeBase': darkThemeBase?.index,
+    'lightHighContrast': lightHighContrast,
+    'darkHighContrast': darkHighContrast,
     'homeTab': homeTab.index,
     'discoverType': discoverType.index,
     'imageQuality': imageQuality.index,

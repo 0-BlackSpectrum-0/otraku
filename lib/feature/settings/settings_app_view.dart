@@ -76,7 +76,11 @@ class SettingsAppSubview extends ConsumerWidget {
               title: Text(l10n.settingsHighContrast),
               subtitle: Text(l10n.settingsHighContrastDescription),
               value: options.highContrast,
-              onChanged: (v) => update(options.copyWith(highContrast: v)),
+              onChanged: (v) => update(
+                options.isDarkActive
+                    ? options.copyWith(darkHighContrast: v)
+                    : options.copyWith(lightHighContrast: v),
+              ),
             ),
             const SizedBox(height: Theming.offset / 2),
             Padding(
