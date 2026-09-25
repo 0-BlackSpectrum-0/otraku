@@ -235,7 +235,11 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
         username: Ionicons.person,
       },
       selected: _navIndexForTab(HomeTab.values[_tabCtrl.index]),
-      onChanged: (i) => context.go(Routes.home(_tabForNavIndex(i))),
+      onChanged: (i) {
+        final tab = _tabForNavIndex(i);
+        _tabCtrl.index = tab.index;
+        context.go(Routes.home(tab));
+      },
       onSame: (i) {
         switch (_tabForNavIndex(i)) {
           case .feed:
