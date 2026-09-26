@@ -87,6 +87,11 @@ class PersistenceNotifier extends Notifier<Persistence> {
     state = state.copyWith(drafts: drafts);
   }
 
+  void setEffectiveBrightness(bool isDarkActive) {
+    if (state.options.isDarkActive == isDarkActive) return;
+    state = state.copyWith(options: state.options.copyWith(isDarkActive: isDarkActive));
+  }
+
   void refreshViewerDetails(String newName, String newAvatarUrl) {
     final accounts = state.accountGroup.accounts;
     final accountIndex = state.accountGroup.accountIndex;

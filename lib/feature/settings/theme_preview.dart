@@ -48,7 +48,11 @@ class ThemePreview extends StatelessWidget {
           active: options.themeBase == null,
           onTap: () => ref
               .read(persistenceProvider.notifier)
-              .setOptions(options.copyWith(themeBase: (null,))),
+              .setOptions(
+                brightness == Brightness.dark
+                    ? options.copyWith(darkThemeBase: (null,))
+                    : options.copyWith(lightThemeBase: (null,)),
+              ),
         ),
       );
     }
@@ -62,8 +66,13 @@ class ThemePreview extends StatelessWidget {
             brightness: brightness,
           ).copyWith(surface: background),
           active: options.themeBase == tb,
-          onTap: () =>
-              ref.read(persistenceProvider.notifier).setOptions(options.copyWith(themeBase: (tb,))),
+          onTap: () => ref
+              .read(persistenceProvider.notifier)
+              .setOptions(
+                brightness == Brightness.dark
+                    ? options.copyWith(darkThemeBase: (tb,))
+                    : options.copyWith(lightThemeBase: (tb,)),
+              ),
         ),
       );
     }
