@@ -229,7 +229,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       },
       selectedItems: {
         l10n.feed: Ionicons.reader,
-        l10n.forum: Ionicons.chatbubbles_outline,
+        l10n.forum: Ionicons.chatbubbles,
         l10n.discover: Ionicons.compass,
         l10n.list: const IconData(0xf000, fontFamily: 'Icon_list_alt_rounded_filled'),
         username: Ionicons.person,
