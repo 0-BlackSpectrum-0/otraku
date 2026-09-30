@@ -8,6 +8,7 @@ import 'package:otraku/feature/composition/composition_view.dart';
 import 'package:otraku/feature/comment/comment_tile.dart';
 import 'package:otraku/feature/forum/forum_filter_model.dart';
 import 'package:otraku/feature/forum/forum_filter_provider.dart';
+import 'package:otraku/feature/like/likes_sheet.dart';
 import 'package:otraku/feature/thread/thread_model.dart';
 import 'package:otraku/feature/thread/thread_provider.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
@@ -433,6 +434,7 @@ class __LikeButtonState extends State<_LikeButton> {
     final info = widget.threadInfo;
 
     return Tooltip(
+      triggerMode: .manual,
       message: !info.isLiked ? l10n.likesAdd : l10n.likesRemove,
       child: InkResponse(
         radius: Theming.radiusSmall.x,
@@ -458,6 +460,7 @@ class __LikeButtonState extends State<_LikeButton> {
             SnackBarExtension.show(context, err.toString());
           }
         },
+        onLongPress: () => showLikesSheet(context, info.id, .thread),
         child: Row(
           children: [
             Text(

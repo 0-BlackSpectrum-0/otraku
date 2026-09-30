@@ -963,6 +963,34 @@ abstract class GqlQuery {
       MediaTagCollection {id name description category}
     }
   ''';
+
+  static const likes = r'''
+  query Likes(
+    $id: Int
+    $activity: Boolean = false
+    $reply: Boolean = false
+    $thread: Boolean = false
+  ) {
+    Activity(id: $id) @include(if: $activity) {
+      ... on ListActivity {likes {id name avatar {large}}}
+      ... on TextActivity {likes {id name avatar {large}}}
+      ... on MessageActivity {likes {id name avatar {large}}}
+    }
+    Thread(id: $id) @include(if: $thread) {likes {id name avatar {large}}}
+    repliesPage: Page(perPage: 1) @include(if: $reply) {
+      activityReplies(id: $id) {likes {id name avatar {large}}}
+    }
+  }
+  ''';
+  static const commentLikes = r'''
+    query CommentLikes($id: Int) {
+      ThreadComment(id: $id) {
+        id
+        likes {id name avatar {large}}
+        childComments
+      }
+    }
+  ''';
 }
 
 abstract class GqlMutation {

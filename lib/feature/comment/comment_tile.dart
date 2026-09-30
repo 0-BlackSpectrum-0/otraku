@@ -4,6 +4,7 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/composition/composition_view.dart';
 import 'package:otraku/feature/comment/comment_model.dart';
+import 'package:otraku/feature/like/likes_sheet.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
@@ -28,6 +29,7 @@ class CommentTile extends StatelessWidget {
     required this.analogClock,
     this.interaction,
     this.depth = 0,
+    this.rootId,
   });
 
   final Comment comment;
@@ -36,6 +38,7 @@ class CommentTile extends StatelessWidget {
   final bool highContrast;
   final bool analogClock;
   final int depth;
+  final int? rootId;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +151,7 @@ class CommentTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                  _LikeButton(comment, interaction!.toggleLike),
+                  _LikeButton(comment, interaction!.toggleLike, rootId),
                 ] else ...[
                   SizedBox(
                     height: 20,
@@ -194,6 +197,7 @@ class CommentTile extends StatelessWidget {
                             analogClock: analogClock,
                             interaction: interaction,
                             depth: depth + 1,
+                            rootId: rootId ?? comment.id,
                           ),
                         )
                         .toList(),
@@ -225,10 +229,11 @@ class CommentTile extends StatelessWidget {
 }
 
 class _LikeButton extends StatefulWidget {
-  const _LikeButton(this.comment, this.toggleLike);
+  const _LikeButton(this.comment, this.toggleLike, this.rootId);
 
   final Comment comment;
   final Future<Object?> Function(int commentId) toggleLike;
+  final int? rootId;
 
   @override
   State<_LikeButton> createState() => __LikeButtonState();
@@ -241,6 +246,7 @@ class __LikeButtonState extends State<_LikeButton> {
     final comment = widget.comment;
 
     return Tooltip(
+      triggerMode: .manual,
       message: !comment.isLiked ? l10n.likesAdd : l10n.likesRemove,
       child: InkResponse(
         radius: Theming.radiusSmall.x,
@@ -265,6 +271,7 @@ class __LikeButtonState extends State<_LikeButton> {
             SnackBarExtension.show(context, err.toString());
           }
         },
+        onLongPress: () => showLikesSheet(context, comment.id, .comment, rootId: widget.rootId),
         child: Row(
           children: [
             Text(

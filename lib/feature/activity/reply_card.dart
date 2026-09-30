@@ -7,6 +7,7 @@ import 'package:otraku/feature/activity/activity_model.dart';
 import 'package:otraku/feature/activity/activity_provider.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/composition/composition_view.dart';
+import 'package:otraku/feature/like/likes_sheet.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
@@ -231,10 +232,12 @@ class _ReplyLikeButtonState extends State<_ReplyLikeButton> {
     return SizedBox(
       height: 40,
       child: Tooltip(
+        triggerMode: .manual,
         message: !widget.reply.isLiked ? l10n.likesAdd : l10n.likesRemove,
         child: InkResponse(
           radius: Theming.radiusSmall.x,
           onTap: _toggleLike,
+          onLongPress: () => showLikesSheet(context, widget.reply.id, .reply),
           child: Row(
             children: [
               Text(

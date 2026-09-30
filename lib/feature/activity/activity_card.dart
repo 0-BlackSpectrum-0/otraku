@@ -8,6 +8,7 @@ import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/activity/activity_model.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
 import 'package:otraku/feature/composition/composition_view.dart';
+import 'package:otraku/feature/like/likes_sheet.dart';
 import 'package:otraku/feature/media/media_route_tile.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
@@ -263,10 +264,12 @@ class _ActivityFooterState extends State<ActivityFooter> {
         SizedBox(
           height: 40,
           child: Tooltip(
+            triggerMode: .manual,
             message: !activity.isLiked ? l10n.likesAdd : l10n.likesRemove,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
               onTap: _toggleLike,
+              onLongPress: () => showLikesSheet(context, activity.id, .activity),
               child: Row(
                 children: [
                   Text(
