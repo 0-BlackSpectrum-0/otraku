@@ -48,7 +48,7 @@ class CollectionFloatingAction extends StatelessWidget {
     final items = buildFullCollectionSelectionItems(context, l10n, lists);
 
     return FloatingActionButton(
-      heroTag: 'collectionFab-${tag.ofAnime}',
+      heroTag: 'collectionFab-${tag.userId}-${tag.ofAnime}',
       tooltip: l10n.list,
       onPressed: () {
         showSheet(
