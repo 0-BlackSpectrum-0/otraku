@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:otraku/feature/auth/login_instructions.dart';
+import 'package:otraku/feature/collection/collection_filter_floating_action.dart';
 import 'package:otraku/feature/collection/collection_floating_action.dart';
 import 'package:otraku/feature/collection/collection_top_bar.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
@@ -50,13 +51,20 @@ class _CollectionViewState extends State<CollectionView> {
 
     return AdaptiveScaffold(
       topBar: TopBar(trailing: [CollectionTopBarTrailingContent(tag, null)]),
-      floatingAction: formFactor == .phone
-          ? HidingFloatingActionButton(
-              key: const Key('lists'),
-              scrollCtrl: _ctrl,
-              child: CollectionFloatingAction(tag),
-            )
-          : null,
+      floatingAction: HidingFloatingActionButton(
+        key: const Key('lists'),
+        scrollCtrl: _ctrl,
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            CollectionFilterFloatingAction(tag),
+            if (formFactor == .phone) ...[
+              const SizedBox(height: Theming.offset),
+              CollectionFloatingAction(tag),
+            ],
+          ],
+        ),
+      ),
       child: CollectionSubview(tag: tag, scrollCtrl: _ctrl, formFactor: formFactor),
     );
   }

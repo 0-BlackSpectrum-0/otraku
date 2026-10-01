@@ -21,7 +21,7 @@ class CollectionFilterFloatingAction extends StatelessWidget {
         final filter = ref.watch(collectionFilterProvider(tag));
 
         return FloatingActionButton(
-          heroTag: 'collectionFilterFab-${tag.ofAnime}',
+          heroTag: 'collectionFilterFab-${tag.userId}-${tag.ofAnime}',
           tooltip: l10n.filter,
           onPressed: () => showSheet(
             context,
