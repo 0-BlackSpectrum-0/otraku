@@ -33,11 +33,15 @@ class _SocialViewState extends ConsumerState<SocialView> with SingleTickerProvid
     loadMore: () =>
         ref.read(socialProvider(widget.id).notifier).fetch(SocialTab.values[_tabCtrl.index]),
   );
+  late int _visualIndex = _tabCtrl.index;
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl.addListener(() => setState(() {}));
+    _tabCtrl.animation?.addListener(() {
+      final i = _tabCtrl.animation!.value.round();
+      if (i != _visualIndex) setState(() => _visualIndex = i);
+    });
   }
 
   @override
@@ -49,7 +53,7 @@ class _SocialViewState extends ConsumerState<SocialView> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final tab = SocialTab.values[_tabCtrl.index];
+    final tab = SocialTab.values[_visualIndex];
 
     final viewerId = ref.watch(viewerIdProvider);
     final options = ref.watch(persistenceProvider.select((s) => s.options));
@@ -76,7 +80,7 @@ class _SocialViewState extends ConsumerState<SocialView> with SingleTickerProvid
         ),
       ),
       navigationConfig: NavigationConfig(
-        selected: _tabCtrl.index,
+        selected: _visualIndex,
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
         scrollCtrl: _scrollCtrl,

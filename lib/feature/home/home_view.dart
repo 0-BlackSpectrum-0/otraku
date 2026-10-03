@@ -94,6 +94,8 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
 
   late final _routeSyncDebounce = Debounce(delay: const Duration(milliseconds: 200));
 
+  late int _visualIndex = _tabCtrl.index;
+
   bool _navBarVisible = true;
   double _pillLastOffset = 0;
 
@@ -115,6 +117,11 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       _routeSyncDebounce.run(() {
         if (mounted) context.go(Routes.home(tab));
       });
+    });
+
+    _tabCtrl.animation?.addListener(() {
+      final i = _tabCtrl.animation!.value.round();
+      if (i != _visualIndex) setState(() => _visualIndex = i);
     });
 
     _animeScrollCtrl.addListener(() => _onPillScroll(_animeScrollCtrl));
@@ -212,231 +219,222 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       ],
     );
 
-    return AnimatedBuilder(
-      animation: _tabCtrl.animation!,
-      builder: (context, _) {
-        final tabIndex = _tabCtrl.animation!.value.round().clamp(0, HomeTab.values.length - 1);
+    final tabIndex = _visualIndex;
+    final activeScrollCtrl = switch (tabIndex) {
+      0 => _feedScrollCtrl,
+      1 => _forumScrollCtrl,
+      2 => _discoverScrollCtrl,
+      3 => _animeScrollCtrl,
+      4 => _mangaScrollCtrl,
+      _ => PrimaryScrollController.of(context),
+    };
 
-        final activeScrollCtrl = switch (tabIndex) {
-          0 => _feedScrollCtrl,
-          1 => _forumScrollCtrl,
-          2 => _discoverScrollCtrl,
-          3 => _animeScrollCtrl,
-          4 => _mangaScrollCtrl,
-          _ => PrimaryScrollController.of(context),
-        };
+    final topBar = TopBarAnimatedSwitcher(switch (tabIndex) {
+      0 => TopBar(
+        key: const Key('feedTopBar'),
+        title:
+            (ref.watch(activitiesFilterProvider(HomeActivitiesTag.instance))
+                    as HomeActivitiesFilter)
+                .onFollowing
+            ? 'Following'
+            : l10n.filterActivitiesGlobal,
+        onTitleTap: () {
+          final filter =
+              ref.read(activitiesFilterProvider(HomeActivitiesTag.instance))
+                  as HomeActivitiesFilter;
+          ref.read(activitiesFilterProvider(HomeActivitiesTag.instance).notifier).state = filter
+              .copyWith(onFollowing: !filter.onFollowing);
+        },
+        trailing: const [FeedTopBarTrailingContent()],
+      ),
+      1 => TopBar(key: const Key('forumTopBar'), trailing: const [ForumTopBarTrailingContent()]),
+      2 => TopBar(
+        key: const Key('discoverTobBar'),
+        trailing: [DiscoverTopBarTrailingContent(_discoverFocusNode)],
+      ),
+      3 when animeCollectionTag != null => TopBar(
+        key: const Key('animeCollectionTopBar'),
+        trailing: [CollectionTopBarTrailingContent(animeCollectionTag, _animeFocusNode)],
+      ),
+      4 when mangaCollectionTag != null => TopBar(
+        key: const Key('mangaCollectionTopBar'),
+        trailing: [CollectionTopBarTrailingContent(mangaCollectionTag, _mangaFocusNode)],
+      ),
+      _ => const EmptyTopBar() as PreferredSizeWidget,
+    });
 
-        final topBar = TopBarAnimatedSwitcher(switch (tabIndex) {
-          0 => TopBar(
-            key: const Key('feedTopBar'),
-            title:
-                (ref.watch(activitiesFilterProvider(HomeActivitiesTag.instance))
-                        as HomeActivitiesFilter)
-                    .onFollowing
-                ? 'Following'
-                : l10n.filterActivitiesGlobal,
-            onTitleTap: () {
-              final filter =
-                  ref.read(activitiesFilterProvider(HomeActivitiesTag.instance))
-                      as HomeActivitiesFilter;
-              ref.read(activitiesFilterProvider(HomeActivitiesTag.instance).notifier).state = filter
-                  .copyWith(onFollowing: !filter.onFollowing);
-            },
-            trailing: const [FeedTopBarTrailingContent()],
-          ),
-          1 => TopBar(
-            key: const Key('forumTopBar'),
-            trailing: const [ForumTopBarTrailingContent()],
-          ),
-          2 => TopBar(
-            key: const Key('discoverTobBar'),
-            trailing: [DiscoverTopBarTrailingContent(_discoverFocusNode)],
-          ),
-          3 when animeCollectionTag != null => TopBar(
-            key: const Key('animeCollectionTopBar'),
-            trailing: [CollectionTopBarTrailingContent(animeCollectionTag, _animeFocusNode)],
-          ),
-          4 when mangaCollectionTag != null => TopBar(
-            key: const Key('mangaCollectionTopBar'),
-            trailing: [CollectionTopBarTrailingContent(mangaCollectionTag, _mangaFocusNode)],
-          ),
-          _ => const EmptyTopBar() as PreferredSizeWidget,
-        });
+    final hidingTopBar = HidingBar(scrollCtrl: activeScrollCtrl, child: topBar);
 
-        final hidingTopBar = HidingBar(scrollCtrl: activeScrollCtrl, child: topBar);
+    final navigationConfig = NavigationConfig(
+      items: {
+        l10n.feed: Ionicons.reader_outline,
+        l10n.forum: Ionicons.chatbubbles_outline,
+        l10n.discover: Ionicons.compass_outline,
+        l10n.list: Icons.list_alt_rounded,
+        username: Ionicons.person_outline,
+      },
+      selectedItems: {
+        l10n.feed: Ionicons.reader,
+        l10n.forum: Ionicons.chatbubbles,
+        l10n.discover: Ionicons.compass,
+        l10n.list: const IconData(0xf000, fontFamily: 'Icon_list_alt_rounded_filled'),
+        username: Ionicons.person,
+      },
+      selected: _navIndexForTab(HomeTab.values[tabIndex]),
+      onChanged: (i) => _tabCtrl.index = _tabForNavIndex(i).index,
+      onSame: (i) {
+        switch (_tabForNavIndex(i)) {
+          case .feed:
+            _feedScrollCtrl.scrollToTop();
 
-        final navigationConfig = NavigationConfig(
-          items: {
-            l10n.feed: Ionicons.reader_outline,
-            l10n.forum: Ionicons.chatbubbles_outline,
-            l10n.discover: Ionicons.compass_outline,
-            l10n.list: Icons.list_alt_rounded,
-            username: Ionicons.person_outline,
-          },
-          selectedItems: {
-            l10n.feed: Ionicons.reader,
-            l10n.forum: Ionicons.chatbubbles,
-            l10n.discover: Ionicons.compass,
-            l10n.list: const IconData(0xf000, fontFamily: 'Icon_list_alt_rounded_filled'),
-            username: Ionicons.person,
-          },
-          selected: _navIndexForTab(HomeTab.values[tabIndex]),
-          onChanged: (i) => _tabCtrl.index = _tabForNavIndex(i).index,
-          onSame: (i) {
-            switch (_tabForNavIndex(i)) {
-              case .feed:
-                _feedScrollCtrl.scrollToTop();
+          case .forum:
+            if (_forumScrollCtrl.position.pixels > 0) _forumScrollCtrl.scrollToTop();
 
-              case .forum:
-                if (_forumScrollCtrl.position.pixels > 0) _forumScrollCtrl.scrollToTop();
-
-              case .anime:
-                if (_animeScrollCtrl.position.pixels > 0) {
-                  _animeScrollCtrl.scrollToTop();
-                  return;
-                }
-
-                _toggleSearchFocus(_animeFocusNode);
-              case .manga:
-                if (_mangaScrollCtrl.position.pixels > 0) {
-                  _mangaScrollCtrl.scrollToTop();
-                  return;
-                }
-
-                _toggleSearchFocus(_mangaFocusNode);
-              case .discover:
-                if (_discoverScrollCtrl.position.pixels > 0) {
-                  _discoverScrollCtrl.scrollToTop();
-                  return;
-                }
-
-                _toggleSearchFocus(_discoverFocusNode);
-                return;
-              case .profile:
-                if (primaryScrollCtrl.positions.last.pixels > 0) {
-                  primaryScrollCtrl.scrollToTop();
-                  return;
-                }
-
-                context.push(Routes.settings);
+          case .anime:
+            if (_animeScrollCtrl.position.pixels > 0) {
+              _animeScrollCtrl.scrollToTop();
+              return;
             }
-          },
-          scrollCtrl: activeScrollCtrl,
-          profileAvatarUrl: profileAvatarUrl,
-          onProfileLongPress: () =>
-              showDialog(context: context, builder: (context) => const AccountPicker()),
-          onProfileSwipe: (isNext) =>
-              ref.read(persistenceProvider.notifier).switchToAdjacentAccount(isNext),
-        );
 
-        final floatingAction = switch (tabIndex) {
-          0 => HidingFloatingActionButton(
-            key: const Key('feed'),
-            scrollCtrl: _feedScrollCtrl,
-            child: Column(
-              mainAxisSize: .min,
-              children: [
-                FeedFilterFloatingAction(ref),
-                const SizedBox(height: Theming.offset),
-                FeedFloatingAction(ref),
-              ],
-            ),
-          ),
+            _toggleSearchFocus(_animeFocusNode);
+          case .manga:
+            if (_mangaScrollCtrl.position.pixels > 0) {
+              _mangaScrollCtrl.scrollToTop();
+              return;
+            }
 
-          1 => HidingFloatingActionButton(
-            key: const Key('forum'),
-            scrollCtrl: _forumScrollCtrl,
-            child: ForumFloatingAction(ref),
-          ),
+            _toggleSearchFocus(_mangaFocusNode);
+          case .discover:
+            if (_discoverScrollCtrl.position.pixels > 0) {
+              _discoverScrollCtrl.scrollToTop();
+              return;
+            }
 
-          2 =>
-            formFactor == .phone || formFactor == .tablet
-                ? HidingFloatingActionButton(
-                    key: const Key('discover'),
-                    scrollCtrl: _discoverScrollCtrl,
-                    child: const DiscoverFloatingAction(),
-                  )
-                : null,
-          3 =>
-            animeCollectionTag != null
-                ? HidingFloatingActionButton(
-                    key: const Key('anime'),
-                    scrollCtrl: _animeScrollCtrl,
-                    child: Column(
-                      mainAxisSize: .min,
-                      children: [
-                        CollectionFilterFloatingAction(animeCollectionTag),
-                        if (formFactor == .phone || !home.didExpandAnimeCollection) ...[
-                          const SizedBox(height: Theming.offset),
-                          CollectionFloatingAction(animeCollectionTag),
-                        ],
-                      ],
-                    ),
-                  )
-                : null,
-          4 =>
-            mangaCollectionTag != null
-                ? HidingFloatingActionButton(
-                    key: const Key('manga'),
-                    scrollCtrl: _mangaScrollCtrl,
-                    child: Column(
-                      mainAxisSize: .min,
-                      children: [
-                        CollectionFilterFloatingAction(mangaCollectionTag),
-                        if (formFactor == .phone || !home.didExpandMangaCollection) ...[
-                          const SizedBox(height: Theming.offset),
-                          CollectionFloatingAction(mangaCollectionTag),
-                        ],
-                      ],
-                    ),
-                  )
-                : null,
-          _ => null,
-        };
+            _toggleSearchFocus(_discoverFocusNode);
+            return;
+          case .profile:
+            if (primaryScrollCtrl.positions.last.pixels > 0) {
+              primaryScrollCtrl.scrollToTop();
+              return;
+            }
 
-        final child = Stack(
+            context.push(Routes.settings);
+        }
+      },
+      scrollCtrl: activeScrollCtrl,
+      profileAvatarUrl: profileAvatarUrl,
+      onProfileLongPress: () =>
+          showDialog(context: context, builder: (context) => const AccountPicker()),
+      onProfileSwipe: (isNext) =>
+          ref.read(persistenceProvider.notifier).switchToAdjacentAccount(isNext),
+    );
+
+    final floatingAction = switch (tabIndex) {
+      0 => HidingFloatingActionButton(
+        key: const Key('feed'),
+        scrollCtrl: _feedScrollCtrl,
+        child: Column(
+          mainAxisSize: .min,
           children: [
-            tabBarView,
-            if (tabIndex == HomeTab.anime.index || tabIndex == HomeTab.manga.index)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.bounceOut,
-                left: 0,
-                right: 0,
-                bottom: _navBarVisible
-                    ? pillBottomOffset
-                    : MediaQuery.paddingOf(context).bottom + Theming.offset,
-                child: Center(
-                  child: _MediaTypeSwitcherPill(
-                    showAnime: tabIndex == HomeTab.anime.index,
-                    onChanged: (showAnime) {
-                      _showAnime = showAnime;
-                      _tabCtrl.index = (showAnime ? HomeTab.anime : HomeTab.manga).index;
-                    },
-                  ),
+            FeedFilterFloatingAction(ref),
+            const SizedBox(height: Theming.offset),
+            FeedFloatingAction(ref),
+          ],
+        ),
+      ),
+
+      1 => HidingFloatingActionButton(
+        key: const Key('forum'),
+        scrollCtrl: _forumScrollCtrl,
+        child: ForumFloatingAction(ref),
+      ),
+
+      2 =>
+        formFactor == .phone || formFactor == .tablet
+            ? HidingFloatingActionButton(
+                key: const Key('discover'),
+                scrollCtrl: _discoverScrollCtrl,
+                child: const DiscoverFloatingAction(),
+              )
+            : null,
+      3 =>
+        animeCollectionTag != null
+            ? HidingFloatingActionButton(
+                key: const Key('anime'),
+                scrollCtrl: _animeScrollCtrl,
+                child: Column(
+                  mainAxisSize: .min,
+                  children: [
+                    CollectionFilterFloatingAction(animeCollectionTag),
+                    if (formFactor == .phone || !home.didExpandAnimeCollection) ...[
+                      const SizedBox(height: Theming.offset),
+                      CollectionFloatingAction(animeCollectionTag),
+                    ],
+                  ],
                 ),
               )
-            else if (tabIndex == HomeTab.discover.index)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.bounceOut,
-                left: 0,
-                right: 0,
-                bottom: _navBarVisible
-                    ? pillBottomOffset
-                    : MediaQuery.paddingOf(context).bottom + Theming.offset,
-                child: Center(child: _DiscoverTypeSwitcherPill(ref)),
-              ),
-          ],
-        );
+            : null,
+      4 =>
+        mangaCollectionTag != null
+            ? HidingFloatingActionButton(
+                key: const Key('manga'),
+                scrollCtrl: _mangaScrollCtrl,
+                child: Column(
+                  mainAxisSize: .min,
+                  children: [
+                    CollectionFilterFloatingAction(mangaCollectionTag),
+                    if (formFactor == .phone || !home.didExpandMangaCollection) ...[
+                      const SizedBox(height: Theming.offset),
+                      CollectionFloatingAction(mangaCollectionTag),
+                    ],
+                  ],
+                ),
+              )
+            : null,
+      _ => null,
+    };
 
-        return AdaptiveScaffold(
-          topBar: hidingTopBar,
-          floatingAction: floatingAction,
-          navigationConfig: navigationConfig,
-          child: child,
-        );
-      },
+    final child = Stack(
+      children: [
+        tabBarView,
+        if (tabIndex == HomeTab.anime.index || tabIndex == HomeTab.manga.index)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.bounceOut,
+            left: 0,
+            right: 0,
+            bottom: _navBarVisible
+                ? pillBottomOffset
+                : MediaQuery.paddingOf(context).bottom + Theming.offset,
+            child: Center(
+              child: _MediaTypeSwitcherPill(
+                showAnime: tabIndex == HomeTab.anime.index,
+                onChanged: (showAnime) {
+                  _showAnime = showAnime;
+                  _tabCtrl.index = (showAnime ? HomeTab.anime : HomeTab.manga).index;
+                },
+              ),
+            ),
+          )
+        else if (tabIndex == HomeTab.discover.index)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.bounceOut,
+            left: 0,
+            right: 0,
+            bottom: _navBarVisible
+                ? pillBottomOffset
+                : MediaQuery.paddingOf(context).bottom + Theming.offset,
+            child: Center(child: _DiscoverTypeSwitcherPill(ref)),
+          ),
+      ],
+    );
+
+    return AdaptiveScaffold(
+      topBar: hidingTopBar,
+      floatingAction: floatingAction,
+      navigationConfig: navigationConfig,
+      child: child,
     );
   }
 
