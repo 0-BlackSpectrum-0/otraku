@@ -1,16 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
 import 'package:otraku/feature/activity/activities_filter_provider.dart';
 import 'package:otraku/feature/activity/activities_model.dart';
 import 'package:otraku/feature/activity/activity_date_filter.dart';
 import 'package:otraku/feature/feed/feed_date_filter_sheet.dart';
+import 'package:otraku/feature/feed/feed_filter_floating_action.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
-import 'package:otraku/feature/activity/activity_filter_sheet.dart';
 import 'package:otraku/feature/activity/activities_provider.dart';
 import 'package:otraku/feature/activity/activity_card.dart';
 import 'package:otraku/feature/composition/composition_model.dart';
@@ -18,6 +17,7 @@ import 'package:otraku/feature/composition/composition_view.dart';
 import 'package:otraku/feature/settings/settings_provider.dart';
 import 'package:otraku/feature/activity/activity_model.dart';
 import 'package:otraku/util/paged_controller.dart';
+import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/adaptive_scaffold.dart';
 import 'package:otraku/widget/layout/hiding_bar.dart';
 import 'package:otraku/widget/layout/hiding_floating_action_button.dart';
@@ -51,11 +51,17 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
     final l10n = AppLocalizations.of(context)!;
     final userId = widget.tag.userId;
 
-    final floatingAction = viewerId != null
-        ? HidingFloatingActionButton(
-            key: const Key('post'),
-            scrollCtrl: _scrollCtrl,
-            child: FloatingActionButton(
+    final floatingAction = HidingFloatingActionButton(
+      key: const Key('post'),
+      scrollCtrl: _scrollCtrl,
+      child: Column(
+        mainAxisSize: .min,
+        children: [
+          FeedFilterFloatingAction(ref, widget.tag),
+          if (viewerId != null) ...[
+            const SizedBox(height: Theming.offset),
+            FloatingActionButton(
+              heroTag: 'postFab-$userId',
               tooltip: userId == viewerId ? l10n.postsAdd : l10n.postsAddMessage,
               child: const Icon(Icons.edit_outlined),
               onPressed: () => showSheet(
@@ -68,8 +74,10 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
                 ),
               ),
             ),
-          )
-        : null;
+          ],
+        ],
+      ),
+    );
 
     return AdaptiveScaffold(
       topBar: HidingBar(
@@ -105,11 +113,6 @@ class _ActivitiesViewState extends ConsumerState<ActivitiesView> {
                       ),
                       backgroundColor: isFiltered ? ColorScheme.of(context).primary : null,
                       onPressed: () => showFeedDateFilterSheet(context, ref, widget.tag),
-                    ),
-                    IconButton(
-                      tooltip: l10n.filter,
-                      icon: const Icon(Ionicons.funnel_outline),
-                      onPressed: () => showActivityFilterSheet(context, ref, widget.tag),
                     ),
                   ],
                 );

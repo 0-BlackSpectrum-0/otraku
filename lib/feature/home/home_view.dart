@@ -290,7 +290,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
         child: Column(
           mainAxisSize: .min,
           children: [
-            FeedFilterFloatingAction(ref),
+            FeedFilterFloatingAction(ref, HomeActivitiesTag.instance),
             const SizedBox(height: Theming.offset),
             FeedFloatingAction(ref),
           ],
