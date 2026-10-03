@@ -51,8 +51,7 @@ class _CalendarViewState extends State<CalendarView> {
         final options = ref.watch(persistenceProvider.select((s) => s.options));
         final date = ref.watch(calendarFilterProvider.select((s) => s.date));
         final today = DateTime.now();
-        final isBeforeToday =
-            date.day < today.day && date.month == today.month && date.year == today.year;
+        final firstDate = today.subtract(const Duration(days: 7));
 
         return AdaptiveScaffold(
           topBar: TopBar(title: l10n.calendar),
@@ -69,7 +68,7 @@ class _CalendarViewState extends State<CalendarView> {
             const SizedBox(width: Theming.offset),
             SizedBox(
               width: 60,
-              child: isBeforeToday
+              child: DateUtils.isSameDay(date, firstDate)
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.arrow_back_ios_rounded),
@@ -82,7 +81,7 @@ class _CalendarViewState extends State<CalendarView> {
                     showDatePicker(
                       context: context,
                       initialDate: date,
-                      firstDate: today.add(const Duration(days: -1)),
+                      firstDate: firstDate,
                       lastDate: today.add(const Duration(days: 150)),
                     ).then((newDate) {
                       if (newDate != null && newDate != date) {
