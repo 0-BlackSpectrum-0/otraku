@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,7 +16,7 @@ import 'package:otraku/util/theming.dart';
 Future<void> main() async {
   final container = ProviderContainer(retry: (retryCount, error) => null);
   await container.read(persistenceProvider.notifier).init();
-  BackgroundWorker.init(_notificationCtrl);
+  WidgetsBinding.instance.addPostFrameCallback((_) => BackgroundWorker.init(_notificationCtrl));
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -53,7 +54,17 @@ class AppState extends ConsumerState<_App> {
 
     _router = Routes.buildRouter(mustConfirmExit);
 
-    _notificationSubscription = _notificationCtrl.stream.listen(_router.push);
+    _notificationSubscription = _notificationCtrl.stream.listen((payload) {
+      var route = payload;
+      if (payload.startsWith('{')) {
+        try {
+          route = (json.decode(payload) as Map)['route'] as String? ?? '';
+        } catch (_) {
+          return;
+        }
+      }
+      if (route.isNotEmpty) _router.push(route);
+    });
 
     var appMeta = ref.read(persistenceProvider).appMeta;
     if (appMeta.lastAppVersion != appVersion) {

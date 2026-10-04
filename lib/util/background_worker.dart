@@ -59,6 +59,11 @@ class BackgroundWorker {
         android: AndroidInitializationSettings('notification_icon_monochrome'),
         iOS: DarwinInitializationSettings(),
       ),
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload == null) return;
+        notificationCtrl.add(payload);
+      },
     );
 
     // Check if the app was launched by a notification.
@@ -137,7 +142,7 @@ class BackgroundWorker {
     );
     //if (notification is! MediaReleaseNotification) return;
 
-    final payload = json.encode({'type': type});
+    final payload = Routes.notifications;
 
     await _showRich(l10n, notification!, 'Test:$type', payload);
     container.dispose();

@@ -59,6 +59,8 @@ jobs:
           sed -i 's|https://github.com/lotusprey/otraku|https://github.com/0-BlackSpectrum-0/otraku|g' lib/feature/settings/settings_about_view.dart
           # Fix package declaration in MainActivity.kt
           sed -i 's/package com.otraku.app/package com.otraku_fork.app/' android/app/src/main/kotlin/com/example/otraku/MainActivity.kt
+          # Remove the test notification button
+          sed -i '/^        trailing: \[$/,/^        \],$/d' lib/feature/notification/notifications_view.dart
 
       - name: Verify All Replacements
         run: |
@@ -72,9 +74,9 @@ jobs:
             && echo "✅ namespace replaced" \
             || { echo "❌ namespace replacement failed!"; FAILED=1; }
 
-          grep -qv 'package="com.otraku.app"' android/app/src/main/AndroidManifest.xml \
-          && echo "✅ AndroidManifest.xml package attribute removed" \
-          || { echo "❌ AndroidManifest.xml package attribute still present!"; FAILED=1; }
+          ! grep -q 'package="com.otraku.app"' android/app/src/main/AndroidManifest.xml \
+            && echo "✅ AndroidManifest.xml package attribute removed" \
+            || { echo "❌ AndroidManifest.xml package attribute still present!"; FAILED=1; }
 
           grep -q 'Otraku Fork' android/app/src/main/res/values/strings.xml \
             && echo "✅ strings.xml app name replaced" \
@@ -87,6 +89,10 @@ jobs:
           grep -q 'package com.otraku_fork.app' android/app/src/main/kotlin/com/example/otraku/MainActivity.kt \
             && echo "✅ MainActivity package replaced" \
             || { echo "❌ MainActivity package replacement failed!"; FAILED=1; }
+          
+          ! grep -q 'Send test notification' lib/feature/notification/notifications_view.dart \
+            && echo "✅ Test notification button removed" \
+            || { echo "❌ Test button removal failed!"; FAILED=1; }
 
           if [ $FAILED -ne 0 ]; then
             echo ""
