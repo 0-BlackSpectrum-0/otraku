@@ -32,7 +32,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> with SingleTickerPr
   final _scrollCtrl = ScrollController();
   AsyncValue<Settings>? _settings;
   late int _visualIndex = _tabCtrl.index;
-  late int _visualIndex = _tabCtrl.index;
 
   @override
   void initState() {
@@ -122,7 +121,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> with SingleTickerPr
       ),
       floatingAction: floatingAction,
       navigationConfig: NavigationConfig(
-        selected: _visualIndex,
         selected: _visualIndex,
         onSame: (_) => _scrollCtrl.scrollToTop(),
         onChanged: (i) => _tabCtrl.index = i,
