@@ -35,6 +35,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
   late final _tabCtrl = TabController(length: 2, vsync: this);
   final _scrollCtrl = ScrollController();
   late int _visualIndex = _tabCtrl.index;
+  late int _visualIndex = _tabCtrl.index;
 
   int _primaryBarChartTab = 0;
   int _secondaryBarChartTab = 0;
@@ -42,6 +43,10 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
+    _tabCtrl.animation?.addListener(() {
+      final i = _tabCtrl.animation!.value.round();
+      if (i != _visualIndex) setState(() => _visualIndex = i);
+    });
     _tabCtrl.animation?.addListener(() {
       final i = _tabCtrl.animation!.value.round();
       if (i != _visualIndex) setState(() => _visualIndex = i);
@@ -116,6 +121,7 @@ class _StatisticsViewState extends State<StatisticsView> with SingleTickerProvid
       //     ? const TopBar(key: Key('0'), title: 'Anime Statistics')
       //     : const TopBar(key: Key('1'), title: 'Manga Statistics'),
       navigationConfig: NavigationConfig(
+        selected: _visualIndex,
         selected: _visualIndex,
         onChanged: (i) => _tabCtrl.index = i,
         onSame: (_) => _scrollCtrl.scrollToTop(),
