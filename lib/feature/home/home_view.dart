@@ -54,6 +54,7 @@ class HomeView extends ConsumerStatefulWidget {
 }
 
 class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderStateMixin {
+  final _forumFocusNode = FocusNode();
   final _animeFocusNode = FocusNode();
   final _mangaFocusNode = FocusNode();
   final _discoverFocusNode = FocusNode();
@@ -106,6 +107,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     _tabCtrl.addListener(
       () => WidgetsBinding.instance.addPostFrameCallback((_) {
         final tab = HomeTab.values[_tabCtrl.index];
+        if (tab != .forum) _forumFocusNode.unfocus();
         if (tab != .anime) _animeFocusNode.unfocus();
         if (tab != .manga) _mangaFocusNode.unfocus();
         if (tab != .discover) _discoverFocusNode.unfocus();
@@ -129,6 +131,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     ref.invalidate(discoverProvider);
     ref.invalidate(activitiesProvider(HomeActivitiesTag.instance));
 
+    _forumFocusNode.dispose();
     _animeFocusNode.dispose();
     _mangaFocusNode.dispose();
     _discoverFocusNode.dispose();
@@ -194,7 +197,10 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
         },
         trailing: const [FeedTopBarTrailingContent()],
       ),
-      1 => TopBar(key: const Key('forumTopBar'), trailing: const [ForumTopBarTrailingContent()]),
+      1 => TopBar(
+        key: const Key('forumTopBar'),
+        trailing: [ForumTopBarTrailingContent(_forumFocusNode)],
+      ),
       2 => TopBar(
         key: const Key('discoverTobBar'),
         trailing: [DiscoverTopBarTrailingContent(_discoverFocusNode)],
@@ -236,13 +242,25 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
       },
       selected: _navIndexForTab(HomeTab.values[_tabCtrl.index]),
       onChanged: (i) => context.go(Routes.home(_tabForNavIndex(i))),
-      onSame: (i) {
+      onSame: (i) async {
         switch (_tabForNavIndex(i)) {
           case .feed:
-            _feedScrollCtrl.scrollToTop();
+            if (_feedScrollCtrl.position.pixels > 0) {
+              _feedScrollCtrl.scrollToTop();
+              return;
+            }
+            if (ref.read(viewerIdProvider) != null) {
+              await context.push(Routes.notifications);
+              if (!mounted) return;
+              ref.read(settingsProvider.notifier).clearUnread();
+            }
 
           case .forum:
-            _forumScrollCtrl.scrollToTop();
+            if (_feedScrollCtrl.position.pixels > 0) {
+              _forumScrollCtrl.scrollToTop();
+              return;
+            }
+            _toggleSearchFocus(_forumFocusNode);
 
           case .anime:
             if (_animeScrollCtrl.position.pixels > 0) {
