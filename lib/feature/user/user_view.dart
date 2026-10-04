@@ -130,7 +130,13 @@ class _UserView extends StatelessWidget {
 
         final refreshControl = MediaQuery(
           data: mediaQuery.copyWith(padding: mediaQuery.padding.copyWith(top: 0)),
-          child: SliverRefreshControl(onRefresh: () => ref.invalidate(userProvider(tag))),
+          child: SliverRefreshControl(
+            onRefresh: () {
+              ref.invalidate(userProvider(tag));
+              final id = user.value?.id;
+              if (id != null) ref.invalidate(userHasReviewsProvider(id));
+            },
+          ),
         );
 
         return user.unwrapPrevious().when(
@@ -179,7 +185,7 @@ class _UserView extends StatelessWidget {
   }
 }
 
-class _ButtonRow extends StatelessWidget {
+class _ButtonRow extends ConsumerWidget {
   const _ButtonRow(this.userId, this.isViewer, this.highContrast);
 
   final int userId;
@@ -187,7 +193,8 @@ class _ButtonRow extends StatelessWidget {
   final bool highContrast;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasReviews = ref.watch(userHasReviewsProvider(userId)).value ?? false;
     final l10n = AppLocalizations.of(context)!;
     final buttonHeight =
         Theming.iconBig +
@@ -235,12 +242,13 @@ class _ButtonRow extends StatelessWidget {
         highContrast: highContrast,
         onTap: () => context.push(Routes.statistics(userId)),
       ),
-      _Button(
-        label: l10n.reviews,
-        icon: Icons.rate_review,
-        highContrast: highContrast,
-        onTap: () => context.push(Routes.reviews(userId)),
-      ),
+      if (hasReviews)
+        _Button(
+          label: l10n.reviews,
+          icon: Icons.rate_review,
+          highContrast: highContrast,
+          onTap: () => context.push(Routes.reviews(userId)),
+        ),
     ];
 
     return SliverConstrainedView(
