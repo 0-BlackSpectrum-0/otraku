@@ -86,6 +86,7 @@ abstract class GqlQuery {
             format
             title {userPreferred} 
             status(version: 2)
+            startDate {year month day}
             coverImage {extraLarge large medium}
             mediaListEntry {status}
           }

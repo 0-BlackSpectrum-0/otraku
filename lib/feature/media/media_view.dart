@@ -10,6 +10,7 @@ import 'package:otraku/feature/media/media_following_view.dart';
 import 'package:otraku/feature/media/media_models.dart';
 import 'package:otraku/feature/media/media_provider.dart';
 import 'package:otraku/feature/media/media_recommendations_view.dart';
+import 'package:otraku/feature/media/media_related_filter.dart';
 import 'package:otraku/feature/media/media_related_view.dart';
 import 'package:otraku/feature/media/media_reviews_view.dart';
 import 'package:otraku/feature/media/media_staff_view.dart';
@@ -56,12 +57,30 @@ class _MediaViewState extends State<MediaView> {
 
         final toggleFavorite = () => ref.read(mediaProvider(widget.id).notifier).toggleFavorite();
 
+        final onRelatedTab = ref.watch(mediaOnRelatedTabProvider(widget.id));
+
+        final onRecommendationsTab = ref.watch(mediaOnRecommendationsTabProvider(widget.id));
+        final loggedIn = ref.watch(viewerIdProvider) != null;
+
         return AdaptiveScaffold(
           floatingAction: media.value != null
               ? HidingFloatingActionButton(
                   key: const Key('edit'),
                   scrollCtrl: _scrollCtrl,
-                  child: MediaEditButton(media.value!),
+                  child: Column(
+                    mainAxisSize: .min,
+                    children: [
+                      if (onRelatedTab && media.value!.related.isNotEmpty) ...[
+                        MediaRelatedFilterButton(widget.id, media.value!.related),
+                        const SizedBox(height: Theming.offset),
+                      ],
+                      if (onRecommendationsTab && loggedIn) ...[
+                        MediaAddRecommendationButton(widget.id, media.value!.info.isAnime),
+                        const SizedBox(height: Theming.offset),
+                      ],
+                      MediaEditButton(media.value!),
+                    ],
+                  ),
                 )
               : null,
           child: switch (Theming.of(context).formFactor) {
@@ -287,6 +306,7 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
     disposeMediaThreads = ref.read(mediaThreadsProvider(widget.id).notifier).dispose;
     disposeMediaFollowing = ref.read(mediaFollowingProvider(widget.id).notifier).dispose;
     disposeMediaActivities = ref.read(activitiesProvider(_mediaActivitiesTag).notifier).dispose;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncRelatedTab());
   }
 
   @override
@@ -312,6 +332,7 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
       final pos = _scrollCtrl.positions.last;
       if (pos.minScrollExtent == pos.maxScrollExtent) _loadNextPage();
     }
+    _syncRelatedTab();
   }
 
   void _scrollListener() {
@@ -360,6 +381,7 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
             ),
           ),
         MediaRelatedSubview(
+          id: widget.id,
           relations: widget.media.related,
           scrollCtrl: _scrollCtrl,
           invalidate: () => ref.invalidate(mediaProvider(widget.id)),
@@ -416,5 +438,14 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
         ),
       ],
     );
+  }
+
+  void _syncRelatedTab() {
+    if (!mounted) return;
+    final index = widget.withOverview ? widget.tabCtrl.index : widget.tabCtrl.index + 1;
+    ref.read(mediaOnRelatedTabProvider(widget.id).notifier).set(index == MediaTab.relations.index);
+    ref
+        .read(mediaOnRecommendationsTabProvider(widget.id).notifier)
+        .set(index == MediaTab.recommendations.index);
   }
 }

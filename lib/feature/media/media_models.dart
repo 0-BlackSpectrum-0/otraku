@@ -104,6 +104,8 @@ class RelatedMedia {
     required this.format,
     required this.entryStatus,
     required this.releaseStatus,
+    required this.releaseDate,
+    required this.releaseOrder,
   });
 
   factory RelatedMedia(Map<String, dynamic> map, ImageQuality imageQuality) => RelatedMedia._(
@@ -115,7 +117,17 @@ class RelatedMedia {
     entryStatus: ListStatus.from(map['node']['mediaListEntry']?['status']),
     releaseStatus: ReleaseStatus.from(map['node']['status']),
     isAnime: map['node']['type'] == 'ANIME',
+    releaseDate: StringExtension.fromFuzzyDate(map['node']['startDate']),
+    releaseOrder: _releaseOrder(map['node']['startDate']),
   );
+
+  static int? _releaseOrder(Map<String, dynamic> date) {
+    final year = date['year'];
+    if (year == null) return null;
+    return (year as int) * 10000 +
+        ((date['month'] ?? 0) as int) * 100 +
+        ((date['day'] ?? 0) as int);
+  }
 
   final int id;
   final bool isAnime;
@@ -125,6 +137,8 @@ class RelatedMedia {
   final MediaFormat? format;
   final ListStatus? entryStatus;
   final ReleaseStatus? releaseStatus;
+  final String? releaseDate;
+  final int? releaseOrder;
 }
 
 class MediaRelatedItem implements TileModelable {

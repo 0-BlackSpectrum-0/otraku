@@ -21,6 +21,9 @@ final mediaProvider = AsyncNotifierProvider.autoDispose.family<MediaNotifier, Me
 final mediaConnectionsProvider = AsyncNotifierProvider.autoDispose
     .family<MediaRelationsNotifier, MediaConnections, int>(MediaRelationsNotifier.new);
 
+final mediaOnRecommendationsTabProvider = NotifierProvider.autoDispose
+    .family<MediaOnRecommendationsTabNotifier, bool, int>(MediaOnRecommendationsTabNotifier.new);
+
 final mediaThreadsProvider = AsyncNotifierProvider.autoDispose
     .family<MediaThreadsNotifier, Paged<ThreadItem>, int>(MediaThreadsNotifier.new);
 
@@ -235,6 +238,29 @@ class MediaRelationsNotifier extends AsyncNotifier<MediaConnections> {
           : 'RATE_DOWN',
     }).getErrorOrNull();
   }
+
+  Future<Object?> addRecommendation(int recId) async {
+    final err = await rateRecommendation(recId, true);
+    if (err != null) return err;
+
+    final old = state.value;
+    if (old == null) return null;
+
+    final reset = old.copyWith(recommendations: const Paged());
+    try {
+      state = AsyncData(await _fetch(reset, .recommendations));
+    } catch (_) {}
+    return null;
+  }
+}
+
+class MediaOnRecommendationsTabNotifier extends Notifier<bool> {
+  MediaOnRecommendationsTabNotifier(this.arg);
+  final int arg;
+
+  @override
+  bool build() => false;
+  void set(bool value) => state = value;
 }
 
 class MediaThreadsNotifier extends AsyncNotifier<Paged<ThreadItem>> {
