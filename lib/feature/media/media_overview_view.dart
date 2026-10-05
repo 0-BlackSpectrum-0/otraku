@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -362,6 +364,7 @@ class _TagsWrap extends StatefulWidget {
 
 class __TagsWrapState extends State<_TagsWrap> {
   bool? _showSpoilers;
+  final _revealed = <String>{};
 
   @override
   void initState() {
@@ -376,50 +379,83 @@ class __TagsWrapState extends State<_TagsWrap> {
 
   @override
   Widget build(BuildContext context) {
-    final tags = _showSpoilers == null || _showSpoilers!
-        ? widget.tags
-        : widget.tags.where((t) => !t.isSpoiler).toList();
-
     final l10n = AppLocalizations.of(context)!;
     final spoilerColor = ColorScheme.of(context).error;
 
     return _Wrap(
-      title: l10n.tags(tags.length),
+      title: l10n.tags(widget.tags.length),
       trailingAction: _showSpoilers != null
           ? IconButton(
               icon: _showSpoilers!
                   ? const Icon(Ionicons.eye_off_outline)
                   : const Icon(Ionicons.eye_outline),
               tooltip: _showSpoilers! ? l10n.actionSpoilersHide : l10n.actionSpoilersShow,
-              onPressed: () => setState(() => _showSpoilers = !_showSpoilers!),
+              onPressed: () => setState(() {
+                _showSpoilers = !_showSpoilers!;
+                _revealed.clear();
+              }),
             )
           : null,
-      children: tags.map((tag) => _buildTagChip(tag, spoilerColor)).toList(),
+      children: widget.tags.map((tag) => _buildTagChip(tag, spoilerColor)).toList(),
     );
   }
 
   Widget _buildTagChip(Tag tag, Color spoilerColor) {
+    final blurred = tag.isSpoiler && _showSpoilers == false && !_revealed.contains(tag.name);
+
     return _Chip(
-      label: Text(
-        '${tag.name} ${tag.rank}%',
-        style: tag.isSpoiler ? TextStyle(color: spoilerColor) : null,
+      label: _BlurText(
+        blurred: blurred,
+        child: Text(
+          '${tag.name} ${tag.rank}%',
+          style: tag.isSpoiler ? TextStyle(color: spoilerColor) : null,
+        ),
       ),
       highContrast: widget.highContrast,
-      onTap: () {
-        final notifier = widget.ref.read(discoverFilterProvider.notifier);
-        final filter = notifier.state.copyWith(
-          type: widget.isAnime ? .anime : .manga,
-          search: '',
-          mediaFilter: DiscoverMediaFilter(notifier.state.mediaFilter.sort),
-        )..mediaFilter.tagIn.add(tag.name);
-        notifier.state = filter;
+      onTap: blurred
+          ? null
+          : () {
+              final notifier = widget.ref.read(discoverFilterProvider.notifier);
+              final filter = notifier.state.copyWith(
+                type: widget.isAnime ? .anime : .manga,
+                search: '',
+                mediaFilter: DiscoverMediaFilter(notifier.state.mediaFilter.sort),
+              )..mediaFilter.tagIn.add(tag.name);
+              notifier.state = filter;
 
-        context.go(Routes.home(.discover));
+              context.go(Routes.home(.discover));
+            },
+      onLongTap: () async {
+        if (blurred) setState(() => _revealed.add(tag.name));
+        await showDialog(
+          context: context,
+          builder: (context) => TextDialog(title: tag.name, text: tag.desciption),
+        );
+        if (mounted) setState(() => _revealed.remove(tag.name));
       },
-      onLongTap: () => showDialog(
-        context: context,
-        builder: (context) => TextDialog(title: tag.name, text: tag.desciption),
-      ),
+    );
+  }
+}
+
+class _BlurText extends StatelessWidget {
+  const _BlurText({required this.blurred, required this.child});
+
+  final bool blurred;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: blurred ? 8.0 : 0.0),
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutExpo,
+      child: child,
+      builder: (context, sigma, child) => sigma == 0
+          ? child!
+          : ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: .decal),
+              child: child,
+            ),
     );
   }
 }
