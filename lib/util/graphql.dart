@@ -417,6 +417,15 @@ abstract class GqlQuery {
     }
   ''';
 
+  static const userReviewCount = r'''
+    query UserReviewCount($userId: Int) {
+      Page(perPage: 1){
+        pageInfo {total}
+        reviews(userId: $userId) {id}
+      }
+    }
+  ''';
+
   static const user = r'''
       query User($id: Int, $name: String) {
         User(id: $id, name: $name) {

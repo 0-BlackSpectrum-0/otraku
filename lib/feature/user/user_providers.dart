@@ -16,6 +16,13 @@ final userProvider = AsyncNotifierProvider.autoDispose.family<UserNotifier, User
   UserNotifier.new,
 );
 
+final userHasReviewsProvider = FutureProvider.autoDispose.family<bool, int>((ref, userId) async {
+  final data = await ref.read(repositoryProvider).request(GqlQuery.userReviewCount, {
+    'userId': userId,
+  });
+  return (data['Page']['pageInfo']['total'] ?? 0) > 0;
+});
+
 class UserNotifier extends AsyncNotifier<User> {
   UserNotifier(this.arg);
 
