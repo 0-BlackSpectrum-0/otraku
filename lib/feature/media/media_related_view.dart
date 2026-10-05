@@ -1,6 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:otraku/extension/build_context_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
+import 'package:otraku/feature/media/media_related_filter.dart';
 import 'package:otraku/feature/media/media_route_tile.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
@@ -11,28 +13,33 @@ import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/text_rail.dart';
 import 'package:otraku/feature/media/media_models.dart';
 
-class MediaRelatedSubview extends StatelessWidget {
+class MediaRelatedSubview extends ConsumerWidget {
   const MediaRelatedSubview({
+    required this.id,
     required this.relations,
     required this.scrollCtrl,
     required this.invalidate,
     required this.highContrast,
   });
 
+  final int id;
   final List<RelatedMedia> relations;
   final ScrollController scrollCtrl;
   final void Function() invalidate;
   final bool highContrast;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(mediaRelatedFilterProvider(id));
+    final shown = filter.sorted(relations.where(filter.matches).toList());
+
     return ConstrainedView(
       child: CustomScrollView(
         controller: scrollCtrl,
         physics: Theming.bouncyPhysics,
         slivers: [
           SliverRefreshControl(onRefresh: invalidate),
-          _MediaRelatedGrid(relations, highContrast),
+          _MediaRelatedGrid(shown, highContrast),
           const SliverFooter(),
         ],
       ),
@@ -62,12 +69,15 @@ class _MediaRelatedGrid extends StatelessWidget {
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithMinWidthAndFixedHeight(minWidth: 270, height: tileHeight),
       delegate: SliverChildBuilderDelegate(childCount: items.length, (context, i) {
+        final releaseDate = items[i].releaseDate;
+
         final textRailItems = <String, bool>{
           if (items[i].relationType != null) items[i].relationType!.localize(l10n): true,
           if (items[i].entryStatus != null)
             items[i].entryStatus!.localize(l10n, items[i].isAnime): true,
           if (items[i].format != null) items[i].format!.localize(l10n): false,
           if (items[i].releaseStatus != null) items[i].releaseStatus!.localize(l10n): false,
+          if (releaseDate != null) releaseDate.split(' ').last: false,
         };
 
         return CardExtension.highContrast(highContrast)(
