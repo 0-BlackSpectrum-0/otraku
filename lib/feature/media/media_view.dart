@@ -59,6 +59,9 @@ class _MediaViewState extends State<MediaView> {
 
         final onRelatedTab = ref.watch(mediaOnRelatedTabProvider(widget.id));
 
+        final onRecommendationsTab = ref.watch(mediaOnRecommendationsTabProvider(widget.id));
+        final loggedIn = ref.watch(viewerIdProvider) != null;
+
         return AdaptiveScaffold(
           floatingAction: media.value != null
               ? HidingFloatingActionButton(
@@ -71,7 +74,10 @@ class _MediaViewState extends State<MediaView> {
                         MediaRelatedFilterButton(widget.id, media.value!.related),
                         const SizedBox(height: Theming.offset),
                       ],
-
+                      if (onRecommendationsTab && loggedIn) ...[
+                        MediaAddRecommendationButton(widget.id, media.value!.info.isAnime),
+                        const SizedBox(height: Theming.offset),
+                      ],
                       MediaEditButton(media.value!),
                     ],
                   ),
@@ -438,5 +444,8 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
     if (!mounted) return;
     final index = widget.withOverview ? widget.tabCtrl.index : widget.tabCtrl.index + 1;
     ref.read(mediaOnRelatedTabProvider(widget.id).notifier).set(index == MediaTab.relations.index);
+    ref
+        .read(mediaOnRecommendationsTabProvider(widget.id).notifier)
+        .set(index == MediaTab.recommendations.index);
   }
 }

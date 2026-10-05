@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:otraku/feature/edit/edit_view.dart';
+import 'package:otraku/feature/media/media_add_recommendation_sheet.dart';
 import 'package:otraku/feature/media/media_models.dart';
 import 'package:otraku/feature/media/media_related_filter.dart';
 import 'package:otraku/localizations/gen.dart';
@@ -59,6 +60,24 @@ class MediaRelatedFilterButton extends ConsumerWidget {
               child: const Icon(Ionicons.funnel_outline),
             )
           : const Icon(Ionicons.funnel_outline),
+    );
+  }
+}
+
+class MediaAddRecommendationButton extends StatelessWidget {
+  const MediaAddRecommendationButton(this.id, this.isAnime)
+    : super(key: const Key('mediaAddRecommendation'));
+
+  final int id;
+  final bool isAnime;
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      heroTag: 'mediaAddRecommendationFab-$id',
+      tooltip: AppLocalizations.of(context)!.actionAdd,
+      onPressed: () => showAddRecommendationSheet(context, id, isAnime),
+      child: const Icon(Icons.thumb_up_outlined),
     );
   }
 }
