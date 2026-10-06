@@ -6,9 +6,9 @@ import 'package:otraku/util/debounce.dart';
 import 'package:otraku/widget/input/search_field.dart';
 
 class ForumTopBarTrailingContent extends StatelessWidget {
-  const ForumTopBarTrailingContent(this.focusNode);
+  const ForumTopBarTrailingContent([this.focusNode]);
 
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
