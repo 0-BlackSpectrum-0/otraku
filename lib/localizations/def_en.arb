@@ -305,6 +305,7 @@
     "mediaAdult": "Adult",
     "mediaChapters": "Chapters",
     "mediaDuration": "Duration",
+    "mediaDubbed": "Dubbed",
     "mediaEpisode": "Ep {episode}",
     "@mediaEpisode": {
         "description": "Next episode to be aired",
@@ -445,6 +446,7 @@
     "mediaTitleNative": "Native",
     "mediaTitleRomaji": "Romaji",
     "mediaTitleSynonym": "Synonym",
+    "mediaTranslated": "Translated",
     "mediaType": "Media Type",
     "mediaTypeAnime": "Anime",
     "mediaTypeManga": "Manga",

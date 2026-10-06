@@ -66,6 +66,10 @@ class _Tile extends StatelessWidget {
 
     final detailTextStyle = TextTheme.of(context).labelSmall;
 
+    final tag = item.isAnime
+        ? (item.isDubbed ? l10n.mediaDubbed : null)
+        : (item.isTranslated ? l10n.mediaTranslated : null);
+
     return CardExtension.highContrast(highContrast)(
       child: MediaRouteTile(
         id: item.id,
@@ -123,6 +127,21 @@ class _Tile extends StatelessWidget {
                           color: ColorScheme.of(context).onSurfaceVariant,
                         ),
                         Text(item.popularity.toString(), style: detailTextStyle),
+                        if (tag != null) ...[
+                          Icon(
+                            Icons.translate_rounded,
+                            size: 15,
+                            color: ColorScheme.of(context).onSurfaceVariant,
+                          ),
+                          Flexible(
+                            child: Text(
+                              tag,
+                              style: detailTextStyle,
+                              overflow: .ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],

@@ -662,6 +662,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaDuration => 'Süre';
 
   @override
+  String get mediaDubbed => 'Dubbed';
+
+  @override
   String mediaEpisode(int episode) {
     return '$episode.Bölüm';
   }
@@ -954,6 +957,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaTitleSynonym => 'Eş Anlamlı';
+
+  @override
+  String get mediaTranslated => 'Translated';
 
   @override
   String get mediaType => 'Medya Türü';

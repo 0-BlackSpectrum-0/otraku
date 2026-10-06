@@ -237,6 +237,13 @@ abstract class GqlQuery {
           startDate {year}
           isAdult
           mediaListEntry {status}
+          externalLinks {language}
+          characters(role: MAIN, perPage: 2){
+            edges {
+            node {id}
+            voiceActors(language: ENGLISH) {id}
+            }
+          }
         }
       }
     }
