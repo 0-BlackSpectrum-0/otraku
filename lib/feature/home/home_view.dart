@@ -256,7 +256,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
             }
 
           case .forum:
-            if (_feedScrollCtrl.position.pixels > 0) {
+            if (_forumScrollCtrl.position.pixels > 0) {
               _forumScrollCtrl.scrollToTop();
               return;
             }
