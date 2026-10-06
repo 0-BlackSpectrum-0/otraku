@@ -99,6 +99,8 @@ class DiscoverMediaItem {
     required this.averageScore,
     required this.popularity,
     required this.isAdult,
+    required this.isDubbed,
+    required this.isTranslated,
   });
 
   factory DiscoverMediaItem(Map<String, dynamic> map, ImageQuality imageQuality) =>
@@ -114,6 +116,12 @@ class DiscoverMediaItem {
         averageScore: map['averageScore'] ?? 0,
         popularity: map['popularity'] ?? 0,
         isAdult: map['isAdult'] ?? false,
+        isDubbed: ((map['characters']?['edges'] as List?) ?? const []).any(
+          (e) => ((e['voiceActors'] as List?) ?? const []).isNotEmpty,
+        ),
+        isTranslated: ((map['externalLinks'] as List?) ?? const []).any(
+          (l) => l['language'] == 'English',
+        ),
       );
 
   final int id;
@@ -127,6 +135,8 @@ class DiscoverMediaItem {
   final int averageScore;
   final int popularity;
   final bool isAdult;
+  final bool isDubbed;
+  final bool isTranslated;
 }
 
 class DiscoverRecommendationItem {

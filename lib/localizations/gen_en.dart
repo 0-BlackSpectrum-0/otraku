@@ -662,6 +662,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDuration => 'Duration';
 
   @override
+  String get mediaDubbed => 'Dubbed';
+
+  @override
   String mediaEpisode(int episode) {
     return 'Ep $episode';
   }
@@ -954,6 +957,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaTitleSynonym => 'Synonym';
+
+  @override
+  String get mediaTranslated => 'Translated';
 
   @override
   String get mediaType => 'Media Type';

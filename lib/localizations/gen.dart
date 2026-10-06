@@ -1233,6 +1233,12 @@ abstract class AppLocalizations {
   /// **'Duration'**
   String get mediaDuration;
 
+  /// No description provided for @mediaDubbed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dubbed'**
+  String get mediaDubbed;
+
   /// Next episode to be aired
   ///
   /// In en, this message translates to:
@@ -1742,6 +1748,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Synonym'**
   String get mediaTitleSynonym;
+
+  /// No description provided for @mediaTranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated'**
+  String get mediaTranslated;
 
   /// No description provided for @mediaType.
   ///
