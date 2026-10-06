@@ -22,17 +22,26 @@ class _MediaEditButtonState extends State<MediaEditButton> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final media = widget.media;
-    return FloatingActionButton(
-      tooltip: media.entryEdit.listStatus == null ? l10n.actionAdd : l10n.actionEdit,
-      child: media.entryEdit.listStatus == null
-          ? const Icon(Icons.add)
-          : const Icon(Icons.edit_outlined),
-      onPressed: () => showSheet(
-        context,
-        EditView((
-          id: media.info.id,
-          setComplete: false,
-        ), callback: (entryEdit) => setState(() => media.entryEdit = entryEdit)),
+    final progress = media.entryEdit.progress;
+    return Badge(
+      isLabelVisible: progress > 0,
+      label: Text('$progress'),
+      alignment: .topStart,
+      offset: const Offset(-4, -4),
+      backgroundColor: ColorScheme.of(context).primary,
+      textColor: ColorScheme.of(context).onPrimary,
+      child: FloatingActionButton(
+        tooltip: media.entryEdit.listStatus == null ? l10n.actionAdd : l10n.actionEdit,
+        child: media.entryEdit.listStatus == null
+            ? const Icon(Icons.add)
+            : const Icon(Icons.edit_outlined),
+        onPressed: () => showSheet(
+          context,
+          EditView((
+            id: media.info.id,
+            setComplete: false,
+          ), callback: (entryEdit) => setState(() => media.entryEdit = entryEdit)),
+        ),
       ),
     );
   }
