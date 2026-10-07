@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:otraku/extension/date_time_extension.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/media/media_models.dart';
+import 'package:otraku/feature/media/media_tab_bar.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/content_header.dart';
@@ -71,29 +72,29 @@ class MediaHeader extends StatelessWidget {
       siteUrl: media?.info.siteUrl,
       title: media?.info.preferredTitle,
       details: [TextRail(textRailItems, style: TextTheme.of(context).labelMedium)],
-      tabBarConfig: tabCtrl != null && scrollToTop != null
-          ? (tabCtrl: tabCtrl!, scrollToTop: scrollToTop!, tabs: tabsWithOverview(l10n))
+      tabBar: tabCtrl != null && scrollToTop != null
+          ? MediaTabBar(tabCtrl: tabCtrl!, withOverview: true, scrollToTop: scrollToTop!)
           : null,
       trailingTopButtons: [if (media != null) _FavoriteButton(media!.info, toggleFavorite, l10n)],
     );
   }
 
-  static List<Tab> tabsWithoutOverview(AppLocalizations l10n) => [
-    Tab(text: l10n.related),
-    Tab(text: l10n.characters),
-    Tab(text: l10n.staff),
-    Tab(text: l10n.reviews),
-    Tab(text: l10n.threads),
-    Tab(text: l10n.followed),
-    Tab(text: l10n.activities),
-    Tab(text: l10n.recommendations),
-    Tab(text: l10n.statistics),
-  ];
+  // static List<Tab> tabsWithoutOverview(AppLocalizations l10n) => [
+  //   Tab(text: l10n.related),
+  //   Tab(text: l10n.characters),
+  //   Tab(text: l10n.staff),
+  //   Tab(text: l10n.reviews),
+  //   Tab(text: l10n.threads),
+  //   Tab(text: l10n.followed),
+  //   Tab(text: l10n.activities),
+  //   Tab(text: l10n.recommendations),
+  //   Tab(text: l10n.statistics),
+  // ];
 
-  static List<Tab> tabsWithOverview(AppLocalizations l10n) => [
-    Tab(text: l10n.overview),
-    ...tabsWithoutOverview(l10n),
-  ];
+  // static List<Tab> tabsWithOverview(AppLocalizations l10n) => [
+  //   Tab(text: l10n.overview),
+  //   ...tabsWithoutOverview(l10n),
+  // ];
 }
 
 class _FavoriteButton extends StatefulWidget {

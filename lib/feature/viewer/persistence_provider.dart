@@ -92,6 +92,11 @@ class PersistenceNotifier extends Notifier<Persistence> {
     state = state.copyWith(options: state.options.copyWith(isDarkActive: isDarkActive));
   }
 
+  List<String> get mediaTabOrder =>
+      ((_box.get('mediaTabOrder')?['order'] as List?) ?? const []).cast<String>();
+
+  void setMediaTabOrder(List<String> order) => _box.put('mediaTabOrder', {'order': order});
+
   void refreshViewerDetails(String newName, String newAvatarUrl) {
     final accounts = state.accountGroup.accounts;
     final accountIndex = state.accountGroup.accountIndex;

@@ -15,6 +15,8 @@ import 'package:otraku/feature/media/media_related_view.dart';
 import 'package:otraku/feature/media/media_reviews_view.dart';
 import 'package:otraku/feature/media/media_staff_view.dart';
 import 'package:otraku/feature/media/media_stats_view.dart';
+import 'package:otraku/feature/media/media_tab_bar.dart';
+import 'package:otraku/feature/media/media_tab_order_provider.dart';
 import 'package:otraku/feature/media/media_threads_view.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
@@ -130,10 +132,7 @@ class _CompactView extends StatefulWidget {
 }
 
 class _CompactViewState extends State<_CompactView> with SingleTickerProviderStateMixin {
-  late final _tabCtrl = TabController(
-    length: MediaHeader.tabsWithOverview(widget.l10n).length,
-    vsync: this,
-  );
+  late final _tabCtrl = TabController(length: MediaTab.values.length, vsync: this);
 
   @override
   void dispose() {
@@ -193,8 +192,7 @@ class _LargeView extends StatefulWidget {
 }
 
 class _LargeViewState extends State<_LargeView> with SingleTickerProviderStateMixin {
-  late final _tabs = MediaHeader.tabsWithoutOverview(widget.l10n);
-  late final _tabCtrl = TabController(length: _tabs.length, vsync: this);
+  late final _tabCtrl = TabController(length: MediaTab.values.length - 1, vsync: this);
 
   @override
   void dispose() {
@@ -214,9 +212,11 @@ class _LargeViewState extends State<_LargeView> with SingleTickerProviderStateMi
     );
 
     return DualPaneWithTabBar(
-      tabs: _tabs,
-      tabCtrl: _tabCtrl,
-      scrollToTop: widget.scrollCtrl.scrollToTop,
+      tabBar: MediaTabBar(
+        tabCtrl: _tabCtrl,
+        withOverview: false,
+        scrollToTop: widget.scrollCtrl.scrollToTop,
+      ),
       leftPane: widget.media.unwrapPrevious().when(
         loading: () => CustomScrollView(
           physics: Theming.bouncyPhysics,
@@ -345,18 +345,17 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
   }
 
   void _loadNextPage() {
-    final index = widget.withOverview ? widget.tabCtrl.index : widget.tabCtrl.index + 1;
+    final order = [if (widget.withOverview) MediaTab.info, ...ref.read(mediaTabOrderProvider)];
+    final tab = order[widget.tabCtrl.index];
 
-    if (index == MediaTab.threads.index) {
+    if (tab == MediaTab.threads) {
       ref.read(mediaThreadsProvider(widget.id).notifier).fetch();
-    } else if (index == MediaTab.following.index) {
+    } else if (tab == MediaTab.following) {
       ref.read(mediaFollowingProvider(widget.id).notifier).fetch();
-    } else if (index == MediaTab.activities.index) {
+    } else if (tab == MediaTab.activities) {
       ref.read(activitiesProvider(_mediaActivitiesTag).notifier).fetch();
     } else {
-      ref
-          .read(mediaConnectionsProvider(widget.id).notifier)
-          .fetch(MediaTab.values.elementAt(index));
+      ref.read(mediaConnectionsProvider(widget.id).notifier).fetch(tab);
     }
   }
 
@@ -366,86 +365,94 @@ class __MediaSubViewState extends ConsumerState<_MediaTabs> {
 
     final viewerId = ref.watch(viewerIdProvider);
     final options = ref.watch(persistenceProvider.select((s) => s.options));
+    final order = ref.watch(mediaTabOrderProvider);
 
     return TabBarView(
       controller: widget.tabCtrl,
       children: [
-        if (widget.withOverview)
-          ConstrainedView(
-            padded: false,
-            child: MediaOverviewSubview.asFragment(
-              ref: ref,
-              info: widget.media.info,
-              scrollCtrl: _scrollCtrl,
-              highContrast: options.highContrast,
-            ),
+        for (final tab in [if (widget.withOverview) MediaTab.info, ...order])
+          KeyedSubtree(
+            key: ValueKey(tab),
+            child: switch (tab) {
+              MediaTab.info => ConstrainedView(
+                padded: false,
+                child: MediaOverviewSubview.asFragment(
+                  ref: ref,
+                  info: widget.media.info,
+                  scrollCtrl: _scrollCtrl,
+                  highContrast: options.highContrast,
+                ),
+              ),
+              MediaTab.relations => MediaRelatedSubview(
+                id: widget.id,
+                relations: widget.media.related,
+                scrollCtrl: _scrollCtrl,
+                invalidate: () => ref.invalidate(mediaProvider(widget.id)),
+                highContrast: options.highContrast,
+              ),
+              MediaTab.characters => MediaCharactersSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                highContrast: options.highContrast,
+              ),
+              MediaTab.staff => MediaStaffSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                highContrast: options.highContrast,
+              ),
+              MediaTab.reviews => MediaReviewsSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                bannerUrl: widget.media.info.banner,
+                highContrast: options.highContrast,
+              ),
+              MediaTab.threads => MediaThreadsSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                highContrast: options.highContrast,
+                analogClock: options.analogClock,
+              ),
+              MediaTab.following => MediaFollowingSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                highContrast: options.highContrast,
+              ),
+              MediaTab.activities => MediaActivitiesSubview(
+                ref: ref,
+                tag: _mediaActivitiesTag,
+                scrollCtrl: _scrollCtrl,
+                viewerId: viewerId,
+                options: options,
+              ),
+              MediaTab.recommendations => MediaRecommendationsSubview(
+                id: widget.id,
+                scrollCtrl: _scrollCtrl,
+                rateRecommendation: ref
+                    .read(mediaConnectionsProvider(widget.id).notifier)
+                    .rateRecommendation,
+                highContrast: options.highContrast,
+              ),
+              MediaTab.statistics => MediaStatsSubview(
+                ref: ref,
+                info: widget.media.info,
+                stats: widget.media.stats,
+                scrollCtrl: _scrollCtrl,
+                highContrast: options.highContrast,
+              ),
+            },
           ),
-        MediaRelatedSubview(
-          id: widget.id,
-          relations: widget.media.related,
-          scrollCtrl: _scrollCtrl,
-          invalidate: () => ref.invalidate(mediaProvider(widget.id)),
-          highContrast: options.highContrast,
-        ),
-        MediaCharactersSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          highContrast: options.highContrast,
-        ),
-        MediaStaffSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          highContrast: options.highContrast,
-        ),
-        MediaReviewsSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          bannerUrl: widget.media.info.banner,
-          highContrast: options.highContrast,
-        ),
-        MediaThreadsSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          highContrast: options.highContrast,
-          analogClock: options.analogClock,
-        ),
-        MediaFollowingSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          highContrast: options.highContrast,
-        ),
-        MediaActivitiesSubview(
-          ref: ref,
-          tag: _mediaActivitiesTag,
-          scrollCtrl: _scrollCtrl,
-          viewerId: viewerId,
-          options: options,
-        ),
-        MediaRecommendationsSubview(
-          id: widget.id,
-          scrollCtrl: _scrollCtrl,
-          rateRecommendation: ref
-              .read(mediaConnectionsProvider(widget.id).notifier)
-              .rateRecommendation,
-          highContrast: options.highContrast,
-        ),
-        MediaStatsSubview(
-          ref: ref,
-          info: widget.media.info,
-          stats: widget.media.stats,
-          scrollCtrl: _scrollCtrl,
-          highContrast: options.highContrast,
-        ),
       ],
     );
   }
 
   void _syncRelatedTab() {
     if (!mounted) return;
-    final index = widget.withOverview ? widget.tabCtrl.index : widget.tabCtrl.index + 1;
-    ref.read(mediaOnRelatedTabProvider(widget.id).notifier).set(index == MediaTab.relations.index);
+    final order = [if (widget.withOverview) MediaTab.info, ...ref.read(mediaTabOrderProvider)];
+    final tab = order[widget.tabCtrl.index];
+
+    ref.read(mediaOnRelatedTabProvider(widget.id).notifier).set(tab == MediaTab.relations);
     ref
         .read(mediaOnRecommendationsTabProvider(widget.id).notifier)
-        .set(index == MediaTab.recommendations.index);
+        .set(tab == MediaTab.recommendations);
   }
 }
