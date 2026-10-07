@@ -56,6 +56,7 @@ class ContentHeader extends StatelessWidget {
     this.details = const [],
     this.bannerUrl,
     this.tabBarConfig,
+    this.tabBar,
   });
 
   final String? imageUrl;
@@ -69,6 +70,7 @@ class ContentHeader extends StatelessWidget {
   final String? siteUrl;
   final String? bannerUrl;
   final TabBarConfig? tabBarConfig;
+  final Widget? tabBar;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +100,7 @@ class ContentHeader extends StatelessWidget {
         trailingTopButtons: trailingTopButtons,
         bannerUrl: bannerUrl,
         tabBarConfig: tabBarConfig,
+        tabBar: tabBar,
         topPadding: MediaQuery.paddingOf(context).top,
       ),
     );
@@ -188,6 +191,7 @@ class _Delegate extends SliverPersistentHeaderDelegate {
     required this.tabBarConfig,
     required this.trailingTopButtons,
     required this.topPadding,
+    this.tabBar,
   });
 
   final PreferredSizeWidget content;
@@ -197,10 +201,12 @@ class _Delegate extends SliverPersistentHeaderDelegate {
   final String? siteUrl;
   final String? bannerUrl;
   final TabBarConfig? tabBarConfig;
+  final Widget? tabBar;
 
+  bool get _hasTabBar => tabBarConfig != null || tabBar != null;
   @override
   double get minExtent =>
-      topPadding + Theming.normalTapTarget + (tabBarConfig != null ? Theming.minTapTarget : 0);
+      topPadding + Theming.normalTapTarget + (_hasTabBar ? Theming.minTapTarget : 0);
 
   @override
   double get maxExtent => minExtent + content.preferredSize.height + Theming.offset;
@@ -300,24 +306,26 @@ class _Delegate extends SliverPersistentHeaderDelegate {
       ],
     );
 
-    if (tabBarConfig != null) {
+    if (_hasTabBar) {
       body = Column(
         children: [
           Flexible(child: body),
           Material(
             color: Colors.transparent,
-            child: TabBar(
-              tabAlignment: .center,
-              splashBorderRadius: Theming.borderRadiusSmall,
-              controller: tabBarConfig!.tabCtrl,
-              isScrollable: true,
-              tabs: tabBarConfig!.tabs,
-              onTap: (index) {
-                if (index == tabBarConfig!.tabCtrl.index) {
-                  tabBarConfig!.scrollToTop();
-                }
-              },
-            ),
+            child:
+                tabBar ??
+                TabBar(
+                  tabAlignment: .center,
+                  splashBorderRadius: Theming.borderRadiusSmall,
+                  controller: tabBarConfig!.tabCtrl,
+                  isScrollable: true,
+                  tabs: tabBarConfig!.tabs,
+                  onTap: (index) {
+                    if (index == tabBarConfig!.tabCtrl.index) {
+                      tabBarConfig!.scrollToTop();
+                    }
+                  },
+                ),
           ),
         ],
       );

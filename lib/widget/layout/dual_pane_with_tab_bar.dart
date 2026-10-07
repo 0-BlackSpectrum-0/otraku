@@ -5,16 +5,18 @@ import 'package:otraku/util/theming.dart';
 /// There's a tab bar over the right one.
 class DualPaneWithTabBar extends StatelessWidget {
   const DualPaneWithTabBar({
-    required this.tabs,
-    required this.tabCtrl,
-    required this.scrollToTop,
+    this.tabs,
+    this.tabCtrl,
+    this.scrollToTop,
+    this.tabBar,
     required this.leftPane,
     required this.rightPane,
-  });
+  }) : assert(tabBar != null || (tabs != null && tabCtrl != null && scrollToTop != null));
 
-  final List<Tab> tabs;
-  final TabController tabCtrl;
-  final void Function() scrollToTop;
+  final List<Tab>? tabs;
+  final TabController? tabCtrl;
+  final void Function()? scrollToTop;
+  final Widget? tabBar;
   final Widget leftPane;
   final Widget rightPane;
 
@@ -51,18 +53,20 @@ class DualPaneWithTabBar extends StatelessWidget {
                         alignment: .bottomCenter,
                         child: Material(
                           color: Colors.transparent,
-                          child: TabBar(
-                            isScrollable: true,
-                            tabAlignment: .center,
-                            splashBorderRadius: Theming.borderRadiusSmall,
-                            tabs: tabs,
-                            controller: tabCtrl,
-                            onTap: (index) {
-                              if (index == tabCtrl.index) {
-                                scrollToTop();
-                              }
-                            },
-                          ),
+                          child:
+                              tabBar ??
+                              TabBar(
+                                isScrollable: true,
+                                tabAlignment: .center,
+                                splashBorderRadius: Theming.borderRadiusSmall,
+                                tabs: tabs!,
+                                controller: tabCtrl,
+                                onTap: (index) {
+                                  if (index == tabCtrl!.index) {
+                                    scrollToTop!();
+                                  }
+                                },
+                              ),
                         ),
                       ),
                     ),
