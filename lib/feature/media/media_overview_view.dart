@@ -6,9 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/action_chip_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
+import 'package:otraku/feature/collection/collection_models.dart';
+import 'package:otraku/feature/collection/collection_provider.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
+import 'package:otraku/feature/home/home_provider.dart';
 import 'package:otraku/feature/media/media_provider.dart';
 import 'package:otraku/feature/tag/tag_model.dart';
+import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
@@ -108,6 +112,13 @@ class MediaOverviewSubview extends StatelessWidget {
                 .toList(),
           )
         : null;
+
+    final customLists = [
+      for (final e
+          in ref.read(mediaProvider(info.id)).value?.entryEdit.customLists.entries ??
+              <MapEntry<String, bool>>[])
+        if (e.value) e.key,
+    ];
 
     final studios = info.studios.isNotEmpty
         ? _Wrap(
@@ -221,6 +232,12 @@ class MediaOverviewSubview extends StatelessWidget {
                 _TagsWrap(
                   ref: ref,
                   tags: info.tags,
+                  isAnime: info.isAnime,
+                  highContrast: highContrast,
+                ),
+              if (customLists.isNotEmpty)
+                _CustomListsWrap(
+                  names: customLists,
                   isAnime: info.isAnime,
                   highContrast: highContrast,
                 ),
@@ -457,6 +474,61 @@ class _BlurText extends StatelessWidget {
               child: child,
             ),
     );
+  }
+}
+
+class _CustomListsWrap extends StatelessWidget {
+  const _CustomListsWrap({required this.names, required this.isAnime, required this.highContrast});
+
+  final List<String> names;
+  final bool isAnime;
+  final bool highContrast;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return _Wrap(
+      title: l10n.entryCustomLists,
+      children: [
+        for (final name in names)
+          _Chip(label: Text(name), highContrast: highContrast, onTap: () => _open(context, name)),
+      ],
+    );
+  }
+
+  void _open(BuildContext context, String listName) {
+    final container = ProviderScope.containerOf(context);
+    final viewerId = container.read(viewerIdProvider);
+    if (viewerId == null) return;
+
+    final provider = collectionProvider((userId: viewerId, ofAnime: isAnime));
+    final homeSub = container.listen(homeProvider, (_, _) {});
+    late final ProviderSubscription<AsyncValue<Collection>> sub;
+
+    void close() {
+      sub.close();
+      homeSub.close();
+    }
+
+    bool select(AsyncValue<Collection> value) {
+      if (value.hasError) return true;
+
+      final collection = value.value;
+      if (collection is! FullCollection) return false;
+
+      final index = collection.lists.indexWhere((l) => l.name == listName);
+      if (index != -1) container.read(provider.notifier).changeIndex(index);
+      return true;
+    }
+
+    container.read(homeProvider.notifier).expandCollection(isAnime);
+    context.go(Routes.home(isAnime ? .anime : .manga));
+
+    sub = container.listen(provider, (_, next) {
+      if (select(next)) close;
+    });
+    if (select(container.read(provider))) close;
   }
 }
 
