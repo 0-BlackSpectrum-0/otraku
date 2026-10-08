@@ -56,6 +56,7 @@ class ContentHeader extends StatelessWidget {
     this.details = const [],
     this.bannerUrl,
     this.tabBarConfig,
+    this.onTitleLongPress,
     this.tabBar,
   });
 
@@ -70,6 +71,7 @@ class ContentHeader extends StatelessWidget {
   final String? siteUrl;
   final String? bannerUrl;
   final TabBarConfig? tabBarConfig;
+  final void Function()? onTitleLongPress;
   final Widget? tabBar;
 
   @override
@@ -89,6 +91,7 @@ class ContentHeader extends StatelessWidget {
       imageFit: imageFit,
       title: title,
       details: details,
+      onTitleLongPress: onTitleLongPress,
     );
 
     return SliverPersistentHeader(
@@ -119,6 +122,7 @@ class _ImageContent extends StatelessWidget implements PreferredSizeWidget {
     required this.imageFit,
     required this.title,
     required this.details,
+    this.onTitleLongPress,
   });
 
   final double imageWidth;
@@ -129,6 +133,7 @@ class _ImageContent extends StatelessWidget implements PreferredSizeWidget {
   final BoxFit imageFit;
   final String? title;
   final List<Widget> details;
+  final void Function()? onTitleLongPress;
 
   @override
   Size get preferredSize => Size.fromHeight(imageHeight);
@@ -169,6 +174,7 @@ class _ImageContent extends StatelessWidget implements PreferredSizeWidget {
                     GestureDetector(
                       behavior: .opaque,
                       onTap: () => SnackBarExtension.copy(context, title!),
+                      onLongPress: onTitleLongPress,
                       child: Text(title!, overflow: .fade, style: TextTheme.of(context).bodyLarge),
                     ),
                   ...details,

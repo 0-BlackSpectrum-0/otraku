@@ -74,13 +74,13 @@ class MediaOverviewSubview extends StatelessWidget {
       if (info.countryOfOrigin != null) (l10n.country, info.countryOfOrigin!.localize(l10n)),
     ];
 
-    final titles = [
-      if (info.hashtag != null) (l10n.mediaHashtag, info.hashtag!),
-      if (info.romajiTitle != null) (l10n.mediaTitleRomaji, info.romajiTitle!),
-      if (info.englishTitle != null) (l10n.mediaTitleEnglish, info.englishTitle!),
-      if (info.nativeTitle != null) (l10n.mediaTitleNative, info.nativeTitle!),
-      ...info.synonyms.map((s) => (l10n.mediaTitleSynonym, s)),
-    ];
+    // final titles = [
+    //   if (info.hashtag != null) (l10n.mediaHashtag, info.hashtag!),
+    //   if (info.romajiTitle != null) (l10n.mediaTitleRomaji, info.romajiTitle!),
+    //   if (info.englishTitle != null) (l10n.mediaTitleEnglish, info.englishTitle!),
+    //   if (info.nativeTitle != null) (l10n.mediaTitleNative, info.nativeTitle!),
+    //   ...info.synonyms.map((s) => (l10n.mediaTitleSynonym, s)),
+    // ];
 
     const spacing = SliverToBoxAdapter(child: SizedBox(height: Theming.offset));
     final mediaQuery = MediaQuery.of(context);
@@ -244,9 +244,6 @@ class MediaOverviewSubview extends StatelessWidget {
               ?studios,
               ?producers,
               ?externalLinks,
-              spacing,
-              spacing,
-              SliverTableList(titles, highContrast: highContrast),
             ],
           ),
         ),

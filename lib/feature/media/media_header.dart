@@ -3,6 +3,7 @@ import 'package:otraku/extension/date_time_extension.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/feature/media/media_models.dart';
 import 'package:otraku/feature/media/media_tab_bar.dart';
+import 'package:otraku/feature/media/media_titles_dialog.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/content_header.dart';
@@ -71,6 +72,10 @@ class MediaHeader extends StatelessWidget {
       imageHeroTag: id,
       siteUrl: media?.info.siteUrl,
       title: media?.info.preferredTitle,
+      onTitleLongPress: media == null
+          ? null
+          : () =>
+                showDialog(context: context, builder: (context) => MediaTitlesDialog(media!.info)),
       details: [TextRail(textRailItems, style: TextTheme.of(context).labelMedium)],
       tabBar: tabCtrl != null && scrollToTop != null
           ? MediaTabBar(tabCtrl: tabCtrl!, withOverview: true, scrollToTop: scrollToTop!)
