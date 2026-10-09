@@ -20,6 +20,7 @@ extension StringExtension on String {
     'CN' => 'China',
     'KR' => 'South Korea',
     'TW' => 'Taiwan',
+    'EN' => 'English',
     _ => null,
   };
 

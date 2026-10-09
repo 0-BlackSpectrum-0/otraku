@@ -85,7 +85,7 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
     loadMore: () => ref.read(activitiesProvider(HomeActivitiesTag.instance).notifier).fetch(),
   );
   late final _discoverScrollCtrl = PagedController(
-    loadMore: () => ref.read(discoverProvider.notifier).fetch(),
+    loadMore: () => ref.read(discoverProvider(ref.read(viewerIdProvider)).notifier).fetch(),
   );
   late final _forumScrollCtrl = PagedController(
     loadMore: () => ref.read(forumProvider.notifier).fetch(),
@@ -139,9 +139,6 @@ class _HomeViewState extends ConsumerState<HomeView> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    ref.invalidate(discoverProvider);
-    ref.invalidate(activitiesProvider(HomeActivitiesTag.instance));
-
     _forumFocusNode.dispose();
     _animeFocusNode.dispose();
     _mangaFocusNode.dispose();
