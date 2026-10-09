@@ -46,16 +46,56 @@ class ReplyCard extends StatelessWidget {
         GestureDetector(
           behavior: .opaque,
           onTap: () => context.push(Routes.user(reply.authorId, reply.authorAvatarUrl)),
-          child: Row(
-            mainAxisSize: .min,
-            spacing: Theming.offset,
-            children: [
-              ClipRRect(
-                borderRadius: Theming.borderRadiusSmall,
-                child: CachedImage(reply.authorAvatarUrl, height: avatarSize, width: avatarSize),
-              ),
-              Flexible(child: Text(reply.authorName, overflow: .ellipsis, maxLines: 1)),
-            ],
+          child: LayoutBuilder(
+            builder: (context, box) => Row(
+              mainAxisSize: .min,
+              spacing: Theming.offset,
+              children: [
+                ClipRRect(
+                  borderRadius: Theming.borderRadiusSmall,
+                  child: CachedImage(reply.authorAvatarUrl, height: avatarSize, width: avatarSize),
+                ),
+                Flexible(
+                  child: Row(
+                    mainAxisSize: .min,
+                    spacing: 2,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          reply.authorName,
+                          overflow: .ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(fontWeight: .bold),
+                        ),
+                      ),
+                      if (reply.isAuthorMod)
+                        Icon(Icons.verified, size: 15, color: ColorScheme.of(context).primary),
+                    ],
+                  ),
+                ),
+                if (reply.donatorBadge != null)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: box.maxWidth),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: ColorScheme.of(context).primaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Padding(
+                        padding: const .all(5),
+                        child: Text(
+                          reply.donatorBadge!,
+                          overflow: .ellipsis,
+                          maxLines: 1,
+                          style: TextTheme.of(
+                            context,
+                          ).labelSmall?.copyWith(color: ColorScheme.of(context).primary),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         CardExtension.highContrast(highContrast)(

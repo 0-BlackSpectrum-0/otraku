@@ -4,6 +4,13 @@ import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/util/paged.dart';
 import 'package:otraku/util/markdown.dart';
 
+String? _donatorBadge(Map<String, dynamic> user) {
+  final tier = user['donatorTier'];
+  if ((tier ?? 0) <= 0) return null;
+  final badge = (user['donatorBadge'] as String?)?.trim();
+  return badge == null || badge.isEmpty || tier <= 3 ? 'Donator' : badge;
+}
+
 class ExpandedActivity {
   ExpandedActivity(this.activity, this.replies);
 
@@ -16,6 +23,7 @@ sealed class Activity {
     required this.id,
     required this.authorId,
     required this.authorName,
+    required this.donatorBadge,
     required this.authorAvatarUrl,
     required this.createdAt,
     required this.text,
@@ -28,6 +36,9 @@ sealed class Activity {
     required this.isPinned,
   });
 
+  static bool _isMod(Map<String, dynamic>? user) =>
+      ((user?['moderatorRoles'] as List?)?.isNotEmpty) ?? false;
+
   static Activity? maybe(Map<String, dynamic> map, int? viewerId, ImageQuality imageQuality) {
     try {
       switch (map['type']) {
@@ -38,6 +49,7 @@ sealed class Activity {
             id: map['id'],
             authorId: map['user']['id'],
             authorName: map['user']['name'],
+            donatorBadge: _donatorBadge(map['user']),
             authorAvatarUrl: map['user']['avatar']['large'],
             siteUrl: map['siteUrl'],
             text: parseMarkdown(map['text'] ?? ''),
@@ -48,7 +60,7 @@ sealed class Activity {
             isLiked: map['isLiked'] ?? false,
             isSubscribed: map['isSubscribed'] ?? false,
             isPinned: map['isPinned'] ?? false,
-          );
+          )..isAuthorMod = _isMod(map['user']);
         case 'MESSAGE':
           if (map['messenger'] == null || map['recipient'] == null) return null;
 
@@ -56,6 +68,7 @@ sealed class Activity {
             id: map['id'],
             authorId: map['messenger']['id'],
             authorName: map['messenger']['name'],
+            donatorBadge: _donatorBadge(map['messenger']),
             authorAvatarUrl: map['messenger']['avatar']['large'],
             recipientId: map['recipient']['id'],
             recipientName: map['recipient']['name'],
@@ -70,7 +83,7 @@ sealed class Activity {
             isLiked: map['isLiked'] ?? false,
             isSubscribed: map['isSubscribed'] ?? false,
             isPinned: false,
-          );
+          )..isAuthorMod = _isMod(map['user']);
         case 'ANIME_LIST':
         case 'MANGA_LIST':
           if (map['user'] == null || map['media'] == null) return null;
@@ -83,6 +96,7 @@ sealed class Activity {
             id: map['id'],
             authorId: map['user']['id'],
             authorName: map['user']['name'],
+            donatorBadge: _donatorBadge(map['user']),
             authorAvatarUrl: map['user']['avatar']['large'],
             mediaId: map['media']['id'],
             title: map['media']['title']['userPreferred'],
@@ -98,7 +112,7 @@ sealed class Activity {
             isLiked: map['isLiked'] ?? false,
             isSubscribed: map['isSubscribed'] ?? false,
             isPinned: map['isPinned'] ?? false,
-          );
+          )..isAuthorMod = _isMod(map['user']);
         default:
           return null;
       }
@@ -110,6 +124,7 @@ sealed class Activity {
   final int id;
   final int authorId;
   final String authorName;
+  final String? donatorBadge;
   final String authorAvatarUrl;
   final String text;
   final String siteUrl;
@@ -120,6 +135,7 @@ sealed class Activity {
   bool isLiked;
   bool isSubscribed;
   bool isPinned;
+  bool isAuthorMod = false;
 }
 
 class StatusActivity extends Activity {
@@ -127,6 +143,7 @@ class StatusActivity extends Activity {
     required super.id,
     required super.authorId,
     required super.authorName,
+    required super.donatorBadge,
     required super.authorAvatarUrl,
     required super.createdAt,
     required super.text,
@@ -145,6 +162,7 @@ class MessageActivity extends Activity {
     required super.id,
     required super.authorId,
     required super.authorName,
+    required super.donatorBadge,
     required super.authorAvatarUrl,
     required super.createdAt,
     required super.text,
@@ -172,6 +190,7 @@ class MediaActivity extends Activity {
     required super.id,
     required super.authorId,
     required super.authorName,
+    required super.donatorBadge,
     required super.authorAvatarUrl,
     required super.createdAt,
     required super.text,
@@ -201,11 +220,13 @@ class ActivityReply {
     required this.id,
     required this.authorId,
     required this.authorName,
+    required this.donatorBadge,
     required this.authorAvatarUrl,
     required this.text,
     required this.createdAt,
     this.likeCount = 0,
     this.isLiked = false,
+    this.isAuthorMod = false,
   });
 
   static ActivityReply? maybe(Map<String, dynamic> map) {
@@ -215,20 +236,24 @@ class ActivityReply {
       id: map['id'],
       authorId: map['user']['id'],
       authorName: map['user']['name'],
+      donatorBadge: _donatorBadge(map['user']),
       authorAvatarUrl: map['user']['avatar']['large'],
       text: parseMarkdown(map['text'] ?? ''),
       createdAt: DateTimeExtension.fromSecondsSinceEpoch(map['createdAt']),
       likeCount: map['likeCount'] ?? 0,
       isLiked: map['isLiked'] ?? false,
+      isAuthorMod: ((map['user']['moderatorRoles'] as List?)?.isNotEmpty) ?? false,
     );
   }
 
   final int id;
   final int authorId;
   final String authorName;
+  final String? donatorBadge;
   final String authorAvatarUrl;
   final String text;
   final DateTime createdAt;
   int likeCount;
   bool isLiked;
+  final bool isAuthorMod;
 }

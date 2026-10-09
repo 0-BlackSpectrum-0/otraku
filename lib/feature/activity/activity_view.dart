@@ -86,19 +86,59 @@ class _TopBarContent extends StatelessWidget {
             child: GestureDetector(
               behavior: .opaque,
               onTap: () => context.push(Routes.user(activity.authorId, activity.authorAvatarUrl)),
-              child: Row(
-                mainAxisSize: .min,
-                children: [
-                  Hero(
-                    tag: activity.authorId,
-                    child: ClipRRect(
-                      borderRadius: Theming.borderRadiusSmall,
-                      child: CachedImage(activity.authorAvatarUrl, height: 40, width: 40),
+              child: LayoutBuilder(
+                builder: (context, box) => Row(
+                  mainAxisSize: .min,
+                  children: [
+                    Hero(
+                      tag: activity.authorId,
+                      child: ClipRRect(
+                        borderRadius: Theming.borderRadiusSmall,
+                        child: CachedImage(activity.authorAvatarUrl, height: 40, width: 40),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: Theming.offset),
-                  Flexible(child: Text(activity.authorName, overflow: .ellipsis, maxLines: 1)),
-                ],
+                    const SizedBox(width: Theming.offset),
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: .min,
+                        spacing: 2,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              activity.authorName,
+                              overflow: .ellipsis,
+                              maxLines: 1,
+                              style: TextStyle(fontWeight: .bold),
+                            ),
+                          ),
+                          if (activity.isAuthorMod)
+                            Icon(Icons.verified, size: 15, color: ColorScheme.of(context).primary),
+                        ],
+                      ),
+                    ),
+                    if (activity.donatorBadge != null)
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: box.maxWidth),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: ColorScheme.of(context).primaryContainer,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Padding(
+                            padding: const .all(5),
+                            child: Text(
+                              activity.donatorBadge!,
+                              overflow: .ellipsis,
+                              maxLines: 1,
+                              style: TextTheme.of(
+                                context,
+                              ).labelSmall?.copyWith(color: ColorScheme.of(context).primary),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
