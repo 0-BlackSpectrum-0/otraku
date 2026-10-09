@@ -6,12 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/action_chip_extension.dart';
 import 'package:otraku/extension/card_extension.dart';
+import 'package:otraku/feature/collection/collection_models.dart';
+import 'package:otraku/feature/collection/collection_provider.dart';
 import 'package:otraku/feature/discover/discover_filter_model.dart';
+import 'package:otraku/feature/home/home_provider.dart';
 import 'package:otraku/feature/media/media_provider.dart';
 import 'package:otraku/feature/tag/tag_model.dart';
+import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/theming.dart';
+import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
 import 'package:otraku/widget/loaders.dart';
 import 'package:otraku/widget/table_list.dart';
@@ -70,13 +75,13 @@ class MediaOverviewSubview extends StatelessWidget {
       if (info.countryOfOrigin != null) (l10n.country, info.countryOfOrigin!.localize(l10n)),
     ];
 
-    final titles = [
-      if (info.hashtag != null) (l10n.mediaHashtag, info.hashtag!),
-      if (info.romajiTitle != null) (l10n.mediaTitleRomaji, info.romajiTitle!),
-      if (info.englishTitle != null) (l10n.mediaTitleEnglish, info.englishTitle!),
-      if (info.nativeTitle != null) (l10n.mediaTitleNative, info.nativeTitle!),
-      ...info.synonyms.map((s) => (l10n.mediaTitleSynonym, s)),
-    ];
+    // final titles = [
+    //   if (info.hashtag != null) (l10n.mediaHashtag, info.hashtag!),
+    //   if (info.romajiTitle != null) (l10n.mediaTitleRomaji, info.romajiTitle!),
+    //   if (info.englishTitle != null) (l10n.mediaTitleEnglish, info.englishTitle!),
+    //   if (info.nativeTitle != null) (l10n.mediaTitleNative, info.nativeTitle!),
+    //   ...info.synonyms.map((s) => (l10n.mediaTitleSynonym, s)),
+    // ];
 
     const spacing = SliverToBoxAdapter(child: SizedBox(height: Theming.offset));
     final mediaQuery = MediaQuery.of(context);
@@ -108,6 +113,13 @@ class MediaOverviewSubview extends StatelessWidget {
                 .toList(),
           )
         : null;
+
+    final customLists = [
+      for (final e
+          in ref.read(mediaProvider(info.id)).value?.entryEdit.customLists.entries ??
+              <MapEntry<String, bool>>[])
+        if (e.value) e.key,
+    ];
 
     final studios = info.studios.isNotEmpty
         ? _Wrap(
@@ -165,6 +177,75 @@ class MediaOverviewSubview extends StatelessWidget {
           )
         : null;
 
+    const animeSites = {'crunchyroll', 'netflix', 'youtube'};
+
+    final availableLinks = info.externalLinks
+        .where(
+          (v) =>
+              v.type == ExternalLinkType.streaming &&
+              (info.isAnime ? animeSites.contains(v.site.toLowerCase()) : v.countryCode == 'EN'),
+        )
+        .toList();
+
+    final malUrl = info.idMal == null
+        ? null
+        : 'https://myanimelist.net/${info.isAnime ? 'anime' : 'manga'}/${info.idMal}';
+
+    final availableOn = availableLinks.isNotEmpty || malUrl != null
+        ? SliverToBoxAdapter(
+            child: Row(
+              spacing: Theming.offset,
+              children: [
+                Text("${l10n.mediaAvailableOn}:"),
+                Expanded(
+                  child: Wrap(
+                    spacing: 5,
+                    runSpacing: 5,
+                    children: [
+                      for (final v in availableLinks)
+                        _SiteChip(
+                          tooltip: v.site,
+                          color: v.color,
+                          url: v.url,
+                          highContrast: highContrast,
+                          child: v.iconUrl != null
+                              ? CachedImage(v.iconUrl!, fit: BoxFit.contain)
+                              : Center(
+                                  child: Text(
+                                    v.site[0].toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: .bold,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      if (malUrl != null)
+                        _SiteChip(
+                          tooltip: 'MyAnimeList',
+                          color: const Color(0xFF2E51A2),
+                          url: malUrl,
+                          highContrast: highContrast,
+                          child: Center(
+                            child: Text(
+                              'MAL',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: .bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
+
     return CustomScrollView(
       controller: scrollCtrl,
       physics: Theming.bouncyPhysics,
@@ -181,6 +262,9 @@ class MediaOverviewSubview extends StatelessWidget {
           padding: const .symmetric(horizontal: Theming.offset),
           sliver: SliverMainAxisGroup(
             slivers: [
+              ?availableOn,
+              if (availableOn != null)
+                SliverToBoxAdapter(child: SizedBox(height: Theming.offset / 2)),
               if (info.description.isNotEmpty) _Description(info.description, highContrast),
               SliverToBoxAdapter(
                 child: CardExtension.highContrast(highContrast)(
@@ -224,12 +308,15 @@ class MediaOverviewSubview extends StatelessWidget {
                   isAnime: info.isAnime,
                   highContrast: highContrast,
                 ),
+              if (customLists.isNotEmpty)
+                _CustomListsWrap(
+                  names: customLists,
+                  isAnime: info.isAnime,
+                  highContrast: highContrast,
+                ),
               ?studios,
               ?producers,
               ?externalLinks,
-              spacing,
-              spacing,
-              SliverTableList(titles, highContrast: highContrast),
             ],
           ),
         ),
@@ -460,6 +547,101 @@ class _BlurText extends StatelessWidget {
   }
 }
 
+class _CustomListsWrap extends StatelessWidget {
+  const _CustomListsWrap({required this.names, required this.isAnime, required this.highContrast});
+
+  final List<String> names;
+  final bool isAnime;
+  final bool highContrast;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return _Wrap(
+      title: l10n.entryCustomLists,
+      children: [
+        for (final name in names)
+          _Chip(label: Text(name), highContrast: highContrast, onTap: () => _open(context, name)),
+      ],
+    );
+  }
+
+  void _open(BuildContext context, String listName) {
+    final container = ProviderScope.containerOf(context);
+    final viewerId = container.read(viewerIdProvider);
+    if (viewerId == null) return;
+
+    final provider = collectionProvider((userId: viewerId, ofAnime: isAnime));
+    final homeSub = container.listen(homeProvider, (_, _) {});
+    late final ProviderSubscription<AsyncValue<Collection>> sub;
+
+    void close() {
+      sub.close();
+      homeSub.close();
+    }
+
+    bool select(AsyncValue<Collection> value) {
+      if (value.hasError) return true;
+
+      final collection = value.value;
+      if (collection is! FullCollection) return false;
+
+      final index = collection.lists.indexWhere((l) => l.name == listName);
+      if (index != -1) container.read(provider.notifier).changeIndex(index);
+      return true;
+    }
+
+    container.read(homeProvider.notifier).expandCollection(isAnime);
+    context.go(Routes.home(isAnime ? .anime : .manga));
+
+    sub = container.listen(provider, (_, next) {
+      if (select(next)) close();
+    });
+    if (select(container.read(provider))) close;
+  }
+}
+
+class _SiteChip extends StatelessWidget {
+  const _SiteChip({
+    required this.tooltip,
+    required this.color,
+    required this.url,
+    required this.highContrast,
+    required this.child,
+  });
+
+  final String tooltip;
+  final Color? color;
+  final String url;
+  final bool highContrast;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      preferBelow: false,
+      child: _Chip(
+        highContrast: highContrast,
+        onTap: () => SnackBarExtension.launch(context, url),
+        label: Container(
+          width: 32,
+          height: 32,
+          padding: const .all(3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            color: color ?? ColorScheme.of(context).surfaceContainerHighest,
+          ),
+          child: child,
+        ),
+        padding: const .all(4),
+        labelPadding: .zero,
+      ),
+    );
+  }
+}
+
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,
@@ -467,6 +649,8 @@ class _Chip extends StatelessWidget {
     this.leading,
     this.onTap,
     this.onLongTap,
+    this.padding,
+    this.labelPadding,
   });
 
   final Widget label;
@@ -474,6 +658,8 @@ class _Chip extends StatelessWidget {
   final void Function()? onTap;
   final void Function()? onLongTap;
   final bool highContrast;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? labelPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -485,6 +671,8 @@ class _Chip extends StatelessWidget {
             label: label,
             avatar: leading,
             onPressed: onTap,
+            padding: padding,
+            labelPadding: labelPadding,
           ),
         ),
       ),

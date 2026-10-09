@@ -656,6 +656,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaAdult => 'Yetişkin';
 
   @override
+  String get mediaAvailableOn => 'Available on';
+
+  @override
   String get mediaChapters => 'Bölümler';
 
   @override

@@ -656,6 +656,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaAdult => 'Adult';
 
   @override
+  String get mediaAvailableOn => 'Available on';
+
+  @override
   String get mediaChapters => 'Chapters';
 
   @override

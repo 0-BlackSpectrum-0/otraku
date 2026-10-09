@@ -42,6 +42,7 @@ abstract class GqlQuery {
     }
     fragment info on Media {
       id
+      idMal
       type
       title {userPreferred english romaji native}
       synonyms
@@ -76,7 +77,7 @@ abstract class GqlQuery {
       siteUrl
       rankings {rank type year season allTime}
       stats {scoreDistribution {score amount} statusDistribution {status amount}}
-      externalLinks {url site type color language}
+      externalLinks {url site type color language icon}
       relations {
         edges {
           relationType(version: 3)
