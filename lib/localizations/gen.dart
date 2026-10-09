@@ -1221,6 +1221,12 @@ abstract class AppLocalizations {
   /// **'Adult'**
   String get mediaAdult;
 
+  /// No description provided for @mediaAvailableOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Available on'**
+  String get mediaAvailableOn;
+
   /// No description provided for @mediaChapters.
   ///
   /// In en, this message translates to:

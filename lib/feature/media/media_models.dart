@@ -326,6 +326,7 @@ class MediaInfo {
     required this.siteUrl,
     required this.countryOfOrigin,
     required this.isAdult,
+    required this.idMal,
   });
 
   final int id;
@@ -365,6 +366,7 @@ class MediaInfo {
   final OriginCountry? countryOfOrigin;
   final bool isAdult;
   final externalLinks = <ExternalLink>[];
+  final int? idMal;
 
   factory MediaInfo(Map<String, dynamic> map, ImageQuality imageQuality) {
     String? duration;
@@ -419,6 +421,7 @@ class MediaInfo {
       siteUrl: map['siteUrl'],
       countryOfOrigin: OriginCountry.fromCode(map['countryOfOrigin']),
       isAdult: map['isAdult'] ?? false,
+      idMal: map['idMal'],
     );
 
     if (map['studios'] != null) {
@@ -446,6 +449,7 @@ class MediaInfo {
           type: ExternalLinkType.fromString(link['type']),
           color: link['color'] != null ? ColorExtension.fromHexString(link['color']) : null,
           countryCode: StringExtension.languageToCode(link['language']),
+          iconUrl: link['icon'],
         ));
       }
       model.externalLinks.sort(
@@ -467,6 +471,7 @@ typedef ExternalLink = ({
   ExternalLinkType type,
   Color? color,
   String? countryCode,
+  String? iconUrl,
 });
 
 enum ExternalLinkType {
