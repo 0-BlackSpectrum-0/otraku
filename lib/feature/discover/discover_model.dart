@@ -88,6 +88,17 @@ class DiscoverRecommendationItems extends DiscoverItems {
   final Paged<DiscoverRecommendationItem> pages;
 }
 
+String? _regionalFormat(Object? format, String? country) {
+  if (format != 'MANGA') return StringExtension.tryNoScreamingSnakeCase(format);
+
+  return switch (country) {
+    'JP' || null => 'Manga',
+    'KR' => 'Manhwa',
+    'CN' || 'TW' || 'HK' => 'Manhua',
+    _ => 'Manga $country',
+  };
+}
+
 class DiscoverMediaItem {
   DiscoverMediaItem._({
     required this.id,
@@ -111,7 +122,7 @@ class DiscoverMediaItem {
         name: map['title']['userPreferred'],
         imageUrl: map['coverImage'][imageQuality.value],
         isAnime: map['type'] == 'ANIME',
-        format: StringExtension.tryNoScreamingSnakeCase(map['format']),
+        format: _regionalFormat(map['format'], map['countryOfOrigin']),
         releaseStatus: ReleaseStatus.from(map['status']),
         entryStatus: ListStatus.from(map['mediaListEntry']?['status']),
         releaseYear: map['startDate']?['year'],
