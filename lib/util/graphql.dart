@@ -1262,7 +1262,7 @@ abstract class _GqlFragment {
       createdAt
       siteUrl
       text
-      user {id name avatar {large}}
+      user {id name avatar {large} donatorTier donatorBadge moderatorRoles}
     }
   ''';
 
@@ -1278,7 +1278,7 @@ abstract class _GqlFragment {
       createdAt
       siteUrl
       message
-      messenger {id name avatar {large}}
+      messenger {id name avatar {large} donatorTier donatorBadge moderatorRoles}
       recipient {id name avatar {large}}
     }
   ''';
@@ -1290,7 +1290,7 @@ abstract class _GqlFragment {
       isLiked
       createdAt
       text
-      user {id name avatar {large}}
+      user {id name avatar {large} donatorTier donatorBadge moderatorRoles}
     }
   ''';
 
@@ -1305,7 +1305,7 @@ abstract class _GqlFragment {
       isPinned
       createdAt
       siteUrl
-      user {id name avatar {large}}
+      user {id name avatar {large} donatorTier donatorBadge moderatorRoles}
       media {id type title {userPreferred} coverImage {extraLarge large medium} format}
       progress
       status
