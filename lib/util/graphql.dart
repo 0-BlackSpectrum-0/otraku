@@ -230,6 +230,7 @@ abstract class GqlQuery {
           title {userPreferred}
           coverImage {extraLarge large medium}
           format
+          countryOfOrigin
           status(version: 2)
           averageScore
           popularity
