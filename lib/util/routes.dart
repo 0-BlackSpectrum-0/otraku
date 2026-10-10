@@ -296,6 +296,7 @@ class Routes {
 
     return GoRouter(
       routes: routes,
+      restorationScopeId: 'router',
       initialLocation: Routes.home(),
       errorBuilder: (context, state) => const NotFoundView(),
     );

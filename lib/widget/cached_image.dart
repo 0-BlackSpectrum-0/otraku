@@ -32,8 +32,12 @@ class CachedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final w = (width != null && width!.isFinite) ? width! : MediaQuery.sizeOf(context).width;
+
     return CachedNetworkImage(
       imageUrl: imageUrl,
+      memCacheWidth: (w * dpr).round(),
       fit: fit,
       width: width,
       height: height,

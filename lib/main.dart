@@ -39,7 +39,7 @@ class _App extends ConsumerStatefulWidget {
   AppState createState() => AppState();
 }
 
-class AppState extends ConsumerState<_App> {
+class AppState extends ConsumerState<_App> with WidgetsBindingObserver {
   late final GoRouter _router;
   late final StreamSubscription<String> _notificationSubscription;
   Color? _systemLightPrimaryColor;
@@ -48,6 +48,7 @@ class AppState extends ConsumerState<_App> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     final mustConfirmExit = () => ref.read(persistenceProvider).options.confirmExit;
 
@@ -72,7 +73,15 @@ class AppState extends ConsumerState<_App> {
   }
 
   @override
+  void didHaveMemoryPressure() {
+    PaintingBinding.instance.imageCache
+      ..clear()
+      ..clearLiveImages();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _notificationSubscription.cancel();
     super.dispose();
   }
@@ -158,6 +167,7 @@ class AppState extends ConsumerState<_App> {
           darkTheme: Theming.generateThemeData(darkScheme),
           themeMode: options.themeMode,
           routerConfig: _router,
+          restorationScopeId: 'app',
           supportedLocales: const [Locale('en'), Locale('tr')],
           localizationsDelegates: [
             AppLocalizations.delegate,
