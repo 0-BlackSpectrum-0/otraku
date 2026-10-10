@@ -83,16 +83,14 @@ class ReplyCard extends StatelessWidget {
                         color: ColorScheme.of(context).primaryContainer,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Padding(
-                        padding: const .all(5),
-                        child: Text(
-                          reply.donatorBadge!,
-                          overflow: .ellipsis,
-                          maxLines: 1,
-                          style: TextTheme.of(
-                            context,
-                          ).labelSmall?.copyWith(color: ColorScheme.of(context).primary),
-                        ),
+                      padding: const .all(5),
+                      child: Text(
+                        reply.donatorBadge!,
+                        overflow: .ellipsis,
+                        maxLines: 1,
+                        style: TextTheme.of(
+                          context,
+                        ).labelSmall?.copyWith(color: ColorScheme.of(context).primary),
                       ),
                     ),
                   ),
