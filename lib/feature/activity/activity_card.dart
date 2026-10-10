@@ -278,6 +278,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
         SizedBox(
           height: 40,
           child: Tooltip(
+            preferBelow: false,
             message: l10n.actionMore,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
@@ -290,6 +291,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
         SizedBox(
           height: 40,
           child: Tooltip(
+            preferBelow: false,
             message: l10n.postsReplies,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
@@ -308,6 +310,7 @@ class _ActivityFooterState extends State<ActivityFooter> {
         SizedBox(
           height: 40,
           child: Tooltip(
+            preferBelow: false,
             triggerMode: .manual,
             message: !activity.isLiked ? l10n.likesAdd : l10n.likesRemove,
             child: InkResponse(

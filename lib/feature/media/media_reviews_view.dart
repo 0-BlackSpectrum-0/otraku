@@ -93,6 +93,7 @@ class _MediaReviewGrid extends StatelessWidget {
                 ),
                 verticalDivider,
                 Tooltip(
+                  preferBelow: false,
                   message: l10n.reviewsScore,
                   triggerMode: .tap,
                   child: Row(
@@ -106,6 +107,7 @@ class _MediaReviewGrid extends StatelessWidget {
                 ),
                 verticalDivider,
                 Tooltip(
+                  preferBelow: false,
                   message: l10n.reviewsRating,
                   triggerMode: .tap,
                   child: Row(

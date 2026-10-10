@@ -388,6 +388,7 @@ class _IconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
+      preferBelow: false,
       message: tooltip,
       triggerMode: .tap,
       child: Column(
@@ -620,8 +621,8 @@ class _SiteChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: tooltip,
       preferBelow: false,
+      message: tooltip,
       child: _Chip(
         highContrast: highContrast,
         onTap: () => SnackBarExtension.launch(context, url),

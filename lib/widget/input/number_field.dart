@@ -108,6 +108,7 @@ class _NumberFieldState extends State<NumberField> {
               onTap: () => _validateInput(l10n, _ctrl.text, -widget.stepValue),
               radius: Theming.radiusSmall.x,
               child: Tooltip(
+                preferBelow: false,
                 message: l10n.numberDecrement,
                 onTriggered: () => _validateInput(l10n, widget.minValue.toString(), 0),
                 child: const Icon(Icons.remove),
@@ -123,6 +124,7 @@ class _NumberFieldState extends State<NumberField> {
               onTap: () => _validateInput(l10n, _ctrl.text, widget.stepValue),
               radius: Theming.radiusSmall.x,
               child: Tooltip(
+                preferBelow: false,
                 message: l10n.numberIncrement,
                 onTriggered: () {
                   if (widget.maxValue == null) return;

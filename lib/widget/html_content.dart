@@ -54,6 +54,7 @@ class HtmlContent extends StatelessWidget {
       onLoadingBuilder: (_, _, _) => const Center(child: Loader()),
       onErrorBuilder: (_, element, err) => Center(
         child: Tooltip(
+          preferBelow: false,
           triggerMode: .tap,
           message: l10n.errorFailedLoading(element.localName ?? '?'),
           child: const Icon(Icons.error_outline_rounded),
@@ -201,7 +202,11 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Tooltip(message: _error!, child: const Icon(Icons.broken_image_outlined));
+      return Tooltip(
+        preferBelow: false,
+        message: _error!,
+        child: const Icon(Icons.broken_image_outlined),
+      );
     }
 
     if (!_initialized) {
@@ -222,6 +227,7 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
             right: 4,
             child: Builder(
               builder: (context) => Tooltip(
+                preferBelow: false,
                 message: _muted ? 'Unmute' : 'Mute',
                 child: InkResponse(
                   onTap: () => setState(() {
@@ -336,8 +342,8 @@ class _HtmlFactory extends WidgetFactory {
                   children: [
                     Image.network(proxiedUrl, fit: BoxFit.contain),
                     Tooltip(
-                      message: 'Can\'t load the GIF',
                       preferBelow: false,
+                      message: 'Can\'t load the GIF',
                       child: Icon(
                         Icons.broken_image_outlined,
                         size: 40,
@@ -359,8 +365,8 @@ class _HtmlFactory extends WidgetFactory {
                       fit: .contain,
                       placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
                       errorBuilder: (context, error, _) => Tooltip(
-                        message: 'Can\'t load the image',
                         preferBelow: false,
+                        message: 'Can\'t load the image',
                         child: Icon(
                           Icons.broken_image_outlined,
                           size: 40,
@@ -394,8 +400,8 @@ class _HtmlFactory extends WidgetFactory {
             right: 4,
             child: Builder(
               builder: (context) => Tooltip(
-                message: href,
                 preferBelow: false,
+                message: href,
                 child: InkResponse(
                   onTap: () => launchUrl(Uri.parse(href)),
                   child: Container(

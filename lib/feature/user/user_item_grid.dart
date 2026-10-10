@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -100,8 +102,9 @@ class __TileState extends State<_Tile> {
                           child: Column(
                             crossAxisAlignment: .start,
                             children: [
-                              Wrap(
-                                crossAxisAlignment: .center,
+                              Row(
+                                mainAxisSize: .min,
+                                spacing: 2,
                                 children: [
                                   Text(
                                     item.name,
@@ -112,25 +115,36 @@ class __TileState extends State<_Tile> {
                                       fontSize: Theming.fontMedium,
                                     ),
                                   ),
-                                  if (item.modRoles.isNotEmpty) ...[
-                                    const SizedBox(width: Theming.offset / 5),
+                                  if (item.modRoles.isNotEmpty)
                                     Tooltip(
-                                      message: item.modRoles.join(' · '),
                                       preferBelow: false,
+                                      message: item.modRoles.join(' · '),
                                       child: Icon(Icons.verified_rounded, size: 15),
                                     ),
-                                  ],
+
                                   if (item.donatorTier > 0) ...[
-                                    const SizedBox(width: Theming.offset / 5),
-                                    Tooltip(
-                                      message: item.donatorBadge,
-                                      preferBelow: false,
-                                      child: Text(
-                                        item.donatorBadge,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        style: TextTheme.of(context).labelSmall?.copyWith(
-                                          color: ColorScheme.of(context).primary,
+                                    const SizedBox(width: 3),
+                                    ClipRRect(
+                                      borderRadius: BorderRadiusGeometry.circular(6),
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                        child: Container(
+                                          padding: const .all(5),
+                                          color: ColorScheme.of(
+                                            context,
+                                          ).primaryContainer.withValues(alpha: 0.5),
+                                          child: Tooltip(
+                                            preferBelow: false,
+                                            message: item.donatorBadge,
+                                            child: Text(
+                                              item.donatorTier > 3 ? item.donatorBadge : 'Donator',
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              style: TextTheme.of(context).labelSmall?.copyWith(
+                                                color: ColorScheme.of(context).primary,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),

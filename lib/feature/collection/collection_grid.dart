@@ -92,6 +92,7 @@ class _IncrementButtonState extends State<_IncrementButton> {
 
     if (item.progress == item.progressMax) {
       return Tooltip(
+        preferBelow: false,
         message: l10n.entryProgress,
         child: SizedBox(
           height: 30,
@@ -108,6 +109,7 @@ class _IncrementButtonState extends State<_IncrementButton> {
 
     if (widget.onProgressUpdated == null) {
       return Tooltip(
+        preferBelow: false,
         message: l10n.entryProgress,
         child: SizedBox(
           height: 30,
@@ -145,6 +147,7 @@ class _IncrementButtonState extends State<_IncrementButton> {
         _debounce.run(() => _update(l10n));
       },
       child: Tooltip(
+        preferBelow: false,
         message: l10n.entryProgressIncrement,
         child: Row(
           mainAxisAlignment: .center,

@@ -128,12 +128,14 @@ class ThreadItemList extends StatelessWidget {
                           children: [
                             if (item.isPinned)
                               Tooltip(
+                                preferBelow: false,
                                 message: l10n.postsPinned,
                                 triggerMode: .tap,
                                 child: Icon(Icons.push_pin_outlined, size: Theming.iconSmall),
                               ),
                             if (item.isLocked)
                               Tooltip(
+                                preferBelow: false,
                                 message: l10n.postsLocked,
                                 triggerMode: .tap,
                                 child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
@@ -172,6 +174,7 @@ class ThreadItemList extends StatelessWidget {
   }
 
   Widget _buildInfoIcon(BuildContext context, String label, String value, IconData icon) => Tooltip(
+    preferBelow: false,
     message: label,
     triggerMode: .tap,
     child: Row(

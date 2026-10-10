@@ -41,6 +41,7 @@ class CachedImage extends StatelessWidget {
       fadeInDuration: const Duration(milliseconds: 300),
       fadeOutDuration: const Duration(milliseconds: 300),
       errorWidget: (context, _, _) => Tooltip(
+        preferBelow: false,
         triggerMode: .tap,
         message: AppLocalizations.of(context)!.errorFailedGettingFile,
         child: const Icon(Icons.error_outline_rounded),

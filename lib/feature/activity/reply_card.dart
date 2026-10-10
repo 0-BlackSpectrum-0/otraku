@@ -122,6 +122,7 @@ class ReplyCard extends StatelessWidget {
                         height: 40,
                         child: reply.authorId == ref.watch(viewerIdProvider)
                             ? Tooltip(
+                                preferBelow: false,
                                 message: l10n.actionMore,
                                 child: InkResponse(
                                   radius: Theming.radiusSmall.x,
@@ -225,6 +226,7 @@ class _ReplyMentionButton extends StatelessWidget {
       child: Row(
         children: [
           Tooltip(
+            preferBelow: false,
             message: 'View Raw',
             child: InkResponse(
               radius: Theming.radiusSmall.x,
@@ -233,6 +235,7 @@ class _ReplyMentionButton extends StatelessWidget {
             ),
           ),
           Tooltip(
+            preferBelow: false,
             message: l10n.postsRepliesAdd,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
@@ -272,6 +275,7 @@ class _ReplyLikeButtonState extends State<_ReplyLikeButton> {
     return SizedBox(
       height: 40,
       child: Tooltip(
+        preferBelow: false,
         triggerMode: .manual,
         message: !widget.reply.isLiked ? l10n.likesAdd : l10n.likesRemove,
         child: InkResponse(

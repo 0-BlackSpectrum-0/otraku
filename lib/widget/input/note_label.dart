@@ -18,6 +18,7 @@ class NotesLabel extends StatelessWidget {
     return SizedBox(
       height: 35,
       child: Tooltip(
+        preferBelow: false,
         message: l10n.entryComment,
         child: InkResponse(
           radius: Theming.radiusSmall.x,

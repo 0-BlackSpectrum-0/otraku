@@ -332,6 +332,7 @@ class _Content extends StatelessWidget {
                 spacing: Theming.offset,
                 children: [
                   Tooltip(
+                    preferBelow: false,
                     message: 'View Raw',
                     child: InkResponse(
                       radius: Theming.radiusSmall.x,
@@ -341,18 +342,21 @@ class _Content extends StatelessWidget {
                   ),
                   if (info.isPinned)
                     Tooltip(
+                      preferBelow: false,
                       message: l10n.postsPinned,
                       triggerMode: .tap,
                       child: Icon(Icons.push_pin_outlined, size: Theming.iconSmall),
                     ),
                   if (info.isLocked)
                     Tooltip(
+                      preferBelow: false,
                       message: l10n.postsLocked,
                       triggerMode: .tap,
                       child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
                     ),
                   const Spacer(),
                   Tooltip(
+                    preferBelow: false,
                     message: l10n.postsViews,
                     triggerMode: .tap,
                     child: Row(
@@ -368,6 +372,7 @@ class _Content extends StatelessWidget {
                     ),
                   ),
                   Tooltip(
+                    preferBelow: false,
                     message: l10n.postsReplies,
                     triggerMode: .tap,
                     child: Row(
@@ -434,6 +439,7 @@ class __LikeButtonState extends State<_LikeButton> {
     final info = widget.threadInfo;
 
     return Tooltip(
+      preferBelow: false,
       triggerMode: .manual,
       message: !info.isLiked ? l10n.likesAdd : l10n.likesRemove,
       child: InkResponse(

@@ -62,6 +62,6 @@ class ScoreLabel extends StatelessWidget {
     }
 
     final l10n = AppLocalizations.of(context)!;
-    return Tooltip(message: l10n.entryScore, child: content);
+    return Tooltip(preferBelow: false, message: l10n.entryScore, child: content);
   }
 }

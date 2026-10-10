@@ -112,6 +112,7 @@ class _MediaFollowingGrid extends StatelessWidget {
                                   child: Align(
                                     alignment: .centerRight,
                                     child: Tooltip(
+                                      preferBelow: false,
                                       message: l10n.entryRepeats,
                                       child: Row(
                                         mainAxisSize: .min,

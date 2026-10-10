@@ -88,6 +88,7 @@ class CommentTile extends StatelessWidget {
               children: [
                 if (comment.isLocked)
                   Tooltip(
+                    preferBelow: false,
                     message: l10n.postsLocked,
                     triggerMode: .tap,
                     child: Icon(Icons.lock_outline_rounded, size: Theming.iconSmall),
@@ -96,8 +97,8 @@ class CommentTile extends StatelessWidget {
                 SizedBox(
                   height: 40,
                   child: Tooltip(
-                    message: 'View Raw',
                     preferBelow: false,
+                    message: 'View Raw',
                     child: InkResponse(
                       radius: Theming.radiusSmall.x,
                       onTap: () => showRawMarkdown(context, comment.text),
@@ -108,6 +109,7 @@ class CommentTile extends StatelessWidget {
                 if (interaction != null) ...[
                   if (comment.userId != viewerId)
                     Tooltip(
+                      preferBelow: false,
                       message: l10n.postsRepliesAdd,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
@@ -135,6 +137,7 @@ class CommentTile extends StatelessWidget {
                     )
                   else
                     Tooltip(
+                      preferBelow: false,
                       message: l10n.postsReplies,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
@@ -156,6 +159,7 @@ class CommentTile extends StatelessWidget {
                   SizedBox(
                     height: 20,
                     child: Tooltip(
+                      preferBelow: false,
                       message: l10n.postsReplies,
                       child: InkResponse(
                         radius: Theming.radiusSmall.x,
@@ -165,6 +169,7 @@ class CommentTile extends StatelessWidget {
                     ),
                   ),
                   Tooltip(
+                    preferBelow: false,
                     message: l10n.likes,
                     triggerMode: .tap,
                     child: Row(
@@ -246,6 +251,7 @@ class __LikeButtonState extends State<_LikeButton> {
     final comment = widget.comment;
 
     return Tooltip(
+      preferBelow: false,
       triggerMode: .manual,
       message: !comment.isLiked ? l10n.likesAdd : l10n.likesRemove,
       child: InkResponse(

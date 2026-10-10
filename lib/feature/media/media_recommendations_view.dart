@@ -156,6 +156,7 @@ class _RecommendationRatingState extends State<_RecommendationRating> {
             mainAxisAlignment: .spaceEvenly,
             children: [
               Tooltip(
+                preferBelow: false,
                 message: l10n.actionAgreementAgree,
                 child: InkResponse(
                   onTap: () async {
@@ -205,6 +206,7 @@ class _RecommendationRatingState extends State<_RecommendationRating> {
                 ),
               ),
               Tooltip(
+                preferBelow: false,
                 message: l10n.actionAgreementDisagree,
                 child: InkResponse(
                   onTap: () async {

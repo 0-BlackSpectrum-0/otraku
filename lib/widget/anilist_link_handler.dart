@@ -383,6 +383,7 @@ class AnilistLinkHandler extends ConsumerWidget {
                           if (preview.modRoles?.isNotEmpty ?? false) ...[
                             const SizedBox(width: Theming.offset / 5),
                             Tooltip(
+                              preferBelow: false,
                               message: preview.modRoles!.join(' · '),
                               child: Icon(Icons.verified_rounded, size: 15),
                             ),

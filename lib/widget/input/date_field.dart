@@ -71,7 +71,11 @@ class _DateFieldState extends State<DateField> {
             color: Colors.transparent,
             child: InkResponse(
               radius: Theming.radiusSmall.x,
-              child: Tooltip(message: l10n.actionClear, child: const Icon(Ionicons.close_outline)),
+              child: Tooltip(
+                preferBelow: false,
+                message: l10n.actionClear,
+                child: const Icon(Ionicons.close_outline),
+              ),
               onTap: () {
                 _ctrl.text = '';
                 widget.onChanged(null);

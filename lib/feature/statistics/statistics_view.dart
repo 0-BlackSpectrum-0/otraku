@@ -274,6 +274,7 @@ class _Details extends StatelessWidget {
       delegate: SliverChildBuilderDelegate(
         childCount: categories.length,
         (context, i) => Tooltip(
+          preferBelow: false,
           message: categories[i].$1,
           triggerMode: .tap,
           child: CardExtension.highContrast(highContrast)(

@@ -179,6 +179,7 @@ class __TileContentState extends State<_TileContent> {
             ScoreLabel(item.score, widget.scoreFormat),
             if (item.repeat > 0)
               Tooltip(
+                preferBelow: false,
                 message: l10n.entryRepeats,
                 child: Row(
                   mainAxisSize: .min,
@@ -213,7 +214,7 @@ class __TileContentState extends State<_TileContent> {
     );
 
     if (widget.onProgressUpdated == null || item.progress == item.progressMax) {
-      return Tooltip(message: l10n.entryProgress, child: text);
+      return Tooltip(preferBelow: false, message: l10n.entryProgress, child: text);
     }
 
     return TextButton(
@@ -239,6 +240,7 @@ class __TileContentState extends State<_TileContent> {
         _debounce.run(() => _update(l10n));
       },
       child: Tooltip(
+        preferBelow: false,
         message: l10n.entryProgressIncrement,
         child: Row(
           spacing: 3,
