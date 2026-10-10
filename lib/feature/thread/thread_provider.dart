@@ -11,6 +11,10 @@ final threadProvider = AsyncNotifierProvider.autoDispose.family<ThreadNotifier, 
   ThreadNotifier.new,
 );
 
+final _restoredPages = <int, int>{};
+
+void restoredThreadPage(int threadId, int page) => _restoredPages[threadId] = page;
+
 class ThreadNotifier extends AsyncNotifier<Thread> {
   ThreadNotifier(this.arg);
 
@@ -18,9 +22,12 @@ class ThreadNotifier extends AsyncNotifier<Thread> {
 
   @override
   FutureOr<Thread> build() async {
+    final page = state.value?.commentPage ?? _restoredPages.remove(arg) ?? 1;
+
     final data = await ref.read(repositoryProvider).request(GqlQuery.thread, {
       'id': arg,
       'withInfo': true,
+      'page': page,
     });
 
     final options = ref.watch(persistenceProvider.select((s) => s.options));
