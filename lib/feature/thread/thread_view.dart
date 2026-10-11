@@ -38,22 +38,33 @@ class ThreadView extends ConsumerStatefulWidget {
   ConsumerState<ThreadView> createState() => _ThreadViewState();
 }
 
-class _ThreadViewState extends ConsumerState<ThreadView> {
+class _ThreadViewState extends ConsumerState<ThreadView> with RestorationMixin {
   final _scrollCtrl = ScrollController();
+  final _page = RestorableInt(1);
+
+  @override
+  String? get restorationId => 'thread';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_page, 'page');
+    if (initialRestore && _page.value > 1) restoredThreadPage(widget.id, _page.value);
+  }
 
   @override
   void dispose() {
+    _page.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue>(
-      threadProvider(widget.id),
-      (_, s) =>
-          s.whenOrNull(error: (error, _) => SnackBarExtension.show(context, error.toString())),
-    );
+    ref.listen<AsyncValue<Thread>>(threadProvider(widget.id), (_, s) {
+      s.whenOrNull(error: (error, _) => SnackBarExtension.show(context, error.toString()));
+      final page = s.value?.commentPage;
+      if (page != null) _page.value = page;
+    });
 
     final thread = ref.watch(threadProvider(widget.id));
     final options = ref.watch(persistenceProvider.select((s) => s.options));
