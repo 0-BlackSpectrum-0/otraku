@@ -31,7 +31,7 @@ Future<void> main() async {
   runApp(UncontrolledProviderScope(container: container, child: const _App()));
 }
 
-final _notificationCtrl = StreamController<String>.broadcast();
+final _notificationCtrl = StreamController<String>();
 
 class _App extends ConsumerStatefulWidget {
   const _App();
@@ -46,6 +46,18 @@ class AppState extends ConsumerState<_App> {
   Color? _systemLightPrimaryColor;
   Color? _systemDarkPrimaryColor;
 
+  void _openPayload(String payload) {
+    var route = payload;
+    if (payload.startsWith('{')) {
+      try {
+        route = (json.decode(payload) as Map)['route'] as String? ?? Routes.notifications;
+      } catch (_) {
+        route = Routes.notifications;
+      }
+    }
+    _router.push(route);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -54,17 +66,7 @@ class AppState extends ConsumerState<_App> {
 
     _router = Routes.buildRouter(mustConfirmExit);
 
-    _notificationSubscription = _notificationCtrl.stream.listen((payload) {
-      var route = payload;
-      if (payload.startsWith('{')) {
-        try {
-          route = (json.decode(payload) as Map)['route'] as String? ?? '';
-        } catch (_) {
-          return;
-        }
-      }
-      if (route.isNotEmpty) _router.push(route);
-    });
+    _notificationSubscription = _notificationCtrl.stream.listen(_openPayload);
 
     var appMeta = ref.read(persistenceProvider).appMeta;
     if (appMeta.lastAppVersion != appVersion) {
