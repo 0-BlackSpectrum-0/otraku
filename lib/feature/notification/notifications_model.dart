@@ -71,10 +71,14 @@ String _stripMarkdown(String text) => text
     .replaceAll(RegExp(r'[*_~`#>]+'), '');
 
 ({String? donatorBadge, bool isModerator}) _actorBadges(Map<String, dynamic>? user) {
-  final tier = user?['donatorTier'] as int?;
-  final badge = user?['donatorBadge'] as String?;
+  final tier = (user?['donatorTier'] as int?) ?? 0;
+  final badge = (user?['donatorBadge'] as String?)?.trim();
   return (
-    donatorBadge: (tier != null && tier > 0 && badge != null && badge.isNotEmpty) ? badge : null,
+    donatorBadge: tier <= 0
+        ? null
+        : (badge == null || badge.isEmpty || tier <= 3)
+        ? 'Donator'
+        : badge,
     isModerator: ((user?['moderatorRoles'] as List?)?.isNotEmpty) ?? false,
   );
 }

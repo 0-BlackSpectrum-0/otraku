@@ -1,5 +1,3 @@
-//import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -317,11 +315,13 @@ class _AvatarNotificationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: Theming.offset),
                 Expanded(
-                  child: Column(
+                  child: Row(
                     mainAxisSize: .min,
-                    crossAxisAlignment: .start,
+                    spacing: Theming.offset,
                     children: [
                       Row(
+                        mainAxisSize: .min,
+                        spacing: 2,
                         children: [
                           Flexible(
                             child: Text(
@@ -331,18 +331,24 @@ class _AvatarNotificationCard extends StatelessWidget {
                               style: textTheme.bodyMedium,
                             ),
                           ),
-                          if (isModerator) ...[
-                            const SizedBox(width: Theming.offset / 2),
-                            Icon(Icons.verified, size: 12, color: colors.primary),
-                          ],
+                          if (isModerator) Icon(Icons.verified, size: 12, color: colors.primary),
                         ],
                       ),
                       if (donatorBadge != null && donatorBadge!.isNotEmpty)
-                        Text(
-                          donatorBadge!,
-                          maxLines: 1,
-                          overflow: .ellipsis,
-                          style: textTheme.labelSmall?.copyWith(color: colors.outline),
+                        Flexible(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: colors.primaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            padding: const .all(5),
+                            child: Text(
+                              donatorBadge!,
+                              maxLines: 1,
+                              overflow: .ellipsis,
+                              style: textTheme.labelSmall?.copyWith(color: colors.primary),
+                            ),
+                          ),
                         ),
                     ],
                   ),
