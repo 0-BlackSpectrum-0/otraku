@@ -5,6 +5,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:otraku/localizations/gen.dart';
 
+const imageHeaders = {
+  'User-Agent':
+      'Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+  'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=1.0',
+};
+
 /// A custom cache manager is needed to define exact image cap and stale period.
 final _cacheManager = CacheManager(
   Config('imageCache', maxNrOfCacheObjects: 1000, stalePeriod: const Duration(days: 10)),
@@ -37,6 +43,7 @@ class CachedImage extends StatelessWidget {
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
+      httpHeaders: imageHeaders,
       memCacheWidth: (w * dpr).round(),
       fit: fit,
       width: width,

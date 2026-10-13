@@ -286,28 +286,34 @@ String fixMalformedImageUrls(String html) {
 class _HtmlFactory extends WidgetFactory {
   @override
   Widget? buildImageWidget(BuildTree tree, ImageSource src) {
-    final url = src.url;
-    if (!url.startsWith('http')) {
-      return super.buildImageWidget(tree, src);
-    }
+    final url = src.url.startsWith('http://')
+        ? src.url.replaceFirst('http://', 'https://')
+        : src.url;
 
     final isGif = url.toLowerCase().endsWith('.gif');
     final isSvg = url.toLowerCase().endsWith('.svg');
-    final proxiedUrl = 'https://wsrv.nl/?url=${Uri.encodeComponent(url)}';
+    final proxiedUrl =
+        'https://wsrv.nl/?url=${Uri.encodeComponent(url)}${isGif ? '' : '&w=1080&we&output=webp&q=80'}';
+    final proxyFirst = !isGif && !(Uri.tryParse(url)?.host.endsWith('anilist.co') ?? false);
+    final primaryUrl = proxyFirst ? proxiedUrl : url;
+    final fallbackUrl = proxyFirst ? url : proxiedUrl;
 
     final imageWidget = (isSvg)
         ? SvgPicture.network(
             url,
+            headers: imageHeaders,
             fit: .contain,
             placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
             errorBuilder: (context, error, _) => SvgPicture.network(
               proxiedUrl,
+              headers: imageHeaders,
               fit: .contain,
               placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
             ),
           )
         : CachedNetworkImage(
-            imageUrl: url,
+            imageUrl: primaryUrl,
+            httpHeaders: imageHeaders,
             fit: BoxFit.contain,
             fadeInDuration: .zero,
             fadeOutDuration: .zero,
@@ -354,14 +360,17 @@ class _HtmlFactory extends WidgetFactory {
                 );
               } else {
                 return CachedNetworkImage(
-                  imageUrl: proxiedUrl,
+                  imageUrl: fallbackUrl,
+                  httpHeaders: imageHeaders,
                   fit: BoxFit.contain,
                   errorWidget: (context, error, _) => SvgPicture.network(
                     url,
+                    headers: imageHeaders,
                     fit: .contain,
                     placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
                     errorBuilder: (context, error, _) => SvgPicture.network(
                       proxiedUrl,
+                      headers: imageHeaders,
                       fit: .contain,
                       placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
                       errorBuilder: (context, error, _) => Tooltip(

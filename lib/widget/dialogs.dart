@@ -295,6 +295,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                                 onTap: () async {
                                   final file = await DefaultCacheManager().getSingleFile(
                                     widget.url,
+                                    headers: imageHeaders,
                                   );
                                   final fileName = _getFileName(widget.url, file);
                                   final temp = File(
@@ -343,7 +344,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
   //save button logic
   Future<void> _saveImage(BuildContext context) async {
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.url);
+      final file = await DefaultCacheManager().getSingleFile(widget.url, headers: imageHeaders);
       final fileName = _getFileName(widget.url, file);
       final Directory dir;
       //save in downloads for android
@@ -743,6 +744,7 @@ class _VideoDialogState extends State<VideoDialog> {
                                         onTap: () async {
                                           final file = await DefaultCacheManager().getSingleFile(
                                             widget.url,
+                                            headers: imageHeaders,
                                           );
                                           final fileName = _getVideoFileName(widget.url);
                                           final temp = File(
@@ -793,7 +795,7 @@ class _VideoDialogState extends State<VideoDialog> {
 
   Future<void> _saveVideo(BuildContext context) async {
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.url);
+      final file = await DefaultCacheManager().getSingleFile(widget.url, headers: imageHeaders);
       final fileName = _getVideoFileName(widget.url);
       final Directory dir;
       if (Platform.isAndroid) {
