@@ -127,8 +127,6 @@ class HtmlContent extends StatelessWidget {
 }
 
 String _replaceAniListLinks(String html) {
-  debugPrint('=== HTML BEFORE REPLACE ===\n$html');
-
   final result = html.replaceAllMapped(
     RegExp(
       '<a[^>]*href=["\']https?://anilist\\.co/(anime|manga|character|staff|user)/(\\d+|[A-Za-z0-9_-]+)[^"\']*["\'][^>]*>(.*?)</a>',
@@ -145,7 +143,6 @@ String _replaceAniListLinks(String html) {
       return '<anilistcard category="$category" id="$idOrName"></anilistcard>';
     },
   );
-  debugPrint('=== PROCESSED ===\n$result');
   return result;
 }
 

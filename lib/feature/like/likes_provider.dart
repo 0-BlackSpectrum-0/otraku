@@ -43,10 +43,10 @@ final likesProvider = FutureProvider.autoDispose.family<List<LikeUser>, LikesTag
     var lookupId = tag.rootId ?? tag.id;
     for (var i = 0; i < 8; i++) {
       final root = await fetchComment(lookupId);
-      _log(
-        'lookup=$lookupId -> id=${root?['id']} '
-        'childComments=${root?['childComments'].runtimeType}',
-      );
+      // _log(
+      //   'lookup=$lookupId -> id=${root?['id']} '
+      //   'childComments=${root?['childComments'].runtimeType}',
+      // );
       if (root == null) break;
 
       node = _findComment(root, tag.id);
@@ -57,7 +57,7 @@ final likesProvider = FutureProvider.autoDispose.family<List<LikeUser>, LikesTag
       lookupId = next;
     }
 
-    _log('found=${node != null} likes=${node?['likes']}');
+    // _log('found=${node != null} likes=${node?['likes']}');
     likes = node?['likes'];
   } else {
     final data = await repo.request(GqlQuery.likes, {'id': tag.id, tag.type.name: true});
@@ -77,7 +77,7 @@ final likesProvider = FutureProvider.autoDispose.family<List<LikeUser>, LikesTag
     for (final u in likes)
       if (u['avatar']?['large'] == null) u['id'] as int,
   };
-  _log('likes=${likes.length} missingAvatars=${missing.length}');
+  // _log('likes=${likes.length} missingAvatars=${missing.length}');
 
   if (missing.isNotEmpty) {
     try {

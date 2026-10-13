@@ -303,7 +303,7 @@ class AnilistLinkHandler extends ConsumerWidget {
     }
 
     if (async.hasError || async.value == null) {
-      debugPrint('=== ANILIST CARD ERROR [$category/$idOrName] === ${async.error}');
+      // debugPrint('=== ANILIST CARD ERROR [$category/$idOrName] === ${async.error}');
       return const SizedBox.shrink();
     }
 

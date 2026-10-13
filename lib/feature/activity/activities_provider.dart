@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:material_ui/material_ui.dart';
+// import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:otraku/extension/future_extension.dart';
 import 'package:otraku/feature/activity/activities_filter_model.dart';
@@ -46,11 +46,9 @@ class ActivitiesNotifier extends AsyncNotifier<Paged<Activity>> {
     final variables = {'page': oldState.next, ..._filter.toGraphQlVariables()};
     final data = await ref.read(repositoryProvider).request(GqlQuery.activityPage, variables);
 
-    debugPrint('Queries: $variables');
-
-    for (final a in data['Page']['activities']) {
-      debugPrint('Returned activity id: ${a['id']} createdAt: ${a['createdAt']}');
-    }
+    // for (final a in data['Page']['activities']) {
+    //   debugPrint('Returned activity id: ${a['id']} createdAt: ${a['createdAt']}');
+    // }
 
     final createdAfter = variables['createdAfter'] as int?;
     final createdBefore = variables['createdBefore'] as int?;
