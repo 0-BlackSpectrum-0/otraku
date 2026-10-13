@@ -30,37 +30,31 @@ class MediaTitlesDialog extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: Theming.borderRadiusSmall),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 600),
-        child: Padding(
-          padding: const .symmetric(horizontal: Theming.offset),
-          child: Flexible(
-            fit: FlexFit.tight,
-            child: SingleChildScrollView(
+        child: SingleChildScrollView(
+          padding: const .all(Theming.offset),
+          child: CardExtension.highContrast(highContrast)(
+            child: Padding(
               padding: const .symmetric(vertical: Theming.offset),
-              child: CardExtension.highContrast(highContrast)(
-                child: Padding(
-                  padding: const .symmetric(vertical: Theming.offset),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: titles.length,
-                    padding: .zero,
-                    physics: const NeverScrollableScrollPhysics(),
-                    separatorBuilder: (context, _) => const Divider(),
-                    itemBuilder: (context, i) => Row(
-                      children: [
-                        const SizedBox(width: Theming.offset),
-                        Center(child: Text(titles[i].$1, textAlign: .start)),
-                        const SizedBox(width: Theming.offset * 2),
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: .opaque,
-                            onTap: () => SnackBarExtension.copy(context, titles[i].$2),
-                            child: Text(titles[i].$2, textAlign: .end),
-                          ),
-                        ),
-                        const SizedBox(width: Theming.offset),
-                      ],
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: titles.length,
+                padding: .zero,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (context, _) => const Divider(),
+                itemBuilder: (context, i) => Row(
+                  children: [
+                    const SizedBox(width: Theming.offset),
+                    Center(child: Text(titles[i].$1, textAlign: .start)),
+                    const SizedBox(width: Theming.offset * 2),
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: .opaque,
+                        onTap: () => SnackBarExtension.copy(context, titles[i].$2),
+                        child: Text(titles[i].$2, textAlign: .end),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: Theming.offset),
+                  ],
                 ),
               ),
             ),
