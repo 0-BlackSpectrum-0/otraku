@@ -123,7 +123,6 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
   late List<AnimationController> _pops = _makePops();
 
   int _selected = -1;
-  int _hovered = -1;
   double _lastAngle = 0;
   Offset _lastPos = Offset.zero;
 
@@ -148,7 +147,6 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
       }
       _pops = _makePops();
       _selected = -1;
-      _hovered = -1;
     }
     _intro.forward(from: 0);
   }
@@ -165,20 +163,13 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
 
   void _retarget() {
     for (int i = 0; i < _pops.length; i++) {
-      final target = i == _selected ? 1.0 : (i == _hovered ? 0.35 : 0.0);
       final c = _pops[i];
-      c.animateWith(SpringSimulation(_spring, c.value, target, c.velocity));
+      c.animateWith(SpringSimulation(_spring, c.value, i == _selected ? 1.0 : 0.0, c.velocity));
     }
   }
 
   void _select(int i) {
     setState(() => _selected = (i < 0 || i == _selected) ? -1 : i);
-    _retarget();
-  }
-
-  void _hover(int i) {
-    if (i == _hovered) return;
-    _hovered = i;
     _retarget();
   }
 
@@ -222,64 +213,53 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
     final text = TextTheme.of(context);
     final cats = widget.categories;
     final total = cats.fold<int>(0, (s, c) => s + c.$2);
-    final colors = [for (int i = 0; i < cats.length; i++) _sliceColor(scheme, i)];
+    final colors = [for (int i = 0; i < cats.length; i++) _sliceColors(scheme, i)];
 
     final donut = AspectRatio(
       aspectRatio: 1,
       child: LayoutBuilder(
         builder: (context, box) {
           final size = box.biggest;
-          final g = _geometry(size);
 
-          return MouseRegion(
-            onHover: (e) => _hover(_hit(e.localPosition, size)),
-            onExit: (_) => _hover(-1),
-            child: GestureDetector(
-              onTapUp: (d) => _select(_hit(d.localPosition, size)),
-              onPanStart: (d) {
-                _spin.stop();
-                _lastPos = d.localPosition;
-                _lastAngle = _angleAt(d.localPosition, size);
-              },
-              onPanUpdate: (d) {
-                final a = _angleAt(d.localPosition, size);
-                var delta = a - _lastAngle;
-                if (delta > math.pi) delta -= math.pi * 2;
-                if (delta < -math.pi) delta += math.pi * 2;
-                _spin.value += delta;
-                _lastAngle = a;
-                _lastPos = d.localPosition;
-              },
-              onPanEnd: (d) => _fling(d.velocity.pixelsPerSecond, size),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CustomPaint(
-                    painter: _DonutPainter(
-                      values: [for (final c in cats) c.$2],
-                      colors: colors,
-                      track: scheme.surfaceContainerHighest,
-                      intro: _intro,
-                      spin: _spin,
-                      pops: _pops,
+          return GestureDetector(
+            onTapUp: (d) => _select(_hit(d.localPosition, size)),
+            onPanStart: (d) {
+              _spin.stop();
+              _lastPos = d.localPosition;
+              _lastAngle = _angleAt(d.localPosition, size);
+            },
+            onPanUpdate: (d) {
+              final a = _angleAt(d.localPosition, size);
+              var delta = a - _lastAngle;
+              if (delta > math.pi) delta -= math.pi * 2;
+              if (delta < -math.pi) delta += math.pi * 2;
+              _spin.value += delta;
+              _lastAngle = a;
+              _lastPos = d.localPosition;
+            },
+            onPanEnd: (d) => _fling(d.velocity.pixelsPerSecond, size),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CustomPaint(
+                  painter: _DonutPainter(
+                    values: [for (final c in cats) c.$2],
+                    colors: colors,
+                    track: scheme.surfaceContainerHighest,
+                    intro: _intro,
+                    spin: _spin,
+                    pops: _pops,
+                  ),
+                ),
+                Center(
+                  child: IgnorePointer(
+                    child: _DonutCenter(
+                      value: _selected >= 0 && _selected < cats.length ? cats[_selected].$2 : total,
+                      percent: _selected >= 0 ? _percent(cats[_selected].$2, total) : '100%',
                     ),
                   ),
-                  Center(
-                    child: IgnorePointer(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: g.inner * 1.5),
-                        child: _selected >= 0 && _selected < cats.length
-                            ? _DonutCenter(
-                                label: cats[_selected].$1,
-                                value: cats[_selected].$2,
-                                percent: _percent(cats[_selected].$2, total),
-                              )
-                            : _DonutCenter(value: total),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -296,63 +276,25 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
             child: Padding(padding: const .all(Theming.offset), child: donut),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const .only(top: 5, bottom: 5, right: Theming.offset),
-              itemCount: cats.length,
-              itemBuilder: (context, i) => GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => _select(i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const .symmetric(vertical: 2),
-                  padding: const .symmetric(horizontal: 6, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: i == _selected ? colors[i].withAlpha(40) : Colors.transparent,
-                    borderRadius: Theming.borderRadiusSmall,
-                  ),
-                  child: Column(
-                    spacing: 4,
+            child: Padding(
+              padding: const .only(right: Theming.offset),
+              child: Align(
+                alignment: .centerLeft,
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
                     children: [
-                      Row(
-                        spacing: 8,
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: colors[i],
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(cats[i].$1, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ),
-                          Text(cats[i].$2.toString(), style: text.labelMedium),
-                          Text(
-                            _percent(cats[i].$2, total),
-                            style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: ColoredBox(
-                          color: scheme.surfaceContainerHighest,
-                          child: SizedBox(
-                            height: 3,
-                            child: AnimatedBuilder(
-                              animation: _intro,
-                              builder: (context, _) => FractionallySizedBox(
-                                alignment: Alignment.centerLeft,
-                                widthFactor:
-                                    (total > 0 ? cats[i].$2 / total : 0.0) *
-                                    Curves.easeOutCubic.transform(_intro.value),
-                                child: ColoredBox(color: colors[i]),
-                              ),
-                            ),
-                          ),
+                      for (int i = 0; i < cats.length; i++)
+                        _LegendChip(
+                          label: cats[i].$1,
+                          value: cats[i].$2,
+                          colors: colors[i],
+                          startAngle:
+                              cats.take(i).fold<int>(0, (s, c) => s + c.$2) / total * (math.pi * 2),
+                          selected: i == _selected,
+                          onTap: () => _select(i),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -380,22 +322,26 @@ String _percent(int value, int total) =>
 
 /// Slice colors come only from the current theme, so the chart follows
 /// the app's colors and light/dark mode.
-Color _sliceColor(ColorScheme s, int i) {
-  final base = switch (i % 3) {
-    0 => s.primary,
-    1 => s.tertiary,
-    _ => s.secondary,
+(Color from, Color to) _sliceColors(ColorScheme s, int i) {
+  final (base, container) = switch (i % 3) {
+    0 => (s.primary, s.primaryContainer),
+    1 => (s.tertiary, s.tertiaryContainer),
+    _ => (s.secondary, s.secondaryContainer),
   };
   final tier = i ~/ 3;
-  if (tier == 0) return base;
-  return Color.lerp(base, tier.isOdd ? s.surface : s.onSurface, 0.35 + 0.1 * (tier ~/ 2))!;
+  if (tier == 0) return (container, base);
+
+  final mixWith = tier.isOdd ? s.surface : s.onSurface;
+  final k = 0.3 + 0.1 * (tier ~/ 2);
+
+  return (Color.lerp(container, mixWith, k)!, Color.lerp(base, mixWith, k)!);
 }
 
 ({double outer, double inner, double pop}) _geometry(Size size) {
   final r = math.min(size.width, size.height) / 2;
   final pop = r * 0.07;
   final outer = r - pop;
-  return (outer: outer, inner: outer * 0.62, pop: pop);
+  return (outer: outer, inner: outer - 24, pop: pop);
 }
 
 double _baseAngle(double spin, double ease) => -math.pi / 2 + spin + (1 - ease) * -1.75;
@@ -418,7 +364,7 @@ class _DonutPainter extends CustomPainter {
   }) : super(repaint: Listenable.merge([intro, spin, ...pops]));
 
   final List<int> values;
-  final List<Color> colors;
+  final List<(Color, Color)> colors;
   final Color track;
   final AnimationController intro;
   final AnimationController spin;
@@ -470,11 +416,16 @@ class _DonutPainter extends CustomPainter {
       final shift = pop * g.pop;
       final c = center + Offset(math.cos(mid), math.sin(mid)) * shift;
 
+      final startAngle = base + from - lead;
+
       canvas.drawPath(
-        _sector(c, g.inner, g.outer + shift * 0.35, base + from - lead, sweep),
+        _sector(c, g.inner, g.outer + shift * 0.35, startAngle, sweep),
         Paint()
-          ..color = colors[i]
-          ..isAntiAlias = true,
+          ..isAntiAlias = true
+          ..shader = RadialGradient(
+            colors: [colors[i].$1, colors[i].$2],
+            transform: GradientRotation(startAngle),
+          ).createShader(Rect.fromCircle(center: c, radius: g.outer)),
       );
     }
   }
@@ -485,10 +436,9 @@ class _DonutPainter extends CustomPainter {
 }
 
 class _DonutCenter extends StatelessWidget {
-  const _DonutCenter({required this.value, this.label, this.percent});
+  const _DonutCenter({required this.value, this.percent});
 
   final int value;
-  final String? label;
   final String? percent;
 
   @override
@@ -499,21 +449,79 @@ class _DonutCenter extends StatelessWidget {
     return Column(
       mainAxisSize: .min,
       children: [
-        if (label != null)
-          Text(
-            label!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: text.labelSmall?.copyWith(color: muted),
-          ),
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: value.toDouble()),
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOutCubic,
-          builder: (context, v, _) => Text(v.round().toString(), style: text.titleLarge),
+          builder: (context, v, _) =>
+              Text(v.round().toString(), style: TextTheme.of(context).titleLarge),
         ),
         if (percent != null) Text(percent!, style: text.labelSmall?.copyWith(color: muted)),
       ],
+    );
+  }
+}
+
+class _LegendChip extends StatelessWidget {
+  const _LegendChip({
+    required this.label,
+    required this.value,
+    required this.colors,
+    required this.selected,
+    required this.onTap,
+    required this.startAngle,
+  });
+
+  final String label;
+  final int value;
+  final (Color from, Color to) colors;
+  final bool selected;
+  final VoidCallback onTap;
+  final double startAngle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = ColorScheme.of(context);
+    final text = TextTheme.of(context);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const .symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? colors.$2.withAlpha(45) : Colors.transparent,
+          borderRadius: Theming.borderRadiusSmall,
+          border: Border.all(color: selected ? colors.$2 : Colors.transparent),
+        ),
+        child: Row(
+          mainAxisSize: .min,
+          spacing: 6,
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: scheme.outlineVariant),
+                gradient: RadialGradient(
+                  colors: [Color.lerp(colors.$1, colors.$2, 0.8)!, colors.$2],
+                  transform: GradientRotation(startAngle),
+                ),
+              ),
+            ),
+            Flexible(child: Text(label, style: text.labelMedium)),
+            Text(
+              value.toString(),
+              style: text.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
