@@ -116,7 +116,8 @@ class _TopBarContent extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (activity.donatorBadge != null)
+                    if (activity.donatorBadge != null) ...[
+                      const SizedBox(width: Theming.offset),
                       ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: box.maxWidth),
                         child: Container(
@@ -135,6 +136,7 @@ class _TopBarContent extends StatelessWidget {
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
               ),
