@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:otraku/extension/scroll_controller_extension.dart';
 
 class HidingBar extends StatefulWidget implements PreferredSizeWidget {
   const HidingBar({required this.child, required this.scrollCtrl});
@@ -18,22 +19,14 @@ class _HidingBarState extends State<HidingBar> with SingleTickerProviderStateMix
   late final Animation<Offset> _slideAnimation;
   late final Animation<double> _fadeAnimation;
 
-  var _visible = true;
-  var _lastOffset = 0.0;
-
   void _visibility() {
-    final pos = widget.scrollCtrl.positions.last;
-    final dif = pos.pixels - _lastOffset;
-
-    // If the position has moved enough from the last
-    // spot or is out of bounds, hide/show the actions.
-    if (dif > 15 || pos.pixels > pos.maxScrollExtent) {
-      _lastOffset = pos.pixels;
-      _animationCtrl.reverse().then((_) => setState(() => _visible = false));
-    } else if (dif < -15 || pos.pixels < pos.minScrollExtent) {
-      _lastOffset = pos.pixels;
-      setState(() => _visible = true);
-      _animationCtrl.forward();
+    switch (widget.scrollCtrl.barsVisibility) {
+      case null:
+        break;
+      case true:
+        _animationCtrl.forward();
+      case false:
+        _animationCtrl.reverse();
     }
   }
 
@@ -43,12 +36,17 @@ class _HidingBarState extends State<HidingBar> with SingleTickerProviderStateMix
     widget.scrollCtrl.addListener(_visibility);
 
     _animationCtrl = AnimationController(
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 220),
       vsync: this,
       value: 1,
     );
-    _slideAnimation = Tween(begin: const Offset(0, 0.2), end: Offset.zero).animate(_animationCtrl);
-    _fadeAnimation = Tween(begin: 0.3, end: 1.0).animate(_animationCtrl);
+    final curved = CurvedAnimation(
+      parent: _animationCtrl,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _slideAnimation = Tween(begin: const Offset(0, -1), end: Offset.zero).animate(curved);
+    _fadeAnimation = curved;
   }
 
   @override
@@ -65,16 +63,22 @@ class _HidingBarState extends State<HidingBar> with SingleTickerProviderStateMix
     if (widget.scrollCtrl != oldWidget.scrollCtrl) {
       oldWidget.scrollCtrl.removeListener(_visibility);
       widget.scrollCtrl.addListener(_visibility);
+      _animationCtrl.forward();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_visible) return const SizedBox();
-
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+    return AnimatedBuilder(
+      animation: _animationCtrl,
+      builder: (context, child) =>
+          IgnorePointer(ignoring: _animationCtrl.value < 0.5, child: child),
+      child: RepaintBoundary(
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+        ),
+      ),
     );
   }
 }
