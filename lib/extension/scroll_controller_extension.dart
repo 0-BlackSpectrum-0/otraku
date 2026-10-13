@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 extension ScrollControllerExtension on ScrollController {
@@ -12,5 +13,17 @@ extension ScrollControllerExtension on ScrollController {
       duration: const Duration(milliseconds: 200),
       curve: Curves.decelerate,
     );
+  }
+
+  bool? get barsVisibility {
+    if (positions.isEmpty) return null;
+    final pos = positions.last;
+    if (pos.pixels <= pos.minScrollExtent) return true;
+    if (pos.pixels >= pos.maxScrollExtent) return null;
+    return switch (pos.userScrollDirection) {
+      ScrollDirection.idle => null,
+      ScrollDirection.forward => true,
+      ScrollDirection.reverse => false,
+    };
   }
 }

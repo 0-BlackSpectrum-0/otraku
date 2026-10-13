@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:otraku/extension/scroll_controller_extension.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 
@@ -33,20 +34,15 @@ class _BottomNavigationState extends State<BottomNavigation> with SingleTickerPr
   late int _selected = widget.selected;
   late final AnimationController _animationCtrl;
   late final Animation<Offset> _slideAnimation;
-  var _lastOffset = 0.0;
 
   void _onScroll() {
-    final ctrl = widget.scrollCtrl;
-    if (ctrl == null || ctrl.positions.isEmpty) return;
-    final pos = ctrl.positions.last;
-    final dif = pos.pixels - _lastOffset;
-
-    if (dif > 15 || pos.pixels > pos.maxScrollExtent) {
-      _lastOffset = pos.pixels;
-      _animationCtrl.reverse();
-    } else if (dif < -15 || pos.pixels < pos.minScrollExtent) {
-      _lastOffset = pos.pixels;
-      _animationCtrl.forward();
+    switch (widget.scrollCtrl?.barsVisibility) {
+      case true:
+        _animationCtrl.forward();
+      case false:
+        _animationCtrl.reverse();
+      default:
+        break;
     }
   }
 
@@ -56,12 +52,15 @@ class _BottomNavigationState extends State<BottomNavigation> with SingleTickerPr
     _animationCtrl = AnimationController(
       vsync: this,
       value: 1,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 220),
     );
-    _slideAnimation = Tween(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationCtrl, curve: Curves.easeOut));
+    _slideAnimation = Tween(begin: const Offset(0, 1), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: _animationCtrl,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
+    );
 
     widget.scrollCtrl?.addListener(_onScroll);
   }
