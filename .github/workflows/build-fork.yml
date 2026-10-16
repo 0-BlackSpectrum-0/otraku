@@ -126,9 +126,16 @@ jobs:
           <resources xmlns:tools="http://schemas.android.com/tools"
               tools:keep="@drawable/notification_icon_monochrome" />
           EOF
-
+          
       - name: Build Release APK
-        run: flutter build apk --release
+        run: |
+          for i in 1 2 3; do
+            flutter build apk --release && exit 0
+            echo "Build failed, clearing partial NDK and retrying ($i/3)..."
+            rm -rf "$ANDROID_HOME"/ndk/*
+            sleep 15
+          done
+          exit 1
 
       - name: Rename APK
         run: |
