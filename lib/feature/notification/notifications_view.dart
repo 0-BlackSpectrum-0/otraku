@@ -319,20 +319,22 @@ class _AvatarNotificationCard extends StatelessWidget {
                     mainAxisSize: .min,
                     spacing: Theming.offset,
                     children: [
-                      Row(
-                        mainAxisSize: .min,
-                        spacing: 2,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: .ellipsis,
-                              style: textTheme.bodyMedium,
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: .min,
+                          spacing: 2,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: .ellipsis,
+                                style: textTheme.bodyMedium,
+                              ),
                             ),
-                          ),
-                          if (isModerator) Icon(Icons.verified, size: 12, color: colors.primary),
-                        ],
+                            if (isModerator) Icon(Icons.verified, size: 12, color: colors.primary),
+                          ],
+                        ),
                       ),
                       if (donatorBadge != null && donatorBadge!.isNotEmpty)
                         Flexible(
