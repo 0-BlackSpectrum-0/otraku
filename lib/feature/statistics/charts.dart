@@ -290,8 +290,11 @@ class _PieChartState extends State<PieChart> with TickerProviderStateMixin {
                           label: cats[i].$1,
                           value: cats[i].$2,
                           colors: colors[i],
-                          startAngle:
-                              cats.take(i).fold<int>(0, (s, c) => s + c.$2) / total * (math.pi * 2),
+                          startAngle: total > 0
+                              ? cats.take(i).fold<int>(0, (s, c) => s + c.$2) /
+                                    total *
+                                    (math.pi * 2)
+                              : 0.0,
                           selected: i == _selected,
                           onTap: () => _select(i),
                         ),
