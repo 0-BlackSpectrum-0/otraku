@@ -1307,7 +1307,7 @@ abstract class _GqlFragment {
       createdAt
       siteUrl
       user {id name avatar {large} donatorTier donatorBadge moderatorRoles}
-      media {id type title {userPreferred} coverImage {extraLarge large medium} format}
+      media {id type title {userPreferred} coverImage {extraLarge large medium} format countryOfOrigin mediaListEntry {status}}
       progress
       status
     }
