@@ -182,6 +182,7 @@ class _ActivityMediaBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final textTheme = TextTheme.of(context);
     final bodyMediumLineHeight = context.lineHeight(textTheme.bodyMedium!);
     final labelMediumLineHeight = context.lineHeight(textTheme.labelMedium!);
@@ -225,7 +226,20 @@ class _ActivityMediaBox extends StatelessWidget {
                             overflow: .ellipsis,
                             maxLines: 1,
                           ),
-                        Spacer(),
+                        if (item.viewerStatus != null) ...[
+                          if (item.format != null) const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'I: ${item.viewerStatus!.localize(l10n, item.isAnime)}',
+                              style: textTheme.labelMedium?.copyWith(
+                                color: ColorScheme.of(context).primary,
+                              ),
+                              overflow: .ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
                         if (item.score > 0) ScoreLabel(item.score, item.scoreFormat),
                       ],
                     ),

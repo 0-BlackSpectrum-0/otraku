@@ -1,5 +1,6 @@
 import 'package:otraku/extension/date_time_extension.dart';
 import 'package:otraku/extension/string_extension.dart';
+import 'package:otraku/feature/collection/collection_models.dart';
 import 'package:otraku/feature/media/media_models.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/util/paged.dart';
@@ -10,6 +11,17 @@ String? _donatorBadge(Map<String, dynamic> user) {
   if ((tier ?? 0) <= 0) return null;
   final badge = (user['donatorBadge'] as String?)?.trim();
   return badge == null || badge.isEmpty || tier <= 3 ? 'Donator' : badge;
+}
+
+String? _formatLabel(dynamic format, dynamic country, bool isAnime) {
+  if (!isAnime && format == 'MANGA') {
+    return switch (country) {
+      'KR' => 'Manhwa',
+      'CN' || 'TW' => 'Manhua',
+      _ => 'Manga',
+    };
+  }
+  return StringExtension.tryNoScreamingSnakeCase(format);
 }
 
 class ExpandedActivity {
@@ -105,7 +117,12 @@ sealed class Activity {
             mediaId: map['media']['id'],
             title: map['media']['title']['userPreferred'],
             coverUrl: map['media']['coverImage'][imageQuality.value],
-            format: StringExtension.tryNoScreamingSnakeCase(map['media']['format']),
+            format: _formatLabel(
+              map['media']['format'],
+              map['media']['countryOfOrigin'],
+              map['type'] == 'ANIME_LIST',
+            ),
+            viewerStatus: ListStatus.from(map['media']['mediaListEntry']?['status']),
             isAnime: map['type'] == 'ANIME_LIST',
             siteUrl: map['siteUrl'],
             text: '$status $progress',
@@ -213,6 +230,7 @@ class MediaActivity extends Activity {
     required this.coverUrl,
     required this.isAnime,
     required this.format,
+    required this.viewerStatus,
   });
 
   final int mediaId;
@@ -220,6 +238,7 @@ class MediaActivity extends Activity {
   final String coverUrl;
   final bool isAnime;
   final String? format;
+  final ListStatus? viewerStatus;
   double score = 0.0;
   ScoreFormat scoreFormat = ScoreFormat.point10;
 }
