@@ -18,6 +18,7 @@
      </queries>
 
      <application 
+          android:largeHeap='true'
           android:allowBackup="false" 
           android:fullBackupContent="@xml/backup_rules" 
           android:name="${applicationName}"

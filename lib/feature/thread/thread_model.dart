@@ -72,6 +72,7 @@ class ThreadInfo {
     required this.id,
     required this.title,
     required this.body,
+    required this.rawBody,
     required this.viewCount,
     required this.replyCount,
     required this.likeCount,
@@ -107,6 +108,7 @@ class ThreadInfo {
       id: map['id'],
       title: map['title'] ?? '?',
       body: parseMarkdown(map['body'] ?? ''),
+      rawBody: map['body'] ?? '',
       viewCount: map['viewCount'] ?? 0,
       replyCount: map['replyCount'] ?? 0,
       likeCount: map['likeCount'] ?? 0,
@@ -127,6 +129,7 @@ class ThreadInfo {
   final int id;
   final String title;
   final String body;
+  final String rawBody;
   final int viewCount;
   int likeCount;
   final int replyCount;

@@ -347,7 +347,7 @@ class _Content extends StatelessWidget {
                     message: 'View Raw',
                     child: InkResponse(
                       radius: Theming.radiusSmall.x,
-                      onTap: () => showRawMarkdown(context, thread.info.body),
+                      onTap: () => showRawMarkdown(context, thread.info.rawBody),
                       child: const Icon(Icons.code_rounded, size: Theming.iconSmall),
                     ),
                   ),

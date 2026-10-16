@@ -9,6 +9,7 @@ import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/layout/content_header.dart';
 import 'package:otraku/widget/dialogs.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
+import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/text_rail.dart';
 
 class UserHeader extends StatelessWidget {
@@ -43,6 +44,19 @@ class UserHeader extends StatelessWidget {
       bannerUrl: user?.bannerUrl,
       siteUrl: user?.siteUrl,
       title: user?.name,
+      menuTiles: [
+        if (user != null && user!.rawDescription.isNotEmpty)
+          Builder(
+            builder: (sheetContext) => ListTile(
+              title: const Text('View raw'),
+              leading: const Icon(Icons.code_rounded),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                showRawMarkdown(context, user!.rawDescription);
+              },
+            ),
+          ),
+      ],
       details: [
         GestureDetector(
           behavior: .opaque,

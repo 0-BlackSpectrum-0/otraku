@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:otraku/extension/snack_bar_extension.dart';
 
 void showRawMarkdown(BuildContext context, String rawText) {
   showDialog(
@@ -11,7 +12,16 @@ void showRawMarkdown(BuildContext context, String rawText) {
           style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
         ),
       ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+      actions: [
+        TextButton(
+          onPressed: () {
+            SnackBarExtension.copy(context, rawText);
+            Navigator.pop(context);
+          },
+          child: const Text('Copy'),
+        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+      ],
     ),
   );
 }

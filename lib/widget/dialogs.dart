@@ -6,7 +6,6 @@ import 'package:ionicons_plus/ionicons_plus.dart';
 import 'package:otraku/extension/snack_bar_extension.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:otraku/util/theming.dart';
 import 'package:otraku/widget/cached_image.dart';
 import 'package:otraku/widget/html_content.dart';
@@ -238,7 +237,12 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                   child: InteractiveViewer(
                     clipBehavior: Clip.none,
                     transformationController: _transformCtrl,
-                    child: CachedImage(widget.url, fit: BoxFit.contain, height: null),
+                    child: CachedImage(
+                      widget.url,
+                      fit: BoxFit.contain,
+                      height: null,
+                      fullResolution: true,
+                    ),
                   ),
                 ),
               ),
@@ -293,10 +297,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
                                 title: Text(l10n.actionShare),
                                 leading: const Icon(Ionicons.share_outline),
                                 onTap: () async {
-                                  final file = await DefaultCacheManager().getSingleFile(
-                                    widget.url,
-                                    headers: imageHeaders,
-                                  );
+                                  final file = await getFileFromCacheOrDownload(widget.url);
                                   final fileName = _getFileName(widget.url, file);
                                   final temp = File(
                                     '${(await getTemporaryDirectory()).path}/$fileName',
@@ -344,7 +345,7 @@ class _ImageDialogState extends State<ImageDialog> with SingleTickerProviderStat
   //save button logic
   Future<void> _saveImage(BuildContext context) async {
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.url, headers: imageHeaders);
+      final file = await getFileFromCacheOrDownload(widget.url);
       final fileName = _getFileName(widget.url, file);
       final Directory dir;
       //save in downloads for android
@@ -508,25 +509,31 @@ class _VideoDialogState extends State<VideoDialog> {
   late final VideoPlayerController _controller;
   bool _initialized = false;
   bool _showControls = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() => _initialized = true);
-        _controller.play();
-        _controller.setVolume(1);
-      });
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url), httpHeaders: videoHeaders)
+      ..initialize()
+          .then((_) {
+            if (!mounted) return;
+            setState(() => _initialized = true);
+            _controller.play();
+            _controller.setVolume(1);
+          })
+          .catchError((Object e) {
+            debugPrint('VideoDialog: video_player failed: $e');
+            if (mounted) setState(() => _error = e.toString());
+          });
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _controller.dispose();
     super.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   @override
@@ -549,7 +556,9 @@ class _VideoDialogState extends State<VideoDialog> {
                     _controller.value.isPlaying ? _controller.pause() : _controller.play();
                     setState(() {});
                   },
-                  child: !_initialized
+                  child: _error != null
+                      ? MediaKitFallbackPlayer(widget.url, inDialog: true)
+                      : !_initialized
                       ? const CircularProgressIndicator()
                       : AspectRatio(
                           aspectRatio: _controller.value.aspectRatio,
@@ -680,7 +689,7 @@ class _VideoDialogState extends State<VideoDialog> {
                                         SizedBox(
                                           width: 45,
                                           child: Text(
-                                            value.position.inHours > 0
+                                            value.duration.inHours > 0
                                                 ? '${value.duration.inHours}:${value.duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.duration.inSeconds.remainder(60).toString().padLeft(2, '0')} '
                                                 : '${value.duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${value.duration.inSeconds.remainder(60).toString().padLeft(2, '0')} ',
                                             style: TextStyle(
@@ -742,10 +751,7 @@ class _VideoDialogState extends State<VideoDialog> {
                                         title: Text('Share'),
                                         leading: const Icon(Ionicons.share_outline),
                                         onTap: () async {
-                                          final file = await DefaultCacheManager().getSingleFile(
-                                            widget.url,
-                                            headers: imageHeaders,
-                                          );
+                                          final file = await getFileFromCacheOrDownload(widget.url);
                                           final fileName = _getVideoFileName(widget.url);
                                           final temp = File(
                                             '${(await getTemporaryDirectory()).path}/$fileName',
@@ -795,7 +801,7 @@ class _VideoDialogState extends State<VideoDialog> {
 
   Future<void> _saveVideo(BuildContext context) async {
     try {
-      final file = await DefaultCacheManager().getSingleFile(widget.url, headers: imageHeaders);
+      final file = await getFileFromCacheOrDownload(widget.url);
       final fileName = _getVideoFileName(widget.url);
       final Directory dir;
       if (Platform.isAndroid) {

@@ -212,7 +212,7 @@ class _UnderlineSyntax extends InlineSyntax {
 /// Besides the standard markdown image syntax,
 /// AniList allows for an additional way to embed images.
 class _ImageSyntax extends InlineSyntax {
-  _ImageSyntax() : super(r'img((?:\d+%?)?)\(((?:https:\/\/)[^)]+)\)', caseSensitive: false);
+  _ImageSyntax() : super(r'img((?:\d+%?)?)\(((?:https?:\/\/)[^)]+)\)', caseSensitive: false);
 
   @override
   bool onMatch(InlineParser parser, Match match) {
@@ -253,7 +253,7 @@ class _VideoSyntax extends InlineSyntax {
 }
 
 class _MentionSyntax extends InlineSyntax {
-  _MentionSyntax() : super(r'\B@([A-Za-z0-9]+)', startCharacter: 64);
+  _MentionSyntax() : super(r'\B@([A-Za-z0-9_]+)', startCharacter: 64);
 
   @override
   bool onMatch(InlineParser parser, Match match) {

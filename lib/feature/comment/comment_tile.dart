@@ -101,7 +101,7 @@ class CommentTile extends StatelessWidget {
                     message: 'View Raw',
                     child: InkResponse(
                       radius: Theming.radiusSmall.x,
-                      onTap: () => showRawMarkdown(context, comment.text),
+                      onTap: () => showRawMarkdown(context, comment.rawText),
                       child: const Icon(Icons.code_rounded, size: Theming.iconSmall),
                     ),
                   ),

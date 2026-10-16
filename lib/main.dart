@@ -6,14 +6,25 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:otraku/widget/media_loader.dart';
 import 'package:otraku/feature/viewer/persistence_model.dart';
 import 'package:otraku/feature/viewer/persistence_provider.dart';
 import 'package:otraku/localizations/gen.dart';
 import 'package:otraku/util/routes.dart';
 import 'package:otraku/util/background_worker.dart';
 import 'package:otraku/util/theming.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
+  VisibilityDetectorController.instance.updateInterval = const Duration(milliseconds: 100);
+
+  PaintingBinding.instance.imageCache
+    ..maximumSizeBytes = 80 << 20
+    ..maximumSize = 300;
+
   final container = ProviderContainer(retry: (retryCount, error) => null);
   await container.read(persistenceProvider.notifier).init();
   WidgetsBinding.instance.addPostFrameCallback((_) => BackgroundWorker.init(_notificationCtrl));
@@ -87,6 +98,7 @@ class AppState extends ConsumerState<_App> with WidgetsBindingObserver {
 
   @override
   void didHaveMemoryPressure() {
+    MediaLoader.instance.clearMemory();
     PaintingBinding.instance.imageCache
       ..clear()
       ..clearLiveImages();

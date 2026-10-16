@@ -136,7 +136,7 @@ class ReplyCard extends StatelessWidget {
                                 l10n,
                                 activityId,
                                 reply.authorName,
-                                reply.text,
+                                reply.rawText,
                               ),
                       ),
                     ),
@@ -200,7 +200,7 @@ class ReplyCard extends StatelessWidget {
           leading: const Icon(Icons.code_rounded),
           onTap: () {
             Navigator.pop(context);
-            showRawMarkdown(context, reply.text);
+            showRawMarkdown(context, reply.rawText);
           },
         ),
       ]),

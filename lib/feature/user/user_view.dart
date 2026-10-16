@@ -17,7 +17,6 @@ import 'package:otraku/feature/user/user_header.dart';
 import 'package:otraku/widget/html_content.dart';
 import 'package:otraku/widget/layout/constrained_view.dart';
 import 'package:otraku/widget/loaders.dart';
-import 'package:otraku/widget/raw_dialog_box.dart';
 
 class UserView extends StatelessWidget {
   const UserView(this.tag, this.avatarUrl);
@@ -167,12 +166,7 @@ class _UserView extends StatelessWidget {
                 if (data.description.isNotEmpty) ...[
                   const SliverToBoxAdapter(child: SizedBox(height: Theming.offset)),
                   SliverConstrainedView(
-                    sliver: SliverToBoxAdapter(
-                      child: GestureDetector(
-                        onLongPress: () => showRawMarkdown(context, data.description),
-                        child: HtmlContent(data.description),
-                      ),
-                    ),
+                    sliver: HtmlContent(data.description, renderMode: .sliverList),
                   ),
                 ],
                 const SliverFooter(),

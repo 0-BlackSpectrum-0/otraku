@@ -437,13 +437,13 @@ class _ActivityFooterState extends State<ActivityFooter> {
                   : const Icon(Ionicons.notifications_off_outline),
               onTap: _toggleSubscription,
             ),
-            if (activity.text.isNotEmpty)
+            if (activity.text.isNotEmpty && activity is! MediaActivity)
               ListTile(
                 title: const Text('View Raw'),
                 leading: const Icon(Icons.code_rounded),
                 onTap: () {
                   Navigator.pop(context);
-                  showRawMarkdown(context, activity.text);
+                  showRawMarkdown(context, activity.rawText!);
                 },
               ),
           ]);

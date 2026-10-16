@@ -54,6 +54,7 @@ class ContentHeader extends StatelessWidget {
     this.imageFit = .cover,
     this.trailingTopButtons = const [],
     this.details = const [],
+    this.menuTiles = const [],
     this.bannerUrl,
     this.tabBarConfig,
     this.onTitleLongPress,
@@ -68,6 +69,7 @@ class ContentHeader extends StatelessWidget {
   final String? title;
   final List<Widget> details;
   final List<Widget> trailingTopButtons;
+  final List<Widget> menuTiles;
   final String? siteUrl;
   final String? bannerUrl;
   final TabBarConfig? tabBarConfig;
@@ -101,6 +103,7 @@ class ContentHeader extends StatelessWidget {
         title: title,
         siteUrl: siteUrl,
         trailingTopButtons: trailingTopButtons,
+        menuTiles: menuTiles,
         bannerUrl: bannerUrl,
         tabBarConfig: tabBarConfig,
         tabBar: tabBar,
@@ -198,6 +201,7 @@ class _Delegate extends SliverPersistentHeaderDelegate {
     required this.trailingTopButtons,
     required this.topPadding,
     this.tabBar,
+    this.menuTiles = const [],
   });
 
   final PreferredSizeWidget content;
@@ -208,6 +212,7 @@ class _Delegate extends SliverPersistentHeaderDelegate {
   final String? bannerUrl;
   final TabBarConfig? tabBarConfig;
   final Widget? tabBar;
+  final List<Widget> menuTiles;
 
   bool get _hasTabBar => tabBarConfig != null || tabBar != null;
   @override
@@ -219,7 +224,12 @@ class _Delegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _Delegate oldDelegate) =>
-      topPadding != oldDelegate.topPadding || title != oldDelegate.title;
+      topPadding != oldDelegate.topPadding ||
+      title != oldDelegate.title ||
+      bannerUrl != oldDelegate.bannerUrl ||
+      siteUrl != oldDelegate.siteUrl ||
+      trailingTopButtons.length != oldDelegate.trailingTopButtons.length ||
+      menuTiles.length != oldDelegate.menuTiles.length;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -254,7 +264,7 @@ class _Delegate extends SliverPersistentHeaderDelegate {
           tooltip: l10n.actionMore,
           icon: const Icon(Ionicons.ellipsis_horizontal),
           onPressed: siteUrl != null
-              ? () => showSheet(context, SimpleSheet.link(context, siteUrl!))
+              ? () => showSheet(context, SimpleSheet.link(context, siteUrl!, menuTiles))
               : null,
         ),
       ],

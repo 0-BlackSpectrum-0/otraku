@@ -9,6 +9,7 @@ class User {
     required this.name,
     required this.createdAt,
     required this.description,
+    required this.rawDescription,
     required this.imageUrl,
     required this.bannerUrl,
     required this.siteUrl,
@@ -37,6 +38,7 @@ class User {
           ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] * 1000).formattedDate
           : null,
       description: parseMarkdown(map['about'] ?? ''),
+      rawDescription: map['about'] ?? '',
       imageUrl: map['avatar']['large'],
       bannerUrl: map['bannerImage'],
       siteUrl: map['siteUrl'],
@@ -55,6 +57,7 @@ class User {
   final String name;
   final String? createdAt;
   final String description;
+  final String rawDescription;
   final String imageUrl;
   final String? bannerUrl;
   final String? siteUrl;

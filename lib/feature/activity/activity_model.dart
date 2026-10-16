@@ -28,6 +28,7 @@ sealed class Activity {
     required this.authorAvatarUrl,
     required this.createdAt,
     required this.text,
+    this.rawText,
     required this.siteUrl,
     required this.isOwned,
     required this.replyCount,
@@ -54,6 +55,7 @@ sealed class Activity {
             authorAvatarUrl: map['user']['avatar']['large'],
             siteUrl: map['siteUrl'],
             text: parseMarkdown(map['text'] ?? ''),
+            rawText: map['text'] ?? '',
             createdAt: DateTimeExtension.fromSecondsSinceEpoch(map['createdAt']),
             isOwned: map['user']['id'] == viewerId,
             replyCount: map['replyCount'] ?? 0,
@@ -76,6 +78,7 @@ sealed class Activity {
             recipientAvatarUrl: map['recipient']['avatar']['large'],
             siteUrl: map['siteUrl'],
             text: parseMarkdown(map['message'] ?? ''),
+            rawText: map['message'] ?? '',
             createdAt: DateTimeExtension.fromSecondsSinceEpoch(map['createdAt']),
             isOwned: map['messenger']['id'] == viewerId || map['recipient']['id'] == viewerId,
             isPrivate: map['isPrivate'] ?? false,
@@ -128,6 +131,7 @@ sealed class Activity {
   final String? donatorBadge;
   final String authorAvatarUrl;
   final String text;
+  final String? rawText;
   final String siteUrl;
   final DateTime createdAt;
   final bool isOwned;
@@ -148,6 +152,7 @@ class StatusActivity extends Activity {
     required super.authorAvatarUrl,
     required super.createdAt,
     required super.text,
+    required super.rawText,
     required super.siteUrl,
     required super.isOwned,
     required super.replyCount,
@@ -167,6 +172,7 @@ class MessageActivity extends Activity {
     required super.authorAvatarUrl,
     required super.createdAt,
     required super.text,
+    required super.rawText,
     required super.siteUrl,
     required super.isOwned,
     required super.replyCount,
@@ -226,6 +232,7 @@ class ActivityReply {
     required this.donatorBadge,
     required this.authorAvatarUrl,
     required this.text,
+    required this.rawText,
     required this.createdAt,
     this.likeCount = 0,
     this.isLiked = false,
@@ -242,6 +249,7 @@ class ActivityReply {
       donatorBadge: _donatorBadge(map['user']),
       authorAvatarUrl: map['user']['avatar']['large'],
       text: parseMarkdown(map['text'] ?? ''),
+      rawText: map['text'] ?? '',
       createdAt: DateTimeExtension.fromSecondsSinceEpoch(map['createdAt']),
       likeCount: map['likeCount'] ?? 0,
       isLiked: map['isLiked'] ?? false,
@@ -255,6 +263,7 @@ class ActivityReply {
   final String? donatorBadge;
   final String authorAvatarUrl;
   final String text;
+  final String rawText;
   final DateTime createdAt;
   int likeCount;
   bool isLiked;

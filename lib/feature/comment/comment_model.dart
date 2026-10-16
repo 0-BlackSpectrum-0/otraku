@@ -5,6 +5,7 @@ class Comment {
   Comment._({
     required this.id,
     required this.text,
+    required this.rawText,
     required this.likeCount,
     required this.isLiked,
     required this.isLocked,
@@ -27,6 +28,7 @@ class Comment {
     return Comment._(
       id: map['id'],
       text: parseMarkdown(map['comment'] ?? ''),
+      rawText: map['comment'] ?? '',
       likeCount: map['likeCount'] ?? 0,
       isLiked: map['isLiked'] ?? false,
       isLocked: map['isLocked'] ?? false,
@@ -43,6 +45,7 @@ class Comment {
 
   final int id;
   final String text;
+  final String rawText;
   int likeCount;
   bool isLiked;
   final bool isLocked;
@@ -58,6 +61,7 @@ class Comment {
   Comment _copyWith({String? text, List<Comment>? childComments}) => Comment._(
     id: id,
     text: text ?? this.text,
+    rawText: rawText,
     likeCount: likeCount,
     isLiked: isLiked,
     isLocked: isLocked,
