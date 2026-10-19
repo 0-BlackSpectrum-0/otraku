@@ -227,20 +227,25 @@ class _ActivityMediaBox extends StatelessWidget {
                             maxLines: 1,
                           ),
                         if (item.viewerStatus != null) ...[
-                          if (item.format != null) const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              'I: ${item.viewerStatus!.localize(l10n, item.isAnime)}',
-                              style: textTheme.labelMedium?.copyWith(
-                                color: ColorScheme.of(context).primary,
-                              ),
-                              overflow: .ellipsis,
-                              maxLines: 1,
+                          if (item.format != null) const SizedBox(width: Theming.offset),
+                          Text(
+                            [
+                                  'Planning',
+                                  'Reading',
+                                  'Watching',
+                                  'Rereading',
+                                  'Rewatching',
+                                ].contains(item.viewerStatus!.localize(l10n, item.isAnime))
+                                ? 'I\'m ${item.viewerStatus!.localize(l10n, item.isAnime).toLowerCase()}'
+                                : 'I ${item.viewerStatus!.localize(l10n, item.isAnime).toLowerCase()}',
+                            style: textTheme.labelMedium?.copyWith(
+                              color: ColorScheme.of(context).secondary,
                             ),
+                            overflow: .ellipsis,
+                            maxLines: 1,
                           ),
                         ],
-                        const Spacer(),
-                        if (item.score > 0) ScoreLabel(item.score, item.scoreFormat),
+                        if (item.score > 0) ...[Spacer(), ScoreLabel(item.score, item.scoreFormat)],
                       ],
                     ),
                   ],

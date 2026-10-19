@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:otraku/extension/future_extension.dart';
 import 'package:otraku/feature/thread/thread_model.dart';
@@ -32,22 +33,32 @@ class ThreadNotifier extends AsyncNotifier<Thread> {
 
     final options = ref.watch(persistenceProvider.select((s) => s.options));
 
-    return Thread(data, options.imageQuality);
+    return compute(parseThread, (data: data, quality: options.imageQuality));
   }
 
-  Future<void> changePage(int page) async {
-    final value = state.value;
-    if (value == null) return;
+  var _pageRequest = 0;
 
-    state = state.whenData((data) => data.withChangingCommentPage(page));
+  Future<Object?> changePage(int page) async {
+    final value = state.value;
+    if (value == null) return null;
+
+    final request = ++_pageRequest;
     state = const AsyncValue.loading();
 
-    final data = await ref.read(repositoryProvider).request(GqlQuery.thread, {
-      'id': arg,
-      'page': page,
-    });
+    try {
+      final data = await ref.read(repositoryProvider).request(GqlQuery.thread, {
+        'id': arg,
+        'page': page,
+      });
+      final next = await compute(parseThreadPage, (info: value.info, data: data));
 
-    state = AsyncValue.data(value.withChangedCommentPage(data));
+      if (ref.mounted && request == _pageRequest) state = AsyncValue.data(next);
+      return null;
+    } catch (e) {
+      // Keep showing the old page instead of spinning forever.
+      if (ref.mounted && request == _pageRequest) state = AsyncValue.data(value);
+      return e;
+    }
   }
 
   void appendComment(Map<String, dynamic> map, int? parentCommentId) {

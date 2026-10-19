@@ -189,14 +189,18 @@ class MediaOverviewSubview extends StatelessWidget {
 
     final malUrl = info.idMal == null
         ? null
-        : 'https://myanimelist.net/${info.isAnime ? 'anime' : 'manga'}/${info.idMal}';
+        : 'https://myanimelist.net/${info.isAnime ? 'anime' : 'manga'}/${info.idMal}/';
 
     final availableOn = availableLinks.isNotEmpty || malUrl != null
         ? SliverToBoxAdapter(
             child: Row(
               spacing: Theming.offset,
               children: [
-                Text("${l10n.mediaAvailableOn}:"),
+                Tooltip(
+                  message: l10n.mediaAvailableOn,
+                  preferBelow: false,
+                  child: Icon(Ionicons.open_outline),
+                ),
                 Expanded(
                   child: Wrap(
                     spacing: 5,

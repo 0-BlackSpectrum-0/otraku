@@ -147,3 +147,9 @@ class ThreadInfo {
 }
 
 typedef ThreadMedia = ({int id, String title, String coverUrl});
+
+Thread parseThread(({Map<String, dynamic> data, ImageQuality quality}) args) =>
+    Thread(args.data, args.quality);
+
+Thread parseThreadPage(({ThreadInfo info, Map<String, dynamic> data}) args) =>
+    Thread._withInfo(args.info, args.data);

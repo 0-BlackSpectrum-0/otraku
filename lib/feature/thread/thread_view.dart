@@ -96,7 +96,10 @@ class _ThreadViewState extends ConsumerState<ThreadView> with RestorationMixin {
       bottomBar: thread.hasValue && thread.value!.totalCommentPages > 1
           ? _BottomBar(
               thread: thread.value!,
-              changePage: (page) => ref.read(threadProvider(widget.id).notifier).changePage(page),
+              changePage: (page) async {
+                final err = await ref.read(threadProvider(widget.id).notifier).changePage(page);
+                if (err != null && mounted) SnackBarExtension.show(context, err.toString());
+              },
             )
           : null,
       child: ConstrainedView(

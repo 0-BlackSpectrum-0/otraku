@@ -14,7 +14,7 @@ import 'package:otraku/widget/raw_dialog_box.dart';
 import 'package:otraku/widget/sheets.dart';
 import 'package:otraku/widget/timestamp.dart';
 
-const _maxCommentDepth = 6;
+const _maxCommentDepth = 3;
 
 typedef CommentTileInteraction = ({
   void Function(Map<String, dynamic> map, int commentId) onReplySaved,
